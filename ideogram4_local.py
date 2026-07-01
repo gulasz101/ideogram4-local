@@ -66,7 +66,7 @@ MODEL_URLS = {
 
 def log(message: str) -> None:
     ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"[{ts}] [ideogram4-local] {message}", flush=True)
+    print(f"[{ts}] [ideogram4-local] {message}", file=sys.stderr, flush=True)
 
 
 def ensure_dir(path: Path) -> None:
