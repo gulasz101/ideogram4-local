@@ -187,7 +187,7 @@ Plan accordingly. A small queue of 3 images will keep the machine busy for over 
 | Variable | Default | Purpose |
 |---|---|---|
 | `SD_CPP_DIR` | `~/sd.cpp` | Path to built stable-diffusion.cpp |
-| `IDEOGRAM4_MODELS_DIR` | `./models` | Model download/lookup directory |
+| `IDEOGRAM4_MODELS_DIR` | `~/sd.cpp-models` | Model download/lookup directory |
 | `IDEOGRAM4_OUTPUT_DIR` | `./output` | Default output directory |
 | `IDEOGRAM4_LOCK_FILE` | `./.lock` | Worker lock file path |
 | `IDEOGRAM4_DB` | `./jobs.db` | SQLite queue database path |
