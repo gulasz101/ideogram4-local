@@ -1,0 +1,45 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama and Dr. Slump. Two chibi human mechanics wearing orange jumpsuits and blue caps are building a new black server rack in a bright garage workshop. In the left background, an older beige server rack labeled homelab.one is disintegrating into floating orange dust particles like the Thanos snap. The new server rack has a small clean sign reading homelab-2nd. The scene is cel-shaded, vibrant, playful, and safe for a technology blog header.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive faces, playful mechanics at work, clean technology blog illustration, no photorealism, no 3D render",
+    "lighting": "Bright workshop lighting with warm overhead lamps, soft shadows under the characters and racks, cyan glow from server LEDs, orange accent glow from cables and the disintegrating dust, cheerful and energetic mood",
+    "photo": "Wide shot from a slight low angle, depth of field keeping both foreground characters and background disintegrating rack readable, crisp linework, flat cel shading with subtle gradients",
+    "medium": "digital anime illustration, vector-like clean coloring, bold outlines, technology blog header art",
+    "color_palette": ["#FF6B00", "#00D4FF", "#1E293B", "#F8FAFC", "#64748B", "#FBBF24"]
+  },
+  "compositional_deconstruction": {
+    "canvas": "Wide 1216 x 832 landscape canvas. Normal upright orientation. The left 35% of the image is the background disintegration area. The center and right 65% contains the workshop floor, the two mechanics, and the new server rack. Leave the top 20% relatively open for blog title overlay.",
+    "background": "A clean garage workshop with a light gray concrete floor. On the far left, an old beige server rack labeled homelab.one is actively breaking apart. Pieces of metal, cables, and panels are turning into floating orange dust particles that drift upward and fade away, resembling the Thanos snap effect. The old rack is dim, dusty, and receding into shadow. The rest of the background shows simple workshop shelves, tool boxes, and soft gray walls.",
+    "layout": "Left background: crumbling homelab.one rack. Center foreground: two mechanics working on the new homelab-2nd rack. Right side: extra cables and a small glowing laptop. The composition leads the eye from the dying old rack on the left to the lively new build on the right.",
+    "elements": [
+      {
+        "type": "obj",
+        "desc": "An old beige server rack in the far left background, clearly labeled homelab.one on a vertical sign attached to its front. The rack is tilted and damaged, and its edges and panels are turning into small floating orange-brown dust particles that drift upward, exactly like the Thanos snap disintegration effect. The rack should look obsolete and fading away."
+      },
+      {
+        "type": "obj",
+        "desc": "A tall, thin chibi human mechanic standing on the left side of the new server rack. He has brown spiky hair, round glasses, and a small goatee. He wears an orange jumpsuit with rolled-up sleeves, a blue baseball cap with a tiny white wrench emblem, white gloves, and blue boots. He is holding a thick orange Ethernet cable with both hands and plugging it into the back of the new rack. His expression is focused and slightly smug."
+      },
+      {
+        "type": "obj",
+        "desc": "A short, chubby chibi human mechanic crouching on the right side of the new server rack. He has black hair under his blue cap, a round friendly face, and a small beard. He wears the same orange jumpsuit and blue cap as the taller mechanic, plus a tool belt with screwdrivers. He is holding a silver screwdriver in one hand and installing a hard drive tray into the rack with the other. His expression is cheerful and enthusiastic."
+      },
+      {
+        "type": "obj",
+        "desc": "A tall black modern server rack in the center of the workshop. It has multiple open bays with glowing cyan LED status lights, orange network cables running into it, and a small clean sign near the top that clearly reads homelab-2nd in lowercase letters. The rack looks new, powerful, and organized."
+      },
+      {
+        "type": "obj",
+        "desc": "A small open laptop sitting on the workshop floor to the right of the mechanics. Its screen shows a soft green glow with abstract hexagonal node icons suggesting Kubernetes or GitOps. A few loose orange and blue cables lie neatly on the floor nearby."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text homelab-2nd in clean lowercase sans-serif letters on a small rectangular sign attached near the top of the new black server rack. The sign is white with dark letters, perfectly readable, horizontal, and front-facing."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text homelab.one in clean lowercase sans-serif letters on a vertical sign attached to the front of the old beige server rack. The letters are slightly faded and cracked to show age, but still readable. The sign is vertical and front-facing."
+      }
+    ]
+  }
+}
