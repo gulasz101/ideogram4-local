@@ -118,27 +118,63 @@ def ensure_models() -> dict:
     return {name: model_path(name) for name in MODEL_URLS}
 
 
-class SingletonLock:
-    """Process-level lock so only one Ideogram 4 generation runs at a time."""
+class QueueLock:
+    """Queue-aware singleton lock.
 
-    def __init__(self, lock_path: Path):
+    Only one Ideogram 4 generation can run at a time (the M1 Max cannot load
+    ~16 GB of model weights twice). By default this class waits politely in
+    queue until the lock becomes free, logging status every 30 seconds. Use
+    no_wait=True to fail immediately instead of queuing.
+    """
+
+    def __init__(self, lock_path: Path, timeout: float = 3600.0, no_wait: bool = False, poll_interval: float = 5.0):
         self.lock_path = lock_path
+        self.timeout = timeout
+        self.no_wait = no_wait
+        self.poll_interval = poll_interval
         self._file = None
+        self._start_wait = None
 
     def __enter__(self):
         ensure_dir(self.lock_path.parent)
         self._file = open(self.lock_path, "w")
-        try:
-            fcntl.flock(self._file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError:
-            self._file.close()
-            raise RuntimeError(
-                f"Another Ideogram 4 generation is already running (lock: {self.lock_path}). "
-                "Wait for it to finish or remove the lock file if you are sure it is stale."
-            )
+
+        if self.no_wait:
+            try:
+                fcntl.flock(self._file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                self._file.close()
+                raise RuntimeError(
+                    f"Another Ideogram 4 generation is already running (lock: {self.lock_path}). "
+                    "Pass --no-wait=false or remove the lock file if you are sure it is stale."
+                )
+        else:
+            self._start_wait = time.time()
+            log(f"Queueing for generation lock (timeout: {self.timeout:.0f}s)...")
+            while True:
+                try:
+                    fcntl.flock(self._file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    waited = time.time() - self._start_wait
+                    if waited > 0.5:
+                        log(f"Waited {waited:.0f}s in queue; lock acquired")
+                    break
+                except BlockingIOError:
+                    elapsed = time.time() - self._start_wait
+                    if elapsed >= self.timeout:
+                        self._file.close()
+                        raise RuntimeError(
+                            f"Timed out after {self.timeout:.0f}s waiting for another Ideogram 4 generation to finish. "
+                            f"Lock file: {self.lock_path}"
+                        )
+                    # Log every ~30 seconds so the user/agent sees it is queued.
+                    if int(elapsed) % 30 < self.poll_interval:
+                        remaining = self.timeout - elapsed
+                        log(f"Still queued... ({elapsed:.0f}s elapsed, {remaining:.0f}s timeout remains)")
+                    time.sleep(self.poll_interval)
+
         self._file.write(f"pid={os.getpid()}\nstarted={time.strftime('%Y-%m-%d %H:%M:%S')}\n")
         self._file.flush()
-        log("Acquired singleton lock")
+        log("Acquired generation lock")
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -151,7 +187,7 @@ class SingletonLock:
                 self.lock_path.unlink()
             except FileNotFoundError:
                 pass
-        log("Released singleton lock")
+        log("Released generation lock")
 
 
 def build_prompt(args) -> str:
@@ -230,7 +266,15 @@ def main() -> int:
     parser.add_argument("-v", "--verbose", action="store_true")
     parser.add_argument(
         "--skip-lock", action="store_true",
-        help="Skip singleton lock (dangerous on M1 Max; only use if you know no other generation is running)"
+        help="Skip queue/lock entirely (dangerous on M1 Max; only use if you know no other generation is running)"
+    )
+    parser.add_argument(
+        "--no-wait", action="store_true",
+        help="Fail immediately if another generation is running instead of queuing"
+    )
+    parser.add_argument(
+        "--queue-timeout", type=float, default=3600.0,
+        help="Maximum seconds to wait in queue for the lock (default: 3600)"
     )
     args = parser.parse_args()
 
@@ -240,16 +284,19 @@ def main() -> int:
     if args.prompt_json and not args.prompt_json.exists():
         parser.error(f"Prompt JSON file not found: {args.prompt_json}")
 
+    if args.skip_lock and args.no_wait:
+        parser.error("--skip-lock and --no-wait are mutually exclusive")
+
     output = args.output.expanduser().resolve()
     ensure_dir(output.parent)
 
     prompt = build_prompt(args)
 
     if args.skip_lock:
-        log("WARNING: running without singleton lock")
+        log("WARNING: running without any lock")
         generate(prompt, output, args.width, args.height, args.verbose)
     else:
-        with SingletonLock(LOCK_FILE):
+        with QueueLock(LOCK_FILE, timeout=args.queue_timeout, no_wait=args.no_wait):
             generate(prompt, output, args.width, args.height, args.verbose)
 
     print(output)

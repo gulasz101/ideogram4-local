@@ -85,26 +85,40 @@ Plain text works, but structured JSON gives far better control over composition 
 
 ## Singleton lock
 
-Ideogram 4 is memory-hungry. `ideogram4_local.py` uses a file lock (`ideogram4-local/.lock` by default) so only one generation runs at a time. If another agent tries to run it while one is already generating, it gets a clear error:
+Ideogram 4 is memory-hungry. `ideogram4_local.py` uses a file lock (`ideogram4-local/.lock` by default) so only one generation runs at a time. By default, if another generation is already running, the script **queues politely** and waits until the lock becomes free, printing a status line every 30 seconds. This prevents multiple agents from OOM-ing the M1 Max by loading ~16 GB of models twice.
 
 ```
-RuntimeError: Another Ideogram 4 generation is already running ...
+[ideogram4-local] Queueing for generation lock (timeout: 3600s)...
+[ideogram4-local] Still queued... (30s elapsed, 3570s timeout remains)
+[ideogram4-local] Waited 1250s in queue; lock acquired
 ```
 
-To override (dangerous on M1 Max):
+To fail immediately instead of queuing:
+
+```bash
+python3 ideogram4_local.py --no-wait ...
+```
+
+To bypass the lock entirely (dangerous; only if you are sure no other generation is running):
 
 ```bash
 python3 ideogram4_local.py --skip-lock ...
 ```
 
+To change the queue timeout:
+
+```bash
+python3 ideogram4_local.py --queue-timeout 1800 ...
+```
+
 ## Environment variables
 
-| Variable | Default | Description |
+| Variable | Default | Purpose |
 |---|---|---|
 | `SD_CPP_DIR` | `~/sd.cpp` | Path to built stable-diffusion.cpp |
-| `IDEOGRAM4_MODELS_DIR` | `./models` | Where to download/look for model files |
+| `IDEOGRAM4_MODELS_DIR` | `./models` | Model download/lookup directory |
 | `IDEOGRAM4_OUTPUT_DIR` | `./output` | Default output directory |
-| `IDEOGRAM4_LOCK_FILE` | `./.lock` | Singleton lock file path |
+| `IDEOGRAM4_LOCK_FILE` | `./.lock` | Singleton lock / queue file path |
 
 ## JSON prompt structure
 
