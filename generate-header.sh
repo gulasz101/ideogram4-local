@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# Convenience wrapper for ideogram4_local.py.
-# Generates a blog header image for the homelab-2nd migration post.
+# Convenience wrapper to submit the default homelab header job to the queue.
 
 set -euo pipefail
 
@@ -13,8 +12,9 @@ if [[ ! -f "$PROMPT_FILE" ]]; then
     exit 1
 fi
 
-python3 "$SCRIPT_DIR/ideogram4_local.py" \
+python3 "$SCRIPT_DIR/ideogram4_local.py" submit \
     --prompt-json "$PROMPT_FILE" \
     -o "$OUTPUT_FILE" \
-    -W 1216 -H 832 \
-    -v
+    -W 1216 -H 832 -v
+
+echo "Job submitted. Run 'python3 $SCRIPT_DIR/ideogram4_local.py worker' to process it."
