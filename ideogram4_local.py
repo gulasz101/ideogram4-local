@@ -40,7 +40,8 @@ from typing import Optional
 # ---------------------------------------------------------------------------
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-MODELS_DIR = Path(os.environ.get("IDEOGRAM4_MODELS_DIR", SCRIPT_DIR / "models"))
+DEFAULT_MODELS_DIR = Path("~/sd.cpp-models").expanduser()
+MODELS_DIR = Path(os.environ.get("IDEOGRAM4_MODELS_DIR", DEFAULT_MODELS_DIR))
 OUTPUT_DIR = Path(os.environ.get("IDEOGRAM4_OUTPUT_DIR", SCRIPT_DIR / "output"))
 LOCK_FILE = Path(os.environ.get("IDEOGRAM4_LOCK_FILE", SCRIPT_DIR / ".lock"))
 DB_PATH = Path(os.environ.get("IDEOGRAM4_DB", SCRIPT_DIR / "jobs.db"))
