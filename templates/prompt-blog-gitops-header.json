@@ -1,0 +1,21 @@
+{
+  "high_level_description": "A wide cinematic header image for a technology blog post about Kubernetes GitOps. In the foreground, friendly flat-design server racks float in a clean data-center corridor. Soft blue and amber light glows from rack LEDs. The scene is modern, organized, and calm.",
+  "style_description": {
+    "aesthetics": "clean flat vector illustration, technology blog hero image, minimal, no photorealism",
+    "lighting": "soft ambient blue and amber LED glow, no harsh shadows",
+    "photo": "wide 16:9 establishing shot, deep perspective down a tidy corridor",
+    "medium": "digital vector illustration",
+    "color_palette": ["#1E3A8A", "#3B82F6", "#F59E0B", "#F3F4F6"]
+  },
+  "compositional_deconstruction": {
+    "canvas": "Wide 1216 x 832 landscape canvas",
+    "background": "soft gradient from dark blue at the top to light grey at the bottom, subtle data-center ceiling lights receding into perspective",
+    "layout": "Left third: large friendly server rack with status LEDs. Center: corridor leading to a glowing exit. Right third: smaller racks and floating abstract GitOps/Git symbols.",
+    "elements": [
+      {"type": "obj", "desc": "A tall server rack with rounded corners, soft blue metal, amber and green status LEDs arranged in a grid."},
+      {"type": "obj", "desc": "A glowing Git branch/merge icon made of thick white lines, floating in the corridor."},
+      {"type": "obj", "desc": "Floating geometric cubes and rectangles representing containers and microservices, in blue and amber."},
+      {"type": "text", "content": "GitOps", "location": "bottom-right corner", "style": "bold sans-serif, white with blue drop shadow"}
+    ]
+  }
+}

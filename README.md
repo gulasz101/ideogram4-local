@@ -193,13 +193,32 @@ Plan accordingly. A small queue of 3 images will keep the machine busy for over 
 | `IDEOGRAM4_OUTPUT_DIR` | `./output` | Default output directory |
 | `IDEOGRAM4_LOCK_FILE` | `./.lock` | Worker lock file path |
 | `IDEOGRAM4_DB` | `./jobs.db` | SQLite queue database path |
-| `IDEOGRAM4_SAFETY_BYPASS` | unset | Set to `1` to enable the safety-filter CFG schedule on every generation |
+| `IDEOGRAM4_SAFETY_BYPASS` | unset | Set to `1` to enable the safety-filter backend workaround on every generation |
 
 ## Safety filter grey-out workaround
 
-Ideogram 4's local GGUF build can grey-out images with a "blocked by safety filter" message, even for ordinary prompts. The filter appears to trigger mostly in the early denoising steps. The wrapper already uses `--uncond-diffusion-model ideogram4_uncond-Q4_0.gguf`, so the dual-model setup is present; the fix is about how sampling runs in the first 1–4 steps.
+Ideogram 4's local GGUF build can grey-out images with a "blocked by safety filter" message, sometimes even on ordinary prompts. The grey box is **primarily a prompt-vocabulary and JSON-structure filter baked into the model weights**, not a pixel-level classifier. Start with prompt hygiene; sampler workarounds are secondary.
 
-Enable it globally:
+### First, lint and rewrite the prompt
+
+The wrapper now ships `lint` and `rewrite` commands:
+
+```bash
+python3 ideogram4_local.py lint prompts/my-scene.json
+python3 ideogram4_local.py rewrite prompts/my-scene.json -o prompts/my-scene-safe.json
+```
+
+### Prompt hygiene rules
+
+- Use **canonical structured JSON** with `high_level_description`, `style_description`, and `compositional_deconstruction`.
+- **Describe the situation, not the garment/anatomy/state.**
+  - Instead of `"a woman in a bikini"` → `"a cheerful young woman having fun at the beach on a sunny day"`.
+  - Instead of `"an unclothed adult human figure"` → `"a classical marble statue of a standing human figure in an art studio"`.
+- Avoid flagged vocabulary in any text field.
+
+### Backend workarounds (when prompt hygiene is not enough)
+
+Enable globally:
 
 ```bash
 export IDEOGRAM4_SAFETY_BYPASS=1
@@ -214,16 +233,22 @@ Or per-prompt in the JSON:
   "compositional_deconstruction": { ... },
   "generation": {
     "safety_bypass": true,
-    "steps": 20,
-    "safety_bypass_steps": 3,
-    "safety_bypass_cfg": 1.0
+    "safety_bypass_mode": "two_pass",
+    "safety_bypass_steps": 4,
+    "safety_bypass_cfg": 1.0,
+    "steps": 20
   }
 }
 ```
 
-With the defaults above the wrapper passes `--extra-sample-args guidance_schedule=1.0x3+7.0x17`, which tells `sd-cli` to use CFG `1.0` for steps 1–3 and CFG `7.0` for steps 4–20.
+Modes:
 
-All keys are optional. The wrapper strips the `"generation"` block before handing the JSON to `sd-cli`. This keeps the fix transparent to agents that submit jobs.
+- `"two_pass"` (default): neutral prompt first pass → img2img second pass. Most reliable, ~2× time.
+- `"single_pass"`: one generation with `guidance_schedule=1.0x4+7.0x16`. Cheaper, weaker.
+
+All keys in `"generation"` are optional. The wrapper strips the block before passing JSON to `sd-cli`, so agents do not need to change CLI commands.
+
+See `references/ideogram4-safety-filter.md` for the full details, tuning, and the underlying `guidance_schedule` syntax.
 
 ## Troubleshooting
 

@@ -35,6 +35,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
+from ideogram4_prompt_tools import lint_prompt, rewrite_prompt, print_lint_report
+
 # ---------------------------------------------------------------------------
 # Defaults tuned for an Apple Silicon M1 Max with 32 GB unified RAM.
 # ---------------------------------------------------------------------------
@@ -359,7 +361,8 @@ def parse_generation_config(prompt_type: str, prompt_value: str) -> dict:
     """
     config: dict = {
         "safety_bypass": DEFAULT_SAFETY_BYPASS,
-        "safety_bypass_steps": 3,
+        "safety_bypass_mode": "two_pass",
+        "safety_bypass_steps": 4,
         "safety_bypass_cfg": 1.0,
         "guidance_schedule": None,
         "steps": DEFAULT_SAMPLE_STEPS,
@@ -373,6 +376,8 @@ def parse_generation_config(prompt_type: str, prompt_value: str) -> dict:
         gen = data.get("generation", {})
         if "safety_bypass" in gen:
             config["safety_bypass"] = bool(gen["safety_bypass"])
+        if "safety_bypass_mode" in gen:
+            config["safety_bypass_mode"] = str(gen["safety_bypass_mode"])
         config["safety_bypass_steps"] = int(gen.get("safety_bypass_steps", config["safety_bypass_steps"]))
         config["safety_bypass_cfg"] = float(gen.get("safety_bypass_cfg", config["safety_bypass_cfg"]))
         if "guidance_schedule" in gen:
@@ -388,13 +393,17 @@ def build_guidance_schedule(config: dict) -> Optional[str]:
     if not config.get("safety_bypass"):
         return None
 
+    # two_pass mode uses img2img instead of a CFG schedule.
+    if config.get("safety_bypass_mode") == "two_pass":
+        return None
+
     # Respect an explicit schedule if the user provided one.
     explicit = config.get("guidance_schedule")
     if explicit:
         return str(explicit)
 
     total_steps = max(1, int(config.get("steps", DEFAULT_SAMPLE_STEPS)))
-    bypass_steps = max(0, min(total_steps - 1, int(config.get("safety_bypass_steps", 3))))
+    bypass_steps = max(0, min(total_steps - 1, int(config.get("safety_bypass_steps", 4))))
     remaining = total_steps - bypass_steps
     bypass_cfg = float(config.get("safety_bypass_cfg", 1.0))
     normal_cfg = 7.0  # sd-cli default for Ideogram4-style CFG
@@ -403,6 +412,47 @@ def build_guidance_schedule(config: dict) -> Optional[str]:
         return None
 
     return f"{bypass_cfg}x{bypass_steps}+{normal_cfg}x{remaining}"
+
+
+def _sd_cli_cmd(
+    prompt: str,
+    output: Path,
+    width: int,
+    height: int,
+    steps: int,
+    cfg_scale: Optional[float] = None,
+    init_img: Optional[Path] = None,
+    strength: Optional[float] = None,
+    guidance_schedule: Optional[str] = None,
+    verbose: bool = False,
+) -> list:
+    """Build the sd-cli command list."""
+    models = ensure_models()
+    cmd = [
+        str(SD_CLI),
+        "--diffusion-model", str(models["ideogram4-Q4_0.gguf"]),
+        "--uncond-diffusion-model", str(models["ideogram4_uncond-Q4_0.gguf"]),
+        "--llm", str(models["Qwen3-VL-8B-Instruct-Q4_K_M.gguf"]),
+        "--vae", str(models["flux2-vae.safetensors"]),
+        "-p", prompt,
+        "-o", str(output),
+        "-W", str(width),
+        "-H", str(height),
+        "--steps", str(steps),
+        "--offload-to-cpu",
+        "--diffusion-fa",
+    ]
+    if cfg_scale is not None:
+        cmd.extend(["--cfg-scale", str(cfg_scale)])
+    if init_img is not None:
+        cmd.extend(["--init-img", str(init_img)])
+    if strength is not None:
+        cmd.extend(["--strength", str(strength)])
+    if guidance_schedule:
+        cmd.extend(["--extra-sample-args", f"guidance_schedule={guidance_schedule}"])
+    if verbose:
+        cmd.append("-v")
+    return cmd
 
 
 def generate(
@@ -422,39 +472,76 @@ def generate(
             "or set SD_CPP_DIR to point at an existing build."
         )
 
-    models = ensure_models()
     prompt = build_prompt(prompt_type, prompt_value)
     gen_config = parse_generation_config(prompt_type, prompt_value)
     guidance_schedule = build_guidance_schedule(gen_config)
     sample_steps = int(gen_config.get("steps", DEFAULT_SAMPLE_STEPS))
 
-    cmd = [
-        str(SD_CLI),
-        "--diffusion-model", str(models["ideogram4-Q4_0.gguf"]),
-        "--uncond-diffusion-model", str(models["ideogram4_uncond-Q4_0.gguf"]),
-        "--llm", str(models["Qwen3-VL-8B-Instruct-Q4_K_M.gguf"]),
-        "--vae", str(models["flux2-vae.safetensors"]),
-        "-p", prompt,
-        "-o", str(output),
-        "-W", str(width),
-        "-H", str(height),
-        "--steps", str(sample_steps),
-        "--offload-to-cpu",
-        "--diffusion-fa",
-    ]
-    if guidance_schedule:
-        cmd.extend(["--extra-sample-args", f"guidance_schedule={guidance_schedule}"])
-        log(f"Safety bypass enabled: guidance_schedule={guidance_schedule}")
+    if gen_config.get("safety_bypass") and gen_config.get("safety_bypass_mode") == "two_pass":
+        # Two-pass safety bypass:
+        #   Pass 1: neutral prompt, low CFG, few steps -> temp init image.
+        #   Pass 2: full prompt, img2img from temp, normal CFG -> final output.
+        temp_output = output.with_suffix(".tmp_init.png")
+        bypass_steps = max(1, min(sample_steps - 1, int(gen_config.get("safety_bypass_steps", 4))))
+        bypass_cfg = float(gen_config.get("safety_bypass_cfg", 1.0))
+        remaining_steps = max(1, sample_steps - bypass_steps)
 
-    if verbose:
-        cmd.append("-v")
+        log(f"Safety bypass (two_pass): pass 1 neutral prompt, {bypass_steps} steps at CFG {bypass_cfg}")
+        cmd1 = _sd_cli_cmd(
+            prompt="a neutral grey background",
+            output=temp_output,
+            width=width,
+            height=height,
+            steps=bypass_steps,
+            cfg_scale=bypass_cfg,
+            verbose=verbose,
+        )
+        result1 = subprocess.run(cmd1)
+        if result1.returncode != 0:
+            raise RuntimeError(f"sd-cli pass 1 exited with code {result1.returncode}")
+        if not temp_output.exists():
+            raise RuntimeError(f"Expected temp init image not found: {temp_output}")
+        log(f"Safety bypass (two_pass): pass 1 complete -> {temp_output}")
 
-    log(f"Running generation ({width}x{height}, steps={sample_steps})...")
-    log("This will take several minutes on CPU-only M1 Max.")
+        log(f"Safety bypass (two_pass): pass 2 full prompt, img2img, {remaining_steps} steps")
+        cmd2 = _sd_cli_cmd(
+            prompt=prompt,
+            output=output,
+            width=width,
+            height=height,
+            steps=remaining_steps,
+            cfg_scale=7.0,
+            init_img=temp_output,
+            strength=0.75,
+            verbose=verbose,
+        )
+        result2 = subprocess.run(cmd2)
+        # Clean up the temp init image regardless of pass 2 outcome.
+        try:
+            temp_output.unlink()
+        except FileNotFoundError:
+            pass
+        if result2.returncode != 0:
+            raise RuntimeError(f"sd-cli pass 2 exited with code {result2.returncode}")
+    else:
+        cmd = _sd_cli_cmd(
+            prompt=prompt,
+            output=output,
+            width=width,
+            height=height,
+            steps=sample_steps,
+            guidance_schedule=guidance_schedule,
+            verbose=verbose,
+        )
+        if guidance_schedule:
+            log(f"Safety bypass enabled: guidance_schedule={guidance_schedule}")
 
-    result = subprocess.run(cmd)
-    if result.returncode != 0:
-        raise RuntimeError(f"sd-cli exited with code {result.returncode}")
+        log(f"Running generation ({width}x{height}, steps={sample_steps})...")
+        log("This will take several minutes on CPU-only M1 Max.")
+
+        result = subprocess.run(cmd)
+        if result.returncode != 0:
+            raise RuntimeError(f"sd-cli exited with code {result.returncode}")
 
     if not output.exists():
         raise RuntimeError(f"Expected output file not found: {output}")
@@ -589,6 +676,24 @@ def cmd_worker(args) -> int:
             return 0
 
 
+def cmd_lint(args) -> int:
+    prompt_value = args.prompt_json.read_text(encoding="utf-8")
+    report = lint_prompt(prompt_value, "json")
+    print_lint_report(report)
+    return 0 if report["score"] == 0 else 1
+
+
+def cmd_rewrite(args) -> int:
+    prompt_value = args.prompt_json.read_text(encoding="utf-8")
+    rewritten = rewrite_prompt(prompt_value, "json")
+    if args.output:
+        args.output.write_text(rewritten, encoding="utf-8")
+        log(f"Rewritten prompt written to {args.output}")
+    else:
+        print(rewritten)
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Local Ideogram 4 image generation queue")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -601,6 +706,15 @@ def main() -> int:
     p_submit.add_argument("-W", "--width", type=int, default=DEFAULT_WIDTH)
     p_submit.add_argument("-H", "--height", type=int, default=DEFAULT_HEIGHT)
     p_submit.add_argument("-v", "--verbose", action="store_true")
+
+    # lint
+    p_lint = sub.add_parser("lint", help="Check a prompt for safety-filter false-positive risks")
+    p_lint.add_argument("prompt_json", type=Path, help="Path to structured JSON prompt file")
+
+    # rewrite
+    p_rewrite = sub.add_parser("rewrite", help="Rewrite a prompt to reduce safety-filter false-positive risks")
+    p_rewrite.add_argument("prompt_json", type=Path, help="Path to structured JSON prompt file")
+    p_rewrite.add_argument("-o", "--output", type=Path, help="Output path for rewritten prompt JSON")
 
     # status
     p_status = sub.add_parser("status", help="Show job status")
@@ -626,6 +740,10 @@ def main() -> int:
 
     if args.command == "submit":
         return cmd_submit(args)
+    if args.command == "lint":
+        return cmd_lint(args)
+    if args.command == "rewrite":
+        return cmd_rewrite(args)
     if args.command == "status":
         return cmd_status(args)
     if args.command == "list":

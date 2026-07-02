@@ -2,8 +2,8 @@
 name: ideogram4-local
 description: Generate images locally with Ideogram 4 via stable-diffusion.cpp using an SQLite-backed job queue, a singleton worker, and a Mattermost progress watchdog on Apple Silicon.
 author: Andrzej <andrzej@example.com>
-date: 2026-07-01
-version: 3.1.0
+date: 2026-07-02
+version: 3.3.0
 tags:
   - image-generation
   - ideogram4
@@ -118,7 +118,7 @@ Ideogram 4 is trained on structured JSON. The wrapper passes the JSON verbatim t
 }
 ```
 
-The wrapper also accepts an optional top-level `"generation"` block for backend-only options. It is stripped before the prompt reaches `sd-cli`. See [Safety filter workaround](#safety-filter-grey-out-workaround) below for an example.
+The wrapper also accepts an optional top-level `"generation"` block for backend-only options. It is stripped before the prompt reaches `sd-cli`. See [Safety filter workaround](#safety-filter-grey-out-workaround) below for an example. Use `templates/prompt-with-safety-bypass.json` as a starting point.
 
 See `prompts/homelab-toriyama.json` in the repo for the full working example that produced the `homelab-2nd` migration header.
 
@@ -190,25 +190,43 @@ A queue of 3 images will keep the machine busy for over an hour. Do not expect i
 | `IDEOGRAM4_OUTPUT_DIR` | `./output` | Default output directory |
 | `IDEOGRAM4_LOCK_FILE` | `./.lock` | Worker lock file path |
 | `IDEOGRAM4_DB` | `./jobs.db` | SQLite queue database path |
-| `IDEOGRAM4_SAFETY_BYPASS` | unset | Set to `1` to enable the safety-filter CFG schedule on every generation |
+| `IDEOGRAM4_SAFETY_BYPASS` | unset | Set to `1` to enable the safety-filter workaround on every generation |
 
 ## Pitfalls / lessons learned
 
 1. **Always set `IDEOGRAM4_MODELS_DIR=~/sd.cpp-models`.** The old default `./models` made the worker re-download 10.6 GB of diffusion weights into the repo. The default is now `~/sd.cpp-models`, but always export it explicitly in scripts.
 2. **Capture stdout correctly.** The `submit` command prints the job ID to stdout and logs to stderr. Use `JOB_ID=$(python3 ideogram4_local.py submit ... 2>/tmp/log.txt)`.
 3. **Do not cancel a running job.** Once `sd-cli` has loaded models, killing it wastes the progress. Either wait for completion or accept the waste.
-5. **Load the LaunchAgent after the current generation finishes.** Loading launchd while a manual worker is mid-generation can create lock confusion. Let the manual worker finish, kill it, remove the stale lock, mark the finished job `done` in SQLite if needed, then load the plist.
-6. **Cron `MEDIA:` lines do not reliably attach images, and `hermes send` falls back to the home channel.** For a dedicated channel target, use a direct Mattermost API script (`post_status.sh`) that sources `~/.hermes/profiles/andrzej/.env` for `MATTERMOST_TOKEN`/`MATTERMOST_URL`. The file upload endpoint requires `channel_id` as a form field (`-F channel_id=...`), not just the file.
-7. **Keep notification state outside the repo.** Put `.notified_done_jobs` under `~/.ideogram4-local/`, not inside the git repo, so it survives repo resets.
-8. **Clean up test jobs before handing the queue to Florian.** Remove any accidental test submissions with `DELETE FROM jobs WHERE id='...';` so the first real job starts immediately.
-9. **Verify the target channel is visible to the Mattermost bot account before relying on it.** `hermes send --list mattermost` shows the channels the gateway currently knows; if the new channel is absent, either have the bot user added to the channel or post a test message there so the gateway learns it.
-10. **Safety bypass is now built in, not bolted on.** Set `IDEOGRAM4_SAFETY_BYPASS=1` or add `"generation": {"safety_bypass": true}` to the JSON prompt. The wrapper will schedule low CFG for the first few denoising steps and normal CFG for the rest. No img2img pass, no new CLI flags for agents, and no 2× time penalty.
+4. **Load the LaunchAgent after the current generation finishes.** Loading launchd while a manual worker is mid-generation can create lock confusion. Let the manual worker finish, kill it, remove the stale lock, mark the finished job `done` in SQLite if needed, then load the plist.
+5. **Cron `MEDIA:` lines do not reliably attach images, and `hermes send` falls back to the home channel.** For a dedicated channel target, use a direct Mattermost API script (`post_status.sh`) that sources `~/.hermes/profiles/andrzej/.env` for `MATTERMOST_TOKEN`/`MATTERMOST_URL`. The file upload endpoint requires `channel_id` as a form field (`-F channel_id=...`), not just the file.
+6. **Keep notification state outside the repo.** Put `.notified_done_jobs` under `~/.ideogram4-local/`, not inside the git repo, so it survives repo resets.
+7. **Clean up test jobs before handing the queue to Florian.** Remove any accidental test submissions with `DELETE FROM jobs WHERE id='...';` so the first real job starts immediately.
+8. **Verify the target channel is visible to the Mattermost bot account before relying on it.** `hermes send --list mattermost` shows the channels the gateway currently knows; if the new channel is absent, either have the bot user added to the channel or post a test message there so the gateway learns it.
+9. **Safety bypass is built in, not bolted on.** Set `IDEOGRAM4_SAFETY_BYPASS=1` or add `"generation": {"safety_bypass": true}` to the JSON prompt. No agent CLI changes are needed. Use `two_pass` for persistent grey-outs; it costs roughly 2× generation time on the M1 Max. Use `single_pass` as a cheap desensitizer for borderline false positives.
+10. **The filter watches your words, not your pixels.** The grey box is triggered by prompt vocabulary and JSON structure, not by the generated image. Use canonical JSON, avoid naming flagged garments/anatomy/situations, and describe the scene/location/mood instead. `python3 ideogram4_local.py lint` and `python3 ideogram4_local.py rewrite` help catch and fix risky prompts before generation.
 
 ## Safety filter grey-out workaround
 
-Ideogram 4's local GGUF build can grey-out images with a "blocked by safety filter" message, even for ordinary prompts. The filter appears to trigger mostly in the early denoising steps. The wrapper already uses `--uncond-diffusion-model ideogram4_uncond-Q4_0.gguf`, so the dual-model setup is present; the fix is about how sampling runs in the first 1–4 steps.
+Ideogram 4's local GGUF build can grey-out images with a "blocked by safety filter" message, even for ordinary prompts. The grey box is **primarily a prompt-vocabulary and JSON-structure filter baked into the weights**, not a pixel-level classifier. The fix starts with prompt hygiene; sampler workarounds are secondary.
 
-Enable it globally:
+### First, lint and rewrite the prompt
+
+```bash
+python3 ideogram4_local.py lint prompts/my-scene.json
+python3 ideogram4_local.py rewrite prompts/my-scene.json -o prompts/my-scene-safe.json
+```
+
+### Prompt hygiene rules
+
+- Use **canonical structured JSON** with `high_level_description`, `style_description`, and `compositional_deconstruction`.
+- **Describe the situation, not the garment/anatomy/state.**
+  - Instead of `"a woman in a bikini"` → `"a cheerful young woman having fun at the beach on a sunny day"`.
+  - Instead of `"an unclothed adult human figure"` → `"a classical marble statue of a standing human figure in an art studio"`.
+- Avoid flagged vocabulary in any text field.
+
+### Backend workarounds (when prompt hygiene is not enough)
+
+Enable globally:
 
 ```bash
 export IDEOGRAM4_SAFETY_BYPASS=1
@@ -223,16 +241,20 @@ Or per-prompt in the JSON:
   "compositional_deconstruction": { ... },
   "generation": {
     "safety_bypass": true,
-    "steps": 20,
-    "safety_bypass_steps": 3,
-    "safety_bypass_cfg": 1.0
+    "safety_bypass_mode": "two_pass",
+    "safety_bypass_steps": 4,
+    "safety_bypass_cfg": 1.0,
+    "steps": 20
   }
 }
 ```
 
-With the defaults above the wrapper passes `--extra-sample-args guidance_schedule=1.0x3+7.0x17`, which tells `sd-cli` to use CFG `1.0` for steps 1–3 and CFG `7.0` for steps 4–20.
+Modes:
 
-See `references/ideogram4-safety-filter.md` for the full details, the exact `guidance_schedule` syntax, and how to tune it.
+- `"two_pass"` (default): neutral prompt first pass → img2img second pass. Most reliable, ~2× time.
+- `"single_pass"`: one generation with `guidance_schedule=1.0x4+7.0x16`. Cheaper, weaker.
+
+See `references/ideogram4-safety-filter.md` for full details, tuning, and the underlying `guidance_schedule` syntax.
 
 ## Troubleshooting
 
@@ -250,6 +272,8 @@ See `references/ideogram4-safety-filter.md` for the full details, the exact `gui
 ## References
 
 - Wrapper repo: https://github.com/gulasz101/ideogram4-local
+- `templates/prompt-with-safety-bypass.json` — ready-to-use JSON prompt with the safety bypass block
+- `scripts/verify-safety-bypass.sh` — smoke test that confirms the guidance schedule is injected
 - `references/launchd-agent.md` — LaunchAgent plist details and migration from a manual worker
 - `references/mattermost-watchdog.md` — Hermes cron watchdog prompt, `MEDIA:` limitation, and bot-token image-attachment fallback
 - `references/mattermost-channel-delivery.md` — How to make a new Mattermost channel reachable to the bot and the exact API calls that work

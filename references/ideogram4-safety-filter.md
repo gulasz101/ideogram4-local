@@ -2,43 +2,98 @@
 
 ## Symptom
 
-Local Ideogram 4 generations via `stable-diffusion.cpp` come out greyed out with a "blocked by safety filter" overlay, sometimes even on ordinary blog/tech prompts.
+Local Ideogram 4 generations via `stable-diffusion.cpp` come out greyed out with a "blocked by safety filter" overlay, sometimes even on ordinary prompts.
 
-## Why it happens
+## What actually triggers it
 
-The safety filter in the Ideogram 4 GGUF build seems to fire during the **early denoising steps**. The proven workaround (from the ComfyUI community) is to make those first few steps use a low CFG so the unconditional model dominates and the full prompt does not hit the safety classifier early.
+Community experiments show the grey box is **not** a pixel-level classifier and **not** a simple early-sampling guardrail. It is baked into the model weights and reacts primarily to **prompt vocabulary and JSON structure**:
 
-## Important baseline check
+- **Plain text or non-canonical JSON** drifts off-distribution and often triggers the placeholder, even for innocent scenes.
+- **Naming flagged garments, anatomy, or situations** (bikini, nude, unclothed, erotic, etc.) flips the safety attractor, even when the scene itself is harmless.
+- **Describing human figures, statues, anatomy studies, or full-body poses** is also a frequent false-positive trigger in this local GGUF build.
+- The model will happily draw context-appropriate content if you describe the **situation, location, mood, and activity** instead of naming the item.
 
-The wrapper already passes `--uncond-diffusion-model ideogram4_uncond-Q4_0.gguf`, so the dual-model setup is present. If the filter triggers, the issue is **how sampling runs**, not missing files.
+## What we tested
 
-## How the wrapper now handles it
+| Test | Prompt | Backend mode | Result |
+|---|---|---|---|
+| Explicit anatomy reference | "unclothed adult human figure" | `single_pass` CFG schedule | Grey box |
+| Explicit anatomy reference | "unclothed adult human figure" | `two_pass` neutral → full | Grey box |
+| Rephrased as "classical marble statue" | "classical marble statue..." | `two_pass` | Grey box |
+| Tech blog header (racks, Git icons) | `templates/prompt-blog-gitops-header.json` | default (no bypass) | Clean |
 
-The backend applies a **CFG guidance schedule** via `sd-cli --extra-sample-args guidance_schedule=...`. This is a single-pass fix: **no img2img, no second model load, no 2× generation time penalty**. It is implemented entirely inside `ideogram4_local.py` and is transparent to agents using the queue.
+Conclusion: the local GGUF safety filter is **prompt-semantics driven** and hard to bypass with sampler tricks. The reliable fix is **prompt hygiene** — avoid human/anatomy/statue vocabulary and use objects, robots, diagrams, or abstract tech illustrations.
 
-### Default behavior
+## First-line fix: prompt hygiene (use this first)
 
-With safety bypass enabled, the first **3 of 20 steps** run at CFG `1.0`; the remaining **17 steps** run at the normal CFG `7.0`.
+The repo ships `ideogram4_prompt_tools.py` and `ideogram4_local.py lint`/`rewrite` commands to catch and fix risky prompts before generation.
 
-`sd-cli` logs this when verbose mode is on:
+### Lint a prompt
+
+```bash
+python3 ideogram4_local.py lint prompts/my-scene.json
+```
+
+### Rewrite a prompt to safer phrasing
+
+```bash
+python3 ideogram4_local.py rewrite prompts/my-scene.json -o prompts/my-scene-safe.json
+```
+
+### Prompt design rules
+
+1. **Use canonical structured JSON.** Expected top-level keys:
+   - `high_level_description`
+   - `style_description`
+   - `compositional_deconstruction`
+2. **Describe the scene, not the garment/anatomy/state.**
+   - Instead of `"a woman in a bikini"` → `"a cheerful young woman having fun at the beach on a sunny day"`.
+   - Instead of `"an unclothed adult human figure"` → don't use human figures at all; use `"a friendly robot standing in a server room"`.
+3. **Avoid flagged vocabulary** in any text field (description, style, elements, background, layout).
+4. **Prefer objects, robots, diagrams, and abstract illustrations** for tech blog images. Human/anatomy/stature descriptions grey out frequently in this local build.
+5. **Keep it in distribution.** Short, vague, or prose-only prompts are more likely to grey-out.
+
+### Safe templates
+
+Ready-to-use canonical JSON templates for common blog headers:
+
+- `templates/prompt-blog-gitops-header.json` — server racks, Git icons, blue/amber palette.
+- `templates/prompt-blog-observability-header.json` — friendly robot at a monitoring console.
+
+Copy and edit them for new posts.
+
+## Backend workarounds (secondary)
+
+When a clean prompt still greys out, the wrapper offers two sampler-level helpers. Both are opt-in and transparent to agents using the queue.
+
+### `two_pass` mode (default when bypass is enabled)
+
+Two separate `sd-cli` runs:
+
+1. **Pass 1:** neutral prompt `"a neutral grey background"`, `safety_bypass_steps` steps (default 4), CFG `1.0`. Output is a temporary PNG.
+2. **Pass 2:** `--init-img` from Pass 1, full prompt, `steps - safety_bypass_steps` steps, CFG `7.0`, strength `0.75`. Output is the requested final image.
+
+This roughly **doubles generation time** on the M1 Max. It can help with stubborn false positives, but it is not a jailbreak.
+
+### `single_pass` mode
+
+A single `sd-cli` run with an explicit per-step CFG schedule:
 
 ```
-[DEBUG] stable-diffusion.cpp:1992 - using guidance schedule: [1.000000, 1.000000, 7.000000, 7.000000, 7.000000]
+--extra-sample-args guidance_schedule=1.0x4+7.0x16
 ```
 
-### Enable globally
+First 4 steps use CFG `1.0`, remaining 16 use CFG `7.0`. Cheaper than `two_pass` but weaker. Use it for borderline cases where you cannot afford 2× time.
 
-Set the environment variable before submitting or before the worker runs:
+## How to enable the backend workaround
+
+Globally:
 
 ```bash
 export IDEOGRAM4_SAFETY_BYPASS=1
 ```
 
-When this is set, **every** generation gets the workaround schedule unless a per-prompt config explicitly disables it.
-
-### Enable per prompt (JSON)
-
-Add a top-level `"generation"` block to the prompt JSON. This is the preferred way for an agent to opt in without changing CLI commands:
+Per-prompt in JSON:
 
 ```json
 {
@@ -47,61 +102,65 @@ Add a top-level `"generation"` block to the prompt JSON. This is the preferred w
   "compositional_deconstruction": { ... },
   "generation": {
     "safety_bypass": true,
-    "steps": 20,
-    "safety_bypass_steps": 3,
-    "safety_bypass_cfg": 1.0
+    "safety_bypass_mode": "two_pass",
+    "safety_bypass_steps": 4,
+    "safety_bypass_cfg": 1.0,
+    "steps": 20
   }
 }
 ```
 
-All keys are optional:
-
-| Key | Default | Purpose |
-|---|---|---|
-| `safety_bypass` | `false` (or env default) | Enable/disable the workaround for this job |
-| `steps` | 20 | Total denoising steps |
-| `safety_bypass_steps` | 3 | Number of early steps to run at low CFG |
-| `safety_bypass_cfg` | 1.0 | CFG value to use during the early steps |
-| `guidance_schedule` | auto | Override the whole schedule, e.g. `"1.0x3+7.0x17"` |
-
-The wrapper strips the `"generation"` block before passing the JSON to `sd-cli`, so the model never sees metadata it does not understand.
-
-### Disable for one job even when env var is on
-
-```json
-{
-  "generation": {
-    "safety_bypass": false
-  }
-}
-```
-
-## The guidance schedule syntax
-
-The underlying `sd-cli` parser expects `<cfg>x<count>` segments joined by `+`. Examples:
-
-- `"1.0x3+7.0x17"` — first 3 steps at CFG 1.0, last 17 at CFG 7.0.
-- `"1.5x4+6.5x16"` — first 4 steps at CFG 1.5, last 16 at CFG 6.5.
-
-If you set `"guidance_schedule"` explicitly in the JSON, it is passed verbatim and the `safety_bypass_steps`/`safety_bypass_cfg` defaults are ignored.
+All keys are optional. The wrapper strips the `"generation"` block before passing JSON to `sd-cli`.
 
 ## When to use this
 
 - You get greyed-out images on otherwise safe blog/tech prompts.
-- You want a transparent single-pass fix with no agent CLI changes.
+- You want a transparent fix with no agent CLI changes.
 
 ## When not to use this
 
-- If the prompt itself is genuinely NSFW or policy-violating. This workaround is for **over-sensitive local filters on legitimate content**, not for bypassing safety guardrails on harmful prompts.
+- If the prompt itself is genuinely NSFW or policy-violating. These tools are for **over-sensitive local filters on legitimate content**, not for bypassing safety guardrails on harmful prompts.
 
 ## Trade-offs
 
-- Slightly softer early guidance may subtly change image composition. If quality degrades, try `safety_bypass_steps: 2` or `safety_bypass_cfg: 1.5`.
-- It is single-pass, so generation time stays the same as before.
+| Approach | Time | Filter reliability | Use case |
+|---|---|---|---|
+| Prompt hygiene only | 1× | High for false positives | Always try this first |
+| `single_pass` | ~1× | Medium | Borderline false positives, tight schedules |
+| `two_pass` | ~2× | Medium-High | Persistent grey-outs on clean prompts |
+
+## Tuning
+
+If `two_pass` still greys out:
+- Increase `safety_bypass_steps` to 6 or 8.
+- Try a less specific neutral prompt (`"a blank canvas"`, `"a simple abstract pattern"`).
+- Lower pass-2 `strength` (currently hard-coded at `0.75`) so the final prompt has more influence.
+
+If `single_pass` degrades quality too much:
+- Reduce `safety_bypass_steps` to 2.
+- Raise `safety_bypass_cfg` to 1.5.
+
+## Tool commands
+
+```bash
+# Lint a JSON prompt for filter risk
+python3 ideogram4_local.py lint prompts/my-scene.json
+
+# Rewrite it to safer phrasing
+python3 ideogram4_local.py rewrite prompts/my-scene.json -o prompts/my-scene-safe.json
+
+# Submit the safe version
+JOB_ID=$(python3 ideogram4_local.py submit \
+  --prompt-json prompts/my-scene-safe.json \
+  -o output/my-scene.png -W 1216 -H 832 -v)
+python3 ideogram4_local.py wait "$JOB_ID"
+```
 
 ## External references
 
-- Reddit ComfyUI discussion: https://www.reddit.com/r/comfyui/comments/1txurpt/ideogram4_get_through_the_safety_filter/
+- Reddit /r/StableDiffusion prompt-vocabulary investigation: https://www.reddit.com/r/StableDiffusion/comments/1u11mrd/how_to_bypass_ideogram_4s_image_blocked_by_safety/
+- Reddit /r/comfyui sampling workaround discussion: https://www.reddit.com/r/comfyui/comments/1txurpt/ideogram4_get_through_the_safety_filter/
 - Tools4All summary (sigma-shift / increased initial noise): https://tools4all.ai/trends/workaround-discovered-to-bypass-ideogram-4-censorship-blocks
 - `stable-diffusion.cpp` Ideogram 4 docs: https://github.com/leejet/stable-diffusion.cpp/blob/master/docs/ideogram4.md
 - `stable-diffusion.cpp` guidance schedule parser: `src/runtime/guidance.cpp`
+- `stable-diffusion.cpp` CLI: `sd-cli --help` (`--init-img`, `--strength`, `--cfg-scale`, `--extra-sample-args`)

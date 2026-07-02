@@ -1,0 +1,21 @@
+{
+  "high_level_description": "A wide cinematic header image for a technology blog post about observability and monitoring. A friendly robot sits at a console made of glowing dashboards, charts, and log streams. The scene is bright, organized, and futuristic.",
+  "style_description": {
+    "aesthetics": "clean flat vector illustration, friendly technology blog hero image, minimal, no photorealism",
+    "lighting": "soft ambient blue and green glow from screens and holographic panels",
+    "photo": "wide 16:9 establishing shot, shallow depth, hero robot centered",
+    "medium": "digital vector illustration",
+    "color_palette": ["#0F172A", "#10B981", "#3B82F6", "#F3F4F6"]
+  },
+  "compositional_deconstruction": {
+    "canvas": "Wide 1216 x 832 landscape canvas",
+    "background": "soft dark blue gradient with subtle hexagonal mesh pattern and glowing data streams",
+    "layout": "Center: a rounded friendly robot at a console. Behind it: large floating dashboards showing line charts, heatmaps, and log tables. Foreground: small glowing metric badges.",
+    "elements": [
+      {"type": "obj", "desc": "A friendly rounded robot with large expressive eyes, sitting at a curved console."},
+      {"type": "obj", "desc": "Floating holographic dashboard panels showing green line charts, amber heatmaps, and blue log streams."},
+      {"type": "obj", "desc": "Small floating metric badges with numbers and status indicators."},
+      {"type": "text", "content": "Observability", "location": "bottom-left corner", "style": "bold sans-serif, white with green accent"}
+    ]
+  }
+}
