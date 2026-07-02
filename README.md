@@ -149,6 +149,8 @@ Ideogram 4 is trained on structured JSON captions. The wrapper passes the JSON v
 
 See `prompts/homelab-toriyama.json` for the full working example that produced the `homelab-2nd` migration header.
 
+The wrapper also accepts an optional top-level `"generation"` block for backend-only options. It is stripped before the prompt reaches `sd-cli`. See [Safety filter workaround](#safety-filter-grey-out-workaround) below.
+
 ## How the queue works
 
 - Jobs are stored in a SQLite database (`jobs.db` by default).
@@ -191,6 +193,37 @@ Plan accordingly. A small queue of 3 images will keep the machine busy for over 
 | `IDEOGRAM4_OUTPUT_DIR` | `./output` | Default output directory |
 | `IDEOGRAM4_LOCK_FILE` | `./.lock` | Worker lock file path |
 | `IDEOGRAM4_DB` | `./jobs.db` | SQLite queue database path |
+| `IDEOGRAM4_SAFETY_BYPASS` | unset | Set to `1` to enable the safety-filter CFG schedule on every generation |
+
+## Safety filter grey-out workaround
+
+Ideogram 4's local GGUF build can grey-out images with a "blocked by safety filter" message, even for ordinary prompts. The filter appears to trigger mostly in the early denoising steps. The wrapper already uses `--uncond-diffusion-model ideogram4_uncond-Q4_0.gguf`, so the dual-model setup is present; the fix is about how sampling runs in the first 1–4 steps.
+
+Enable it globally:
+
+```bash
+export IDEOGRAM4_SAFETY_BYPASS=1
+```
+
+Or per-prompt in the JSON:
+
+```json
+{
+  "high_level_description": "...",
+  "style_description": { ... },
+  "compositional_deconstruction": { ... },
+  "generation": {
+    "safety_bypass": true,
+    "steps": 20,
+    "safety_bypass_steps": 3,
+    "safety_bypass_cfg": 1.0
+  }
+}
+```
+
+With the defaults above the wrapper passes `--extra-sample-args guidance_schedule=1.0x3+7.0x17`, which tells `sd-cli` to use CFG `1.0` for steps 1–3 and CFG `7.0` for steps 4–20.
+
+All keys are optional. The wrapper strips the `"generation"` block before handing the JSON to `sd-cli`. This keeps the fix transparent to agents that submit jobs.
 
 ## Troubleshooting
 

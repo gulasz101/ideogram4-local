@@ -52,6 +52,12 @@ SD_CLI = SD_CPP_DIR / "build" / "bin" / "sd-cli"
 
 DEFAULT_WIDTH = 1216
 DEFAULT_HEIGHT = 832
+DEFAULT_SAMPLE_STEPS = 20
+
+# Global kill-switch for the Ideogram 4 safety-filter workaround.
+# Set IDEOGRAM4_SAFETY_BYPASS=1 to make every generation use a low-CFG
+# guidance schedule for the first few denoising steps.
+DEFAULT_SAFETY_BYPASS = os.environ.get("IDEOGRAM4_SAFETY_BYPASS", "").lower() in ("1", "true", "yes")
 
 MODEL_URLS = {
     "ideogram4-Q4_0.gguf": "https://huggingface.co/leejet/ideogram-4-GGUF/resolve/main/ideogram4-Q4_0.gguf",
@@ -326,8 +332,77 @@ class QueueLock:
 def build_prompt(prompt_type: str, prompt_value: str) -> str:
     if prompt_type == "json":
         data = json.loads(prompt_value)
+        # Strip the internal "generation" config block before handing the
+        # structured prompt to sd-cli; it is metadata for the wrapper only.
+        data.pop("generation", None)
         return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
     return prompt_value.strip()
+
+
+def parse_generation_config(prompt_type: str, prompt_value: str) -> dict:
+    """Extract wrapper-only generation options from JSON prompts.
+
+    Supported JSON shape (all optional):
+
+        {
+          ...normal Ideogram 4 prompt fields...,
+          "generation": {
+            "safety_bypass": true,
+            "safety_bypass_steps": 3,
+            "safety_bypass_cfg": 1.0,
+            "guidance_schedule": "1.0x3+7.0x17",
+            "steps": 20
+          }
+        }
+
+    For plain text prompts, only the env var defaults apply.
+    """
+    config: dict = {
+        "safety_bypass": DEFAULT_SAFETY_BYPASS,
+        "safety_bypass_steps": 3,
+        "safety_bypass_cfg": 1.0,
+        "guidance_schedule": None,
+        "steps": DEFAULT_SAMPLE_STEPS,
+    }
+
+    if prompt_type == "json":
+        try:
+            data = json.loads(prompt_value)
+        except json.JSONDecodeError:
+            return config
+        gen = data.get("generation", {})
+        if "safety_bypass" in gen:
+            config["safety_bypass"] = bool(gen["safety_bypass"])
+        config["safety_bypass_steps"] = int(gen.get("safety_bypass_steps", config["safety_bypass_steps"]))
+        config["safety_bypass_cfg"] = float(gen.get("safety_bypass_cfg", config["safety_bypass_cfg"]))
+        if "guidance_schedule" in gen:
+            config["guidance_schedule"] = str(gen["guidance_schedule"])
+        if "steps" in gen:
+            config["steps"] = int(gen["steps"])
+
+    return config
+
+
+def build_guidance_schedule(config: dict) -> Optional[str]:
+    """Return an --extra-sample-args guidance_schedule string if safety bypass is enabled."""
+    if not config.get("safety_bypass"):
+        return None
+
+    # Respect an explicit schedule if the user provided one.
+    explicit = config.get("guidance_schedule")
+    if explicit:
+        return str(explicit)
+
+    total_steps = max(1, int(config.get("steps", DEFAULT_SAMPLE_STEPS)))
+    bypass_steps = max(0, min(total_steps - 1, int(config.get("safety_bypass_steps", 3))))
+    remaining = total_steps - bypass_steps
+    bypass_cfg = float(config.get("safety_bypass_cfg", 1.0))
+    normal_cfg = 7.0  # sd-cli default for Ideogram4-style CFG
+
+    if bypass_steps <= 0:
+        return None
+
+    return f"{bypass_cfg}x{bypass_steps}+{normal_cfg}x{remaining}"
 
 
 def generate(
@@ -349,6 +424,9 @@ def generate(
 
     models = ensure_models()
     prompt = build_prompt(prompt_type, prompt_value)
+    gen_config = parse_generation_config(prompt_type, prompt_value)
+    guidance_schedule = build_guidance_schedule(gen_config)
+    sample_steps = int(gen_config.get("steps", DEFAULT_SAMPLE_STEPS))
 
     cmd = [
         str(SD_CLI),
@@ -360,13 +438,18 @@ def generate(
         "-o", str(output),
         "-W", str(width),
         "-H", str(height),
+        "--steps", str(sample_steps),
         "--offload-to-cpu",
         "--diffusion-fa",
     ]
+    if guidance_schedule:
+        cmd.extend(["--extra-sample-args", f"guidance_schedule={guidance_schedule}"])
+        log(f"Safety bypass enabled: guidance_schedule={guidance_schedule}")
+
     if verbose:
         cmd.append("-v")
 
-    log(f"Running generation ({width}x{height})...")
+    log(f"Running generation ({width}x{height}, steps={sample_steps})...")
     log("This will take several minutes on CPU-only M1 Max.")
 
     result = subprocess.run(cmd)
