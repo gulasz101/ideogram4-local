@@ -1,0 +1,24 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama and Dr. Slump. A chibi mechanic in an orange jumpsuit stands on the left, holding a large red eviction notice paper. On the right, a sad Google Photos pin icon character looks at the notice with a worried expression. Between them, a happy blue Nextcloud cloud icon character holds open arms welcoming a stream of colorful photos flowing toward it. The photos flow from the Google Photos pin toward the Nextcloud cloud. The scene represents evicting photos from Google Photos and migrating them to Nextcloud. Cel-shaded, vibrant, playful, safe for a technology blog illustration.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive faces, playful tech illustration, clean technology blog illustration, no photorealism, no 3D render",
+    "lighting": "Bright daylight. Warm orange glow from the eviction notice on the left. Cool blue glow from the Nextcloud cloud on the right. Dramatic but playful contrast. Determined and hopeful mood.",
+    "photo": "Medium shot, all elements clearly visible and readable, crisp linework, flat cel shading with subtle gradients",
+    "medium": "digital anime illustration, vector-like clean coloring, bold outlines, technology blog illustration art",
+    "color_palette": ["#FF6B00", "#00D4FF", "#1E293B", "#F8FAFC", "#64748B", "#FBBF24"]
+  },
+  "compositional_deconstruction": {
+    "canvas": "Wide 1216 x 832 landscape canvas. Normal upright orientation. The left 35% contains the mechanic with the eviction notice. The center 30% contains flowing photos. The right 35% contains the Nextcloud cloud welcoming them. Leave top 15% relatively open.",
+    "background": "A clean outdoor scene with a simple blue sky and fluffy white clouds. A green grassy hill below. Clean and uncluttered to emphasize the migration metaphor.",
+    "layout": "Left: chibi mechanic with eviction notice. Center: colorful photo thumbnails flowing from left to right. Right: Nextcloud cloud character welcoming photos, with sad Google Photos pin behind it.",
+    "elements": [
+      {"type": "obj", "desc": "A chibi mechanic standing on the left side. He has brown spiky hair, round glasses, a small goatee, and wears an orange jumpsuit with a blue cap. He holds a large red eviction notice paper in both hands, presenting it forward. His expression is determined and serious but not angry. The paper has bold red text on it."},
+      {"type": "obj", "desc": "A small sad Google Photos pin icon character standing near the center-left. It is a colorful pin shape with the Google Photos flower-like circle logo as its face. It looks worried and deflated, with small sweat drops. It is being pushed away by the eviction notice."},
+      {"type": "obj", "desc": "A stream of colorful photo thumbnails flowing horizontally across the center of the image from left to right. The photos are small rectangles showing various scenes: landscapes, people, sunsets, beaches. They flow like a river of images from the Google Photos pin toward the Nextcloud cloud."},
+      {"type": "obj", "desc": "A happy blue Nextcloud cloud icon character on the right side. The cloud has a friendly smiling face with two small dots for eyes. It holds its arms open welcoming the stream of photos. The cloud has a subtle blue glow and a small Nextcloud logo (three interconnected dots) on its chest."},
+      {"type": "obj", "desc": "A small chibi MinIO parrot mascot sitting on the ground below the Nextcloud cloud, holding a large gray S3 bucket labeled nextcloud-photos. The parrot looks ready to receive the incoming photos into the bucket."},
+      {"type": "text", "desc": "The exact text EVICTION NOTICE in bold red sans-serif letters on the paper the mechanic is holding. Perfectly readable, horizontal, front-facing."},
+      {"type": "text", "desc": "The exact text 400GB in clean bold orange sans-serif letters floating above the stream of photos in the center. Perfectly readable, horizontal, front-facing."}
+    ]
+  }
+}

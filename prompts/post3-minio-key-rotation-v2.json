@@ -1,0 +1,21 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama and Dr. Slump. A chibi mechanic in an orange jumpsuit kneels in front of a friendly blue MinIO parrot mascot, presenting a new golden key card with both hands. On the ground to the left, an old cracked key card is fading away with a red X over it. Behind them on a wooden shelf sits a small green glowing safe with an age lock symbol. The scene represents rotating stale MinIO credentials and updating the SOPS-encrypted secret. Cel-shaded, vibrant, playful, safe for a technology blog illustration.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive faces, playful tech illustration, clean technology blog illustration, no photorealism, no 3D render",
+    "lighting": "Bright indoor lighting with warm golden glow from the new key card, blue glow from the MinIO parrot, and a soft green glow from the safe. Focused and resolved mood.",
+    "medium": "illustration",
+    "art_style": "digital anime illustration, vector-like clean coloring, bold outlines, cel-shaded, flat coloring with subtle gradients, no photorealism, no 3D render",
+    "color_palette": ["#FF6B00", "#00D4FF", "#1E293B", "#F8FAFC", "#64748B", "#FBBF24"]
+  },
+  "compositional_deconstruction": {
+    "background": "A clean workshop interior with light gray walls. A wooden shelf in the background holds a small glowing safe. Minimal and uncluttered.",
+    "elements": [
+      {"type": "obj", "desc": "A chibi mechanic kneeling on the workshop floor. He has brown spiky hair, round glasses, a small goatee, and wears an orange jumpsuit with a blue cap. He is presenting a glowing golden key card with both hands, offering it to the MinIO parrot. His expression is relieved and satisfied with a small smile."},
+      {"type": "obj", "desc": "A chibi MinIO parrot mascot standing on the floor, orange and red colored with a friendly expression. The parrot holds out one wing to accept the new golden key card. The parrot looks happy with a small smile."},
+      {"type": "obj", "desc": "An old cracked key card lying on the ground to the left of the mechanic. It is grey and fading with a large red X mark over it. Small orange particles drift off it as it disintegrates."},
+      {"type": "obj", "desc": "A small green glowing safe on a wooden shelf in the background. The safe has a stylized key icon on its front and looks secure and well-maintained."},
+      {"type": "text", "text": "SignatureDoesNotMatch", "desc": "The exact text SignatureDoesNotMatch in clean monospace letters, appearing as a faded red error message floating above the old cracked key card on the ground. Perfectly readable, horizontal, front-facing."},
+      {"type": "text", "text": "SOPS", "desc": "The exact text SOPS in clean uppercase sans-serif letters on a small label on the green safe. Perfectly readable, horizontal, front-facing."}
+    ]
+  }
+}

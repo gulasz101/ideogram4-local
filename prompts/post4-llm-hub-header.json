@@ -1,0 +1,57 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama and Dr. Slump. A chibi mechanic in an orange jumpsuit stands in the center of a bright workshop, proudly presenting a glowing AI gateway hub. On his left, a small black server rack labeled LiteLLM with a glowing blue crystal on top, emitting data streams. On his right, a sleek chat interface panel labeled Open WebUI with a speech bubble logo. Above both, a large glowing orange Cloudflare shield hovers protectively. Nine small bug creatures with angry faces are scattered on the floor around the mechanic's feet, each one being stomped or flicked away. The scene represents building a self-hosted LLM traffic hub and fighting nine deployment bugs. Cel-shaded, vibrant, playful, safe for a technology blog header.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive faces, heroic tech-builder moment, clean technology blog header illustration, no photorealism, no 3D render",
+    "lighting": "Bright workshop lighting with warm overhead lamps, blue glow from the LiteLLM crystal, orange glow from the Cloudflare shield, energetic and triumphant mood with soft volumetric light rays",
+    "photo": "Wide shot from a slight low angle to make the mechanic heroic, depth of field keeping the server rack and chat panel readable, crisp linework, flat cel shading with subtle gradients",
+    "medium": "digital anime illustration, vector-like clean coloring, bold outlines, technology blog header art",
+    "color_palette": ["#FF6B00", "#00D4FF", "#1E293B", "#F8FAFC", "#64748B", "#FBBF24", "#EF4444"]
+  },
+  "compositional_deconstruction": {
+    "canvas": "Wide 1216 x 832 landscape canvas. Normal upright orientation. The center contains the chibi mechanic with the two server elements on either side. The Cloudflare shield floats above. Bug creatures scatter on the floor. Leave the top 20% relatively open for blog title overlay.",
+    "background": "A bright high-tech workshop interior with clean white walls, tool racks on the back wall, and a large window showing blue sky. Warm overhead lamp lighting. Clean and organized but with a few scattered tools and parts on the workbench to suggest active work.",
+    "layout": "Center foreground: chibi mechanic presenting the hub. Left midground: LiteLLM server rack with crystal. Right midground: Open WebUI chat panel. Top center: Cloudflare shield. Floor foreground: nine bug creatures being defeated. The composition leads the eye from the bugs up to the mechanic and outward to the two services and up to the shield.",
+    "elements": [
+      {
+        "type": "obj",
+        "desc": "A chibi mechanic standing in the center of the workshop, arms outstretched in a proud presenting pose. He has brown spiky hair, round glasses, a small goatee, and wears an orange jumpsuit with a blue cap featuring a white wrench emblem. His expression is a confident grin with one eye slightly squinted. He looks like he just won a hard battle."
+      },
+      {
+        "type": "obj",
+        "desc": "A small black server rack on the left side of the mechanic, about waist height. It has glowing cyan LED lights along the front and a small clean sign reading LiteLLM in white sans-serif text. On top of the rack sits a glowing blue crystal orb that emits flowing data stream particles upward, representing the AI gateway proxy function. The rack looks active and healthy."
+      },
+      {
+        "type": "obj",
+        "desc": "A sleek floating chat interface panel on the right side of the mechanic, about waist height. It looks like a futuristic tablet displaying a chat conversation with colorful speech bubbles. A small clean sign reads Open WebUI in white sans-serif text. A white chat speech bubble logo with three dots floats above the panel, representing the Open WebUI brand. The panel has a thin cyan outline and glows softly."
+      },
+      {
+        "type": "obj",
+        "desc": "A large glowing orange cloud-shaped shield icon hovering above and behind the mechanic and the two server elements, representing Cloudflare Tunnel protection. The shield has a subtle hexagonal pattern and radiates warm orange light downward over the entire hub setup."
+      },
+      {
+        "type": "obj",
+        "desc": "Nine small chibi bug creatures scattered on the workshop floor around the mechanic's feet. Each bug is about ankle height, round-bodied with tiny legs, angry eyebrows, and a grumpy expression. Some are being stomped flat, others are being flicked away by small energy sparks. Each bug has a tiny number 1 through 9 on its back. They represent the nine deployment bugs encountered. They look comical and defeated, not menacing."
+      },
+      {
+        "type": "obj",
+        "desc": "Thin glowing data stream lines flowing from the LiteLLM crystal up and outward, connecting to both the Open WebUI panel and disappearing into the Cloudflare shield above. The streams are cyan and orange, suggesting AI traffic flowing through the gateway."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text LiteLLM in clean white sans-serif letters on the sign attached to the black server rack. Perfectly readable, horizontal, and front-facing."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text Open WebUI in clean white sans-serif letters on the sign attached to the chat panel. Perfectly readable, horizontal, and front-facing."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text llm.voitech.dev in small clean cyan sans-serif letters, appearing as a glowing label above the LiteLLM rack. Perfectly readable, horizontal, and front-facing."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text ai-chat.voitech.dev in small clean cyan sans-serif letters, appearing as a glowing label above the Open WebUI panel. Perfectly readable, horizontal, and front-facing."
+      }
+    ]
+  }
+}

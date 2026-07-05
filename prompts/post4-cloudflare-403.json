@@ -1,0 +1,43 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama and Dr. Slump. A chibi mechanic in an orange jumpsuit with a blue cap stands before a giant orange cloud-shaped shield blocking a doorway. The cloud shield has the Cloudflare logo style — an orange cloud with a shield outline. The mechanic is confused, holding a broken keycard in one hand and scratching his head with the other. Behind the shield, a server rack glows invitingly but is unreachable. A red 403 error symbol floats in the air between the mechanic and the cloud. The scene represents the Cloudflare 403 block on the OpenAI User-Agent. Cel-shaded, vibrant, playful, safe for a technology blog.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive confused face, clean technology blog illustration, no photorealism, no 3D render",
+    "lighting": "Warm orange glow emanating from the cloud shield, cool blue ambient light from behind the shield where the server rack sits, dramatic contrast between the blocked foreground and the inviting background",
+    "medium": "digital anime illustration, vector-like clean coloring, bold outlines, technology blog inline art",
+    "art_style": "Akira Toriyama cel-shaded anime, Dr. Slump chibi proportions, Dragon Ball style bold linework",
+    "color_palette": ["#FF6B00", "#00D4FF", "#1E293B", "#F8FAFC", "#EF4444", "#FBBF24"]
+  },
+  "compositional_deconstruction": {
+    "background": "A clean corridor or hallway leading to a server room. The walls are light gray. The floor has subtle grid tiles. In the far background behind the cloud shield, a black server rack with cyan LEDs is visible but partially obscured by the glowing orange barrier. The space is clean and uncluttered.",
+    "elements": [
+      {
+        "type": "obj",
+        "desc": "A chibi mechanic standing in the foreground, facing right toward the cloud shield. He has brown spiky hair, round glasses, a small goatee, and wears an orange jumpsuit with a blue cap featuring a white wrench emblem. His expression is confused — one eyebrow raised, mouth slightly open, scratching the back of his head with one hand. In his other hand he holds a broken or rejected keycard that has a small crack symbol on it."
+      },
+      {
+        "type": "obj",
+        "desc": "A large glowing orange cloud-shaped shield filling the center of the corridor, blocking the path to the server rack. The cloud is stylized like the Cloudflare logo — a fluffy orange cloud shape with a subtle shield outline around it. The shield radiates warm orange light outward. It is semi-translucent, allowing a glimpse of the server rack behind it."
+      },
+      {
+        "type": "obj",
+        "desc": "A large red circle with the number 403 in bold white sans-serif digits floating in the air between the mechanic and the cloud shield. The circle has a red border and a subtle drop shadow, looking like an error status badge. It glows slightly red."
+      },
+      {
+        "type": "obj",
+        "desc": "A small text label or tag floating near the mechanic's hand showing the text OpenAI/Python in monospace gray letters with a red strike-through line across it, suggesting the blocked User-Agent."
+      },
+      {
+        "type": "obj",
+        "desc": "Behind the cloud shield in the far background, a black server rack shorter than the cloud, with glowing cyan LED strips. A small white sign on the rack reads llm.voitech.dev but is partially obscured by the cloud's glow."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text 403 in large bold white sans-serif digits inside a red circular badge floating in the air. Perfectly readable, horizontal, front-facing."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text OpenAI/Python in small monospace gray letters with a red diagonal strike-through line crossing over it. The text is a small floating label near the mechanic's hand."
+      }
+    ]
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama. A chibi mechanic in an orange jumpsuit is operating a small forklift to swap out old server boxes labeled with crossed-out Grafana and Tempo logos, replacing them with shiny new boxes bearing the grafana-community logo. Around him, glowing log streams flow from a Loki server into a MinIO S3 bucket. The scene is cel-shaded, vibrant, playful, and safe for a technology blog header about a forklift upgrade of an observability stack.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive comedic faces, playful technology blog illustration, no photorealism, no 3D render",
+    "lighting": "Bright workshop lighting with warm overhead lamps, soft shadows, cyan and orange glow from server LEDs and log streams, energetic cheerful mood",
+    "medium": "digital anime illustration, vector-like clean coloring, bold outlines, technology blog header art",
+    "art_style": "Akira Toriyama, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon",
+    "color_palette": ["#FF6B00", "#00D4FF", "#1E293B", "#F8FAFC", "#FBBF24", "#F4682E"]
+  },
+  "compositional_deconstruction": {
+    "background": "A clean homelab workshop with a light gray concrete floor and soft gray walls. Server racks line the back wall with blinking LED lights. Floating holographic log streams in orange and cyan drift through the air. A bright open sky is visible through a large workshop window. The top 20 percent of the image is relatively open for a blog title overlay.",
+    "elements": [
+      {
+        "type": "obj",
+        "desc": "A short chubby chibi human mechanic standing on the left, operating a small orange forklift. He has brown spiky hair, round glasses, a goatee, and wears an orange jumpsuit with a blue cap. He has a big confident grin. The forklift is lifting a shiny new black server box."
+      },
+      {
+        "type": "obj",
+        "desc": "An old dusty beige server box on the floor being pushed away by the forklift. It has a crossed-out circular Grafana logo sticker and a crossed-out Tempo logo sticker. It looks deprecated and sad with dim red LEDs."
+      },
+      {
+        "type": "obj",
+        "desc": "A shiny new black server box being carried by the forklift on the right side. It has bright cyan glowing LEDs and a clean orange circular grafana-community logo on its front panel. It looks powerful and fresh."
+      },
+      {
+        "type": "obj",
+        "desc": "A small Toriyama-style green serpent dragon character coiled around a server rack in the background, blowing a stream of glowing orange log entries from its mouth toward a large bucket-shaped MinIO server on the right. The log entries look like small rectangular pieces of paper with text lines."
+      },
+      {
+        "type": "obj",
+        "desc": "A large white MinIO server box on the right side shaped like a friendly industrial storage container. It has the MinIO logo on its front and two bucket openings labeled loki-chunks and loki-ruler. Glowing orange log entries are flowing into the bucket openings."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text grafana-community in clean lowercase sans-serif letters on a small white sign on the new black server box. Horizontal and front-facing.",
+        "text": "grafana-community"
+      },
+      {
+        "type": "text",
+        "desc": "The exact text MinIO in clean sans-serif letters on the front of the white storage server. Horizontal and front-facing.",
+        "text": "MinIO"
+      },
+      {
+        "type": "text",
+        "desc": "The exact text loki-chunks in small clean sans-serif letters above one bucket opening on the MinIO server. Horizontal.",
+        "text": "loki-chunks"
+      }
+    ]
+  }
+}

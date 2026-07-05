@@ -1,0 +1,50 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama. A chibi mechanic is setting up a small docs-mcp server box on a workbench, connecting it with a cable to a friendly round Ollama robot that is stamping embedding vectors onto documents. A small green serpent dragon watches from a shelf. The scene is about deploying a local documentation MCP server with in-cluster embeddings. Cel-shaded, vibrant, and playful.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive friendly faces, playful technology blog illustration, no photorealism, no 3D render",
+    "lighting": "Warm focused desk lamp lighting on the workbench, soft cyan glow from the server LEDs, green glow from embedding vectors, cozy workshop mood",
+    "medium": "digital anime illustration, vector-like clean coloring, bold outlines, technology blog inline art",
+    "art_style": "Akira Toriyama, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon",
+    "color_palette": ["#FF6B00", "#00D4FF", "#1E293B", "#F8FAFC", "#22C55E", "#FBBF24"]
+  },
+  "compositional_deconstruction": {
+    "background": "A cozy homelab workshop corner with a wooden workbench. Shelves behind hold stacks of documents and manuals. A warm desk lamp illuminates the workbench. Floating green embedding vector arrows drift between a robot and a server. Soft gray walls with small tool outlines.",
+    "elements": [
+      {
+        "type": "obj",
+        "desc": "A short chubby chibi human mechanic standing behind the workbench. He has brown spiky hair, round glasses, a goatee, and wears an orange jumpsuit with a blue cap. He is plugging a cyan network cable into a small black server box with a satisfied smile. He holds a screwdriver in his other hand."
+      },
+      {
+        "type": "obj",
+        "desc": "A small black server box on the workbench labeled docs-mcp on its front panel. It has a small screen showing an SSE endpoint icon and glowing cyan LEDs. A port labeled 6280 is visible on its side where the cable connects."
+      },
+      {
+        "type": "obj",
+        "desc": "A friendly round Toriyama-style robot on the right side of the workbench, representing Ollama. It has a round white body, a single large cyclops eye, stubby arms, and a small antenna. It is stamping green embedding vector symbols onto small rectangular document cards with a rubber stamp. The robot has a cheerful expression. A small label on its chest reads nomic-embed-text."
+      },
+      {
+        "type": "obj",
+        "desc": "Several small rectangular document cards on the workbench, each showing lines of text. Some have green embedding vector arrows floating above them, showing they have been processed by the robot. The arrows look like small green bracketed number sequences."
+      },
+      {
+        "type": "obj",
+        "desc": "A small green and orange Toriyama-style serpent dragon coiled on a shelf in the background, watching the setup with curious friendly eyes. It represents the Loki mascot observing the new service."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text docs-mcp in clean lowercase sans-serif letters on the front panel of the small black server box. Horizontal and front-facing.",
+        "text": "docs-mcp"
+      },
+      {
+        "type": "text",
+        "desc": "The exact text nomic-embed-text in small clean sans-serif letters on a label on the round robot's chest. Horizontal and front-facing.",
+        "text": "nomic-embed-text"
+      },
+      {
+        "type": "text",
+        "desc": "The exact text 6280 in small clean sans-serif letters next to the port on the server box. Horizontal.",
+        "text": "6280"
+      }
+    ]
+  }
+}

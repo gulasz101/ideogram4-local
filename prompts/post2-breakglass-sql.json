@@ -1,0 +1,41 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama and Dr. Slump. A chibi mechanic wearing safety goggles is using a large screwdriver to pry open a glowing blue Postgres elephant logo, as if cracking it open like a safe. Next to him, a small MinIO parrot mascot holds an S3 bucket labeled mattermost-files. The scene represents a break-glass database fix, editing a config row directly. Cel-shaded, vibrant, playful, safe for a technology blog illustration.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive faces, concentrated mechanic at work, playful tech illustration, clean technology blog illustration, no photorealism, no 3D render",
+    "lighting": "Bright workshop lighting with a cool blue glow from the Postgres elephant and a warm orange glow from the screwdriver sparks. Soft shadows. Focused and determined mood with a touch of humor.",
+    "photo": "Medium shot from a slight high angle, the mechanic and the Postgres elephant both clearly visible, crisp linework, flat cel shading with subtle gradients",
+    "medium": "digital anime illustration, vector-like clean coloring, bold outlines, technology blog illustration art",
+    "color_palette": ["#FF6B00", "#00D4FF", "#1E293B", "#F8FAFC", "#64748B", "#FBBF24"]
+  },
+  "compositional_deconstruction": {
+    "canvas": "Wide 1216 x 832 landscape canvas. Normal upright orientation. The left 55% contains the mechanic and the Postgres elephant. The right 40% contains the MinIO parrot with the S3 bucket. Leave the top 15% relatively open.",
+    "background": "A clean workshop floor with light gray concrete. A few scattered SQL command text fragments float in the air as small glowing letters. Simple gray walls with a few tool outlines. Minimal and uncluttered.",
+    "layout": "Left center: mechanic with safety goggles prying open the Postgres elephant with a screwdriver. Right center: MinIO parrot holding an S3 bucket. Floating SQL fragments in the background air.",
+    "elements": [
+      {
+        "type": "obj",
+        "desc": "A chibi mechanic wearing clear safety goggles over his round glasses, brown spiky hair, small goatee, orange jumpsuit with blue cap. He is leaning forward and using both hands to push a large silver screwdriver into the seam of a giant glowing blue elephant logo, as if prying it open like a safe door. His expression is intensely focused with gritted teeth. Small orange spark particles fly from where the screwdriver meets the elephant."
+      },
+      {
+        "type": "obj",
+        "desc": "A large glowing blue elephant logo, the PostgreSQL mascot. It is rendered as a 3D-ish object in the cel-shaded style, with a visible seam or door panel on its side that the mechanic is prying open. Inside the crack, bright blue light and small JSON text fragments are visible, suggesting database config rows. The elephant looks surprised but not harmed."
+      },
+      {
+        "type": "obj",
+        "desc": "A small chibi MinIO parrot mascot on the right side, standing on the floor. The parrot is orange and red colored with a friendly expression. It holds a small gray S3 bucket in its wings. The bucket has a small white label reading mattermost-files. The parrot looks expectantly toward the mechanic, waiting for the fix."
+      },
+      {
+        "type": "obj",
+        "desc": "Small floating glowing text fragments in the air around the mechanic, showing SQL keywords like UPDATE, jsonb_set, and WHERE in small monospace letters with a blue glow. They drift slowly upward like thought bubbles."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text break-glass in clean lowercase sans-serif letters on a small orange warning triangle sign near the mechanic's feet. Perfectly readable, horizontal, front-facing."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text mattermost-files in clean lowercase sans-serif letters on the white label of the S3 bucket held by the parrot. Perfectly readable, horizontal, front-facing."
+      }
+    ]
+  }
+}

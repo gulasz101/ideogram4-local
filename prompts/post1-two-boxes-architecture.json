@@ -1,0 +1,45 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama and Dr. Slump. Two chibi mechanics in orange jumpsuits stand proudly on either side of two distinct computer boxes on a workshop floor. The left box is a sleek modern black server labeled homelab-2nd with glowing cyan LED lights and Kubernetes wheel logo. The right box is a sturdy beige NAS tower labeled OMV with visible hard drive bays and a MinIO parrot logo sticker. Orange network cables connect the two boxes. The scene is cel-shaded, vibrant, playful, and safe for a technology blog illustration.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive faces, playful tech illustration, clean technology blog illustration, no photorealism, no 3D render",
+    "lighting": "Bright workshop lighting with warm overhead lamps, soft shadows under the characters and machines, cyan glow from server LEDs, orange accent glow from network cables, cheerful and energetic mood",
+    "photo": "Wide shot at eye level, both boxes and characters fully visible and readable, crisp linework, flat cel shading with subtle gradients",
+    "medium": "digital anime illustration, vector-like clean coloring, bold outlines, technology blog illustration art",
+    "color_palette": ["#FF6B00", "#00D4FF", "#1E293B", "#F8FAFC", "#64748B", "#FBBF24"]
+  },
+  "compositional_decomposition": {
+    "canvas": "Wide 1216 x 832 landscape canvas. Normal upright orientation. Two boxes sit side by side in the center. Characters flank them on the outside edges. Leave the top 15% relatively open.",
+    "background": "A clean garage workshop with a light gray concrete floor, simple gray walls, and a few shelves with tools in the far background. Minimal and uncluttered.",
+    "layout": "Left third: homelab-2nd black server box with taller mechanic standing beside it. Center: orange network cables connecting the two boxes on the floor. Right third: OMV beige NAS box with shorter mechanic standing beside it.",
+    "elements": [
+      {
+        "type": "obj",
+        "desc": "A sleek black modern server tower on the left side, clearly labeled homelab-2nd on a small clean white sign. It has glowing cyan LED status lights in a vertical strip, and a small Kubernetes steering wheel logo glowing on its front panel. The box looks powerful and high-tech."
+      },
+      {
+        "type": "obj",
+        "desc": "A sturdy beige NAS tower on the right side, clearly labeled OMV on a small clean white sign. It has four visible hard drive bays with small green activity LEDs. A small orange and blue MinIO parrot logo sticker is on its front. The box looks reliable and heavy-duty."
+      },
+      {
+        "type": "obj",
+        "desc": "Two thick orange Ethernet cables running across the floor between the two boxes, connecting them. The cables have a slight arc as they cross the gap, suggesting active data flow."
+      },
+      {
+        "type": "obj",
+        "desc": "A tall thin chibi mechanic standing on the far left next to the homelab-2nd box. Brown spiky hair, round glasses, small goatee, orange jumpsuit, blue cap with white wrench emblem. He stands with arms crossed, looking proud and confident."
+      },
+      {
+        "type": "obj",
+        "desc": "A short chubby chibi mechanic standing on the far right next to the OMV box. Black hair under blue cap, round friendly face, small beard, same orange jumpsuit and blue cap. He gives a thumbs up with a big grin."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text homelab-2nd in clean lowercase sans-serif letters on a small white rectangular sign on the black server box. Perfectly readable, horizontal, front-facing."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text OMV in clean uppercase sans-serif letters on a small white rectangular sign on the beige NAS box. Perfectly readable, horizontal, front-facing."
+      }
+    ]
+  }
+}

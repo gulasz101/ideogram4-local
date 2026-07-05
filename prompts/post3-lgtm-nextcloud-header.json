@@ -1,0 +1,45 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama and Dr. Slump. A chibi engineer in an orange jumpsuit stands proudly in the center between two large displays. On the left, a glowing Grafana dashboard panel with Prometheus, Loki, and Tempo logos floating around it, showing colorful charts and graphs. On the right, a Nextcloud Photos gallery grid showing anime-style landscape photographs. Above everything, two Cloudflare orange cloud shield icons protect each display. A MinIO S3 bucket icon sits below connecting to both. The scene represents a homelab getting both observability and a self-hosted photo gallery on the same weekend. Cel-shaded, vibrant, playful, safe for a technology blog header.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive faces, triumphant and proud moment, clean technology blog header illustration, no photorealism, no 3D render",
+    "lighting": "Bright daylight studio lighting, warm golden glow from the left Grafana display, cool blue glow from the right Nextcloud display, orange glow from both Cloudflare shields above, energetic and accomplished mood",
+    "photo": "Wide shot centered on the character between the two displays, slight low angle to make the character heroic, depth of field keeping both displays readable, crisp linework, flat cel shading with subtle gradients",
+    "medium": "digital anime illustration, vector-like clean coloring, bold outlines, technology blog header art",
+    "color_palette": ["#FF6B00", "#00D4FF", "#1E293B", "#F8FAFC", "#FBBF24", "#22C55E", "#EF4444"]
+  },
+  "compositional_deconstruction": {
+    "canvas": "Wide 1216 x 832 landscape canvas. Normal upright orientation. The center contains the chibi engineer standing between two large display panels. Left display shows Grafana dashboards. Right display shows a photo gallery grid. Two Cloudflare shield icons float above each display. A MinIO bucket icon sits below center. Leave the top 15% relatively open for blog title overlay.",
+    "background": "A clean light blue sky with a few fluffy Toriyama-style rounded clouds. Below the horizon, a simple green grassy hill. The background is clean and uncluttered to keep focus on the technology displays.",
+    "layout": "Center foreground: chibi engineer standing proudly with arms slightly raised. Left midground: large Grafana dashboard display panel. Right midground: large Nextcloud photo gallery display panel. Upper left: Cloudflare shield over Grafana. Upper right: Cloudflare shield over Nextcloud. Lower center: MinIO S3 bucket icon connecting to both displays with thin glowing lines.",
+    "elements": [
+      {
+        "type": "obj",
+        "desc": "A chibi engineer standing in the center foreground, arms slightly raised in a proud accomplishment pose. He has brown spiky hair, round glasses, a small goatee, and wears an orange jumpsuit with a blue cap featuring a white wrench emblem. His expression is a happy grin with slightly closed eyes showing satisfaction. One hand rests on his hip, the other gestures outward presenting the two displays."
+      },
+      {
+        "type": "obj",
+        "desc": "A large rectangular dashboard display panel on the left side, floating slightly above the ground. The panel shows colorful Grafana-style line charts, bar graphs, and gauge meters in orange, cyan, and green. The Grafana logo (a orange and white spiral/leaf emblem) is displayed at the top of the panel. Small floating icons around the panel show the Prometheus flame logo (red/orange), the Loki horned helmet logo (yellow/black), and the Tempo logo (green and black wave). The panel has a dark navy background with glowing data visualizations."
+      },
+      {
+        "type": "obj",
+        "desc": "A large rectangular photo gallery display panel on the right side, floating slightly above the ground at the same height as the left panel. The panel shows a grid of 6 colorful anime-style landscape photographs - a sunset over mountains, a forest path, a lake reflection, a flower field, a city skyline at night, and a beach scene. The Nextcloud logo (a blue circle with three interconnected dots forming a cloud shape) is displayed at the top of the panel. The panel has a clean white background."
+      },
+      {
+        "type": "obj",
+        "desc": "Two large glowing orange cloud-shaped shield icons, one hovering above the Grafana display on the left and one above the Nextcloud display on the right. Each shield has a subtle hexagonal pattern and radiates warm orange light downward over its respective display. The shields represent Cloudflare Tunnel protection for each service."
+      },
+      {
+        "type": "obj",
+        "desc": "A blue and white MinIO S3 bucket icon sitting on the ground in the lower center between the two displays. The bucket has the MinIO flame/logo on its side. Thin glowing blue connection lines run from the bucket up to both display panels, showing that MinIO storage underlies both services. Small data packet dots travel along the lines."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text grafana.voitech.dev in clean lowercase sans-serif letters, appearing as a small label below the left dashboard panel. The text is white with an orange glow, perfectly readable, horizontal, and front-facing."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text nextcloud-photos.voitech.dev in clean lowercase sans-serif letters, appearing as a small label below the right photo gallery panel. The text is white with a blue glow, perfectly readable, horizontal, and front-facing."
+      }
+    ]
+  }
+}

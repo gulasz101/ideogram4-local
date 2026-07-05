@@ -1,0 +1,35 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama and Dr. Slump. Three chibi characters stand in a row on a workshop floor, each holding a glowing keycard with a different colored aura. The left character in an orange jumpsuit holds a yellow keycard glowing with the LiteLLM logo. The middle character in a blue jumpsuit holds a cyan keycard. The right character in a green jumpsuit holds a green keycard. Behind them, a large black server rack labeled llm.voitech.dev hums with activity, with multiple colored key slots on its front panel. The scene represents giving every AI agent its own dedicated API key. Cel-shaded, vibrant, playful, safe for a technology blog header.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive faces, triumphant team moment, clean technology blog header illustration, no photorealism, no 3D render",
+    "lighting": "Bright workshop lighting from above, warm glow from the keycards in each character's hand, cyan LED glow from the server rack, energetic and celebratory mood",
+    "medium": "digital anime illustration, vector-like clean coloring, bold outlines, technology blog header art",
+    "art_style": "Akira Toriyama cel-shaded anime, Dr. Slump chibi proportions, Dragon Ball style bold linework",
+    "color_palette": ["#FF6B00", "#00D4FF", "#1E293B", "#F8FAFC", "#64748B", "#FBBF24", "#22C55E"]
+  },
+  "compositional_deconstruction": {
+    "background": "A clean workshop interior with light gray walls and a concrete floor. Behind the characters, a large black server rack stands against the wall, taller than the characters, with glowing cyan LED strips and a clean white sign reading llm.voitech.dev. The rack has a panel of colored keycard slots on its front. The space is bright and uncluttered.",
+    "elements": [
+      {
+        "type": "obj",
+        "desc": "Three chibi characters standing in a row on the workshop floor. Left character: brown spiky hair, orange jumpsuit, blue cap, holding a yellow glowing keycard with both hands, big grin. Middle character: black hair, blue jumpsuit, no cap, holding a cyan glowing keycard, confident expression. Right character: blonde hair, green jumpsuit, holding a green glowing keycard, cheerful expression. All three are short and round in chibi proportions."
+      },
+      {
+        "type": "obj",
+        "desc": "A large black server rack behind the characters, taller than all of them. It has glowing cyan LED strips running vertically on both sides. On the front panel there is a row of five colored keycard slots — yellow, cyan, green, orange, and white — each slot glowing softly. A clean white rectangular sign near the top of the rack displays the text llm.voitech.dev."
+      },
+      {
+        "type": "obj",
+        "desc": "The LiteLLM logo — a simple geometric flame or spark icon in orange and yellow — appears as a small glowing emblem on the front of each keycard held by the three characters. The logo is clean and minimal."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text llm.voitech.dev in clean lowercase sans-serif letters on a white rectangular sign attached near the top of the black server rack. Perfectly readable, horizontal, front-facing."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text sk-... in small monospace letters faintly visible on each keycard, suggesting API key strings. The text is subtle and decorative, not the main focus."
+      }
+    ]
+  }
+}

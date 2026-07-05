@@ -1,0 +1,22 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama and Dr. Slump. A chibi mechanic in an orange jumpsuit sits at a computer terminal on the left, typing frantically. A glowing green SSH tunnel cable stretches from his computer across the illustration to a beige NAS box on the right labeled OMV. On top of the NAS box, three small monitoring devices have appeared: a node_exporter gauge, a Docker metrics counter, and a cadvisor eye. The mechanic is remotely installing sensors on the NAS via SSH. The scene represents bootstrapping observability on a non-Kubernetes host. Cel-shaded, vibrant, playful, safe for a technology blog illustration.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive faces, playful tech illustration, clean technology blog illustration, no photorealism, no 3D render",
+    "lighting": "Bright indoor lighting with green glow from the SSH tunnel cable, cyan glow from the computer screen, and warm amber glow from the NAS activity lights. Focused and productive mood.",
+    "photo": "Medium shot, all elements clearly visible and readable, crisp linework, flat cel shading with subtle gradients",
+    "medium": "digital anime illustration, vector-like clean coloring, bold outlines, technology blog illustration art",
+    "color_palette": ["#FF6B00", "#00D4FF", "#1E293B", "#F8FAFC", "#64748B", "#FBBF24"]
+  },
+  "compositional_deconstruction": {
+    "canvas": "Wide 1216 x 832 landscape canvas. Normal upright orientation. The left 40% contains the mechanic at his computer. The center 20% has the SSH tunnel cable stretching across. The right 40% contains the OMV NAS box with monitoring devices on top. Leave top 15% relatively open.",
+    "background": "A clean workshop interior with light gray walls. Network cables run along the back wall. Minimal and uncluttered.",
+    "layout": "Left: mechanic at computer terminal with green SSH cable. Center: SSH cable stretching across with data packets flowing. Right: beige OMV NAS box with three monitoring devices on top.",
+    "elements": [
+      {"type": "obj", "desc": "A chibi mechanic sitting at a computer desk on the left side. He has brown spiky hair, round glasses, a small goatee, and wears an orange jumpsuit with a blue cap. He is typing frantically on a keyboard with a focused expression, looking at a screen showing green terminal text. A green glowing cable emerges from the back of his computer."},
+      {"type": "obj", "desc": "A thick glowing green SSH tunnel cable stretching horizontally across the center of the image from the computer to the NAS box. Small green data packets travel along the cable from left to right. The cable has a subtle hexagonal pattern and pulses with energy."},
+      {"type": "obj", "desc": "A sturdy beige NAS box on the right side, clearly labeled OMV on a small white sign. It has four visible hard drive bays with small green activity LEDs. On top of the NAS box, three small monitoring devices have appeared, each glowing with a different color."},
+      {"type": "obj", "desc": "Three small monitoring devices on top of the OMV NAS. Left: a small node_exporter gauge with a needle pointing to green, labeled :9100. Center: a small Docker whale logo counter with a number display, labeled :9323. Right: a small cadvisor eye symbol that is open and watching, labeled :8080. All three glow with activity."},
+      {"type": "text", "desc": "The exact text ssh root@openmediavault.local in clean monospace letters on the computer screen. Perfectly readable, horizontal, front-facing."}
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama and Dr. Slump. Three chibi mechanics in orange jumpsuits are each trying a different approach to store a Nextcloud cloud icon. The left one holds an emptyDir RAM disk that dissolves into nothing with a panicked expression. The center one struggles with a heavy NFS storage box connected by a thick cable, looking exhausted. The right one stands proudly next to a sleek black k3s server with cyan LEDs and a blue MinIO parrot holding an S3 bucket, looking triumphant. The scene represents three iterations to get Nextcloud persistence right. Cel-shaded, vibrant, playful, safe for a technology blog illustration.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive faces showing panic, exhaustion, and triumph, playful tech illustration, clean technology blog illustration, no photorealism, no 3D render",
+    "lighting": "Bright indoor lighting with warm overhead lamps, soft shadows, cyan glow from screens and server LEDs, energetic and focused mood",
+    "photo": "Medium shot, all elements clearly visible and readable, crisp linework, flat cel shading with subtle gradients",
+    "medium": "digital anime illustration, vector-like clean coloring, bold outlines, technology blog illustration art",
+    "color_palette": ["#FF6B00", "#00D4FF", "#1E293B", "#F8FAFC", "#64748B", "#FBBF24"]
+  },
+  "compositional_deconstruction": {
+    "canvas": "Wide 1216 x 832 landscape canvas. Normal upright orientation. Three panels side by side, each taking roughly one third of the width. Leave top 15% relatively open.",
+    "background": "A clean workshop floor with light gray concrete. Simple gray walls. Minimal and uncluttered.",
+    "layout": "Left third: mechanic with dissolving emptyDir. Center third: mechanic struggling with heavy NFS box. Right third: triumphant mechanic with k3s server and MinIO parrot.",
+    "elements": [
+      {"type": "obj", "desc": "Left panel: A chibi mechanic with brown spiky hair and round glasses in an orange jumpsuit, holding a glowing translucent disk that is dissolving into orange particles like the Thanos snap. His expression is panicked with wide eyes and mouth open. A small Nextcloud cloud icon was on the disk but is fading away. His hands are clutching at the disappearing disk."},
+      {"type": "obj", "desc": "Center panel: A chibi mechanic with brown spiky hair in an orange jumpsuit, sweating and straining to push a heavy beige NAS box connected by a thick orange Ethernet cable. The NAS box is labeled NFS on a small sign. The cable is taut and the mechanic looks exhausted with sweat drops flying. A small clock showing 30min is above him."},
+      {"type": "obj", "desc": "Right panel: A chibi mechanic with brown spiky hair, round glasses, and a small goatee in an orange jumpsuit, standing proudly with arms crossed next to a sleek black k3s server tower with glowing cyan LEDs. The server is labeled local-path on a small sign. Next to the server stands a small chibi MinIO parrot mascot holding a blue S3 bucket labeled nextcloud-photos. The mechanic has a big triumphant grin."},
+      {"type": "text", "desc": "Small text labels above each panel. Left: emptyDir in red. Center: NFS in yellow. Right: local-path + S3 in green. All in clean sans-serif letters, perfectly readable, horizontal."},
+      {"type": "text", "desc": "The exact text Persistence Rabbit Hole in clean lowercase sans-serif letters at the top center of the image. Perfectly readable, horizontal, front-facing."}
+    ]
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama and Dr. Slump. A chibi mechanic in an orange jumpsuit stands on a small hill, triumphantly flipping a giant red ON/OFF switch from OFF to ON. Behind him, a glowing Cloudflare orange cloud shield icon hovers protectively over a server rack. A Mattermost chat speech bubble logo appears in the sky. The scene represents the moment a private chat service goes public for the first time. Cel-shaded, vibrant, playful, safe for a technology blog header.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive faces, triumphant launch moment, clean technology blog header illustration, no photorealism, no 3D render",
+    "lighting": "Dramatic sunrise lighting from behind the hill, warm golden rays, cyan glow from the server rack LEDs, orange glow from the Cloudflare shield, energetic and celebratory mood",
+    "photo": "Wide shot from a slight low angle to make the switch and character heroic, depth of field keeping the background shield and rack readable, crisp linework, flat cel shading with subtle gradients",
+    "medium": "digital anime illustration, vector-like clean coloring, bold outlines, technology blog header art",
+    "color_palette": ["#FF6B00", "#00D4FF", "#1E293B", "#F8FAFC", "#64748B", "#FBBF24"]
+  },
+  "compositional_deconstruction": {
+    "canvas": "Wide 1216 x 832 landscape canvas. Normal upright orientation. The center-left contains the mechanic and the giant switch. The right side has the server rack under the Cloudflare shield. The upper right has the Mattermost speech bubble. Leave the top 20% relatively open for blog title overlay.",
+    "background": "A bright sky at sunrise with warm orange and cyan gradient clouds. Below the horizon, a simple green hill with a few rocks. In the far background, a faint city skyline silhouette. Clean and uncluttered.",
+    "layout": "Center-left foreground: chibi mechanic flipping the giant switch. Center-right: server rack with Cloudflare shield above it. Upper right: Mattermost logo speech bubble. The composition leads the eye from the switch action to the protected server and up to the chat logo.",
+    "elements": [
+      {
+        "type": "obj",
+        "desc": "A chibi mechanic standing on the hill, dramatically pulling down a giant lever on a large red switch box. He has brown spiky hair, round glasses, a small goatee, and wears an orange jumpsuit with a blue cap featuring a white wrench emblem. His expression is a triumphant shout with wide eyes and a big grin. One foot is planted forward, the other back, in an exaggerated action pose."
+      },
+      {
+        "type": "obj",
+        "desc": "A giant red lever-style switch box standing on the hill next to the mechanic. The switch has a large metal lever that the mechanic is pulling down. The box has two large labels: OFF on top and ON on bottom. The lever is mid-transition from OFF to ON. Sparks and small energy particles fly from the switch mechanism."
+      },
+      {
+        "type": "obj",
+        "desc": "A black server rack on the right side of the hill, shorter than the switch. It has glowing cyan LED lights and a small clean sign reading Mattermost. The rack looks active and healthy."
+      },
+      {
+        "type": "obj",
+        "desc": "A large glowing orange cloud-shaped shield icon hovering above and behind the server rack, representing Cloudflare Tunnel protection. The shield has a subtle hexagonal pattern and radiates warm orange light downward over the rack."
+      },
+      {
+        "type": "obj",
+        "desc": "A large white chat speech bubble floating in the upper right sky area, representing the Mattermost logo. Inside the bubble are three small dots in a row, the classic chat message indicator. The bubble has a thin cyan outline and a small tail pointing down toward the server rack."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text chat.voitech.dev in clean lowercase sans-serif letters, appearing as a glowing sign in the sky below the speech bubble. The text is white with a cyan glow, perfectly readable, horizontal, and front-facing."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text ON in large bold sans-serif letters on the lower part of the switch box, glowing green. Perfectly readable, horizontal, front-facing."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text OFF in large bold sans-serif letters on the upper part of the switch box, dimmed gray. Perfectly readable, horizontal, front-facing."
+      }
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama and Dr. Slump. Three chibi mechanics sit at three separate computer workstations side by side in a workshop. The left and middle mechanics look defeated with smoke rising from their monitors and frustrated expressions. The right mechanic has both arms raised in triumph with a bright green checkmark on his screen. The scene represents three attempts at deploying software, where only the third succeeded. Cel-shaded, vibrant, playful, safe for a technology blog illustration.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive faces showing frustration and triumph, playful tech illustration, clean technology blog illustration, no photorealism, no 3D render",
+    "lighting": "Bright workshop lighting. The left and center workstations have dim, slightly reddish angry glow from error screens. The right workstation has bright green triumphant glow. Warm overhead lights. Energetic mood with contrast between failure and success.",
+    "photo": "Wide shot at eye level, all three workstations visible side by side, each mechanic clearly readable, crisp linework, flat cel shading with subtle gradients",
+    "medium": "digital anime illustration, vector-like clean coloring, bold outlines, technology blog illustration art",
+    "color_palette": ["#FF6B00", "#00D4FF", "#1E293B", "#F8FAFC", "#64748B", "#FBBF24"]
+  },
+  "compositional_deconstruction": {
+    "canvas": "Wide 1216 x 832 landscape canvas. Normal upright orientation. Three workstations evenly spaced across the width. Each workstation takes roughly one third of the width. Leave the top 15% relatively open.",
+    "background": "A clean workshop interior with light gray walls, simple shelves with tools and cable spools. Minimal and uncluttered so the focus stays on the three workstations.",
+    "layout": "Left third: defeated mechanic #1 with smoking red screen. Center third: defeated mechanic #2 with smoking red screen, looking even more frustrated. Right third: triumphant mechanic #3 with green checkmark screen and arms raised.",
+    "elements": [
+      {
+        "type": "obj",
+        "desc": "Left workstation: A chibi mechanic sitting at a desk with a computer monitor showing a red error screen with X marks. The mechanic has messy brown hair, no glasses, and an orange jumpsuit. His head is resting on the desk in defeat, one arm hanging limp. Small smoke clouds rise from the back of the monitor. His expression is exhausted with spiral eyes."
+      },
+      {
+        "type": "obj",
+        "desc": "Center workstation: A chibi mechanic sitting at a desk with a computer monitor showing a red error screen with a skull and crossbones. The mechanic has black hair, round eyes, and an orange jumpsuit. He is pulling his hair out with both hands, mouth wide open in a scream. Larger smoke clouds and small fire sparks rise from the monitor. His expression is extremely frustrated with exaggerated angry eyebrows."
+      },
+      {
+        "type": "obj",
+        "desc": "Right workstation: A chibi mechanic sitting at a desk with a computer monitor showing a bright green checkmark on a dark screen. The mechanic has brown spiky hair, round glasses, a goatee, and an orange jumpsuit with a blue cap. Both arms are raised high in triumph with fists clenched. His expression is a huge triumphant grin with star-shaped sparkle eyes. A small celebration confetti effect surrounds him."
+      },
+      {
+        "type": "obj",
+        "desc": "Three simple wooden desks side by side, each with a monitor, keyboard, and a coffee mug. The left and center mugs are tipped over with coffee spilling. The right mug is upright with a happy steam cloud. Small orange and blue cables run along the back of the desks."
+      },
+      {
+        "type": "text",
+        "desc": "Small text labels above each workstation. Above the left one: 1st attempt in gray. Above the center one: 2nd attempt in gray. Above the right one: 3rd time in bright green. All in clean sans-serif letters, perfectly readable, horizontal."
+      }
+    ]
+  }
+}

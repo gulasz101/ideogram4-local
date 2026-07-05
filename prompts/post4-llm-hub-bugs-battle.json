@@ -1,0 +1,21 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama and Dr. Slump. A chibi mechanic in an orange jumpsuit battles nine cartoon bug creatures in a server room. Each bug represents a different deployment problem. The mechanic is sweating but grinning, stomping and flicking bugs with energy sparks. Some bugs are flattened, some are still charging. The scene is comedic and action-packed, like a Dragon Ball fight scene against comical enemies. Cel-shaded, vibrant, playful, safe for a technology blog illustration.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive faces, action-comedy battle scene, clean technology blog illustration, no photorealism, no 3D render",
+    "lighting": "Dramatic indoor server room lighting with flickering LED panels overhead, blue and cyan glow from server racks, orange energy sparks from the mechanic's attacks, warm and energetic mood",
+    "medium": "illustration",
+    "art_style": "digital anime illustration, vector-like clean coloring, bold outlines, cel-shaded, flat coloring with subtle gradients, no photorealism, no 3D render",
+    "color_palette": ["#FF6B00", "#00D4FF", "#1E293B", "#F8FAFC", "#EF4444", "#FBBF24", "#64748B"]
+  },
+  "compositional_deconstruction": {
+    "background": "A server room interior with dark walls, server racks lining both sides with glowing cyan and orange LED indicators. The floor is light gray tile. Overhead fluorescent panels flicker dramatically. The room feels contained and tech-focused but not menacing.",
+    "elements": [
+      {"type": "obj", "desc": "A chibi mechanic in the center of the scene, brown spiky hair, round glasses, orange jumpsuit, blue cap with white wrench emblem. He is in a dynamic action pose, one foot stomping down on a bug, one hand flicking an energy spark at another. He is sweating but has a confident grin. His expression says he has been fighting for a while but is winning."},
+      {"type": "obj", "desc": "Nine small chibi bug creatures scattered across the floor around the mechanic. Each bug is round-bodied with tiny legs, angry eyebrows, and a comical grumpy expression. Each bug has a tiny number on its back from 1 to 9. Some are stomped flat with X eyes, some are being flicked away with energy sparks, some are still charging forward. They look comical and defeated, not menacing. Different colors for variety."},
+      {"type": "obj", "desc": "Server racks on the left and right sides of the room, black with glowing cyan and orange LED lights. Cables run along the walls. One rack has a small screen showing a red error message, another shows a green OK status."},
+      {"type": "obj", "desc": "Orange energy sparks and impact stars radiating from the mechanic's stomping foot and flicking hand, classic Dragon Ball action effects. Small dust clouds where bugs are being defeated."},
+      {"type": "text", "text": "9 BUGS", "desc": "The exact text 9 BUGS in bold orange comic-style letters floating above the scene as an action title. Perfectly readable, horizontal, front-facing."},
+      {"type": "text", "text": "1 2 3 4 5 6 7 8 9", "desc": "Small white numbers on the backs of the nine bug creatures, each bug has one number. Readable but small, part of the bug design."}
+    ]
+  }
+}

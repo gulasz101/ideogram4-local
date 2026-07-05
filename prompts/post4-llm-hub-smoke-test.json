@@ -1,0 +1,22 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama and Dr. Slump. A chibi mechanic in an orange jumpsuit sits at a workbench with a large control panel covered in screens, dials, and status lights. He is running smoke tests on the LLM hub, with four model cards displayed on a big screen showing different results: one green checkmark, one yellow warning, two with yellow caution signs. The mechanic has a clipboard and looks like a scientist running experiments. Everything is ultimately green and working. Cel-shaded, vibrant, playful, safe for a technology blog illustration.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive faces, focused scientist at work scene, clean technology blog illustration, no photorealism, no 3D render",
+    "lighting": "Bright workbench lighting with focused desk lamps, green and amber glow from the status lights on the control panel, concentrated and methodical mood with clean light",
+    "medium": "illustration",
+    "art_style": "digital anime illustration, vector-like clean coloring, bold outlines, cel-shaded, flat coloring with subtle gradients, no photorealism, no 3D render",
+    "color_palette": ["#FF6B00", "#00D4FF", "#1E293B", "#F8FAFC", "#92D36E", "#FBBF24", "#64748B"]
+  },
+  "compositional_deconstruction": {
+    "background": "A clean workshop interior with light gray walls, a large workbench in the foreground, tool racks on the back wall. Bright overhead lighting. Some scattered notes and a coffee mug on the bench to suggest a long testing session.",
+    "elements": [
+      {"type": "obj", "desc": "A chibi mechanic sitting at the workbench on a stool, brown spiky hair, round glasses, orange jumpsuit, blue cap with white wrench emblem. He has a focused but satisfied expression, holding a clipboard with a checklist in one hand and a small screwdriver in the other. He looks like a quality inspector who just finished a long shift and is mostly happy with the results."},
+      {"type": "obj", "desc": "A large control panel screen on the workbench showing four model test cards in a 2x2 grid. Each card has a model name and a status indicator: one card shows a green checkmark, one shows a yellow warning triangle, and two show yellow caution symbols with small notes. The screen has a dark background with cyan borders. The cards are colorful and clearly organized like a dashboard."},
+      {"type": "obj", "desc": "Small status lights and dials along the bottom of the control panel, mostly glowing green with two amber lights. A small oscilloscope-like waveform display showing API response curves."},
+      {"type": "obj", "desc": "A clipboard with a checklist on the mechanic's lap, with several items checked off with green checkmarks and a few with yellow highlights. A pen is clipped to it."},
+      {"type": "obj", "desc": "Small floating checkmark and warning icons around the screen, green checkmarks and yellow triangles, suggesting the mixed but overall successful test results."},
+      {"type": "text", "text": "SMOKE TEST", "desc": "The exact text SMOKE TEST in bold green comic-style letters at the top of the big screen. Perfectly readable, horizontal, front-facing."},
+      {"type": "text", "text": "PASS", "desc": "The exact text PASS in large green letters on the screen near the green checkmark card. Perfectly readable, horizontal, front-facing."}
+    ]
+  }
+}

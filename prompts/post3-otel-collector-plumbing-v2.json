@@ -1,0 +1,21 @@
+{
+  "high_level_description": "A wide 1216 x 832 anime illustration in the style of Akira Toriyama and Dr. Slump. A chibi mechanic in an orange jumpsuit operates a data routing station with three glowing conduits branching out. The input conduit on the left carries glowing blue log entries, orange metric numbers, and green trace lines simultaneously. The three output conduits route to three separate destinations: a yellow Loki horned helmet logo on the left, an orange Prometheus flame logo in the center, and a green Tempo wave logo on the right. The mechanic turns a large red control wheel to direct the flow. The scene represents an OpenTelemetry Collector routing logs, metrics, and traces to their destinations. Cel-shaded, vibrant, playful, clean technology blog illustration.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive faces, playful tech illustration, clean technology blog illustration",
+    "lighting": "Bright indoor lighting with warm overhead lamps, soft shadows, cyan glow from conduits and server LEDs, energetic and focused mood",
+    "medium": "illustration",
+    "art_style": "digital anime illustration, vector-like clean coloring, bold outlines, cel-shaded, flat coloring with subtle gradients, no photorealism, no 3D render",
+    "color_palette": ["#FF6B00", "#00D4FF", "#1E293B", "#F8FAFC", "#64748B", "#FBBF24"]
+  },
+  "compositional_deconstruction": {
+    "background": "A clean workshop interior with light gray walls. Glowing gauges and indicators run along the back wall. Minimal and uncluttered.",
+    "elements": [
+      {"type": "obj", "desc": "A chibi mechanic standing at a large data routing station. He has brown spiky hair, round glasses, a small goatee, and wears an orange jumpsuit with a blue cap. Both hands are on a large red control wheel, turning it with a determined expression. The station has three glowing output conduits branching from it."},
+      {"type": "obj", "desc": "A thick glowing input conduit entering the station from the left side. Inside the conduit, three types of glowing data flow simultaneously: blue log text fragments, orange metric numbers, and green trace lines. They swirl together in the conduit before being separated by the station."},
+      {"type": "obj", "desc": "The left output conduit routes blue glowing log text fragments toward a large yellow Loki horned helmet logo mounted on the wall. The helmet logo has a clean yellow and black design."},
+      {"type": "obj", "desc": "The center output conduit routes orange glowing metric numbers toward a large orange Prometheus flame logo mounted on the wall. The flame logo is stylized and clean."},
+      {"type": "obj", "desc": "The right output conduit routes green glowing trace lines toward a large green Tempo wave logo mounted on the wall. The wave logo has clean green and black styling."},
+      {"type": "text", "text": "OpenTelemetry Collector", "desc": "The exact text OpenTelemetry Collector in clean lowercase sans-serif letters on a small white sign above the routing station. Perfectly readable, horizontal, front-facing."}
+    ]
+  }
+}

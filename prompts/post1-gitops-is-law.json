@@ -1,0 +1,37 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama and Dr. Slump. A chibi judge character in black robes sits behind a wooden bench in a bright courthouse, slamming a gavel down. Behind him is a giant glowing Git branch symbol with orange and cyan nodes. On the bench lies an open law book with Kubernetes pod icons floating above it. The scene is cel-shaded, vibrant, playful, and safe for a technology blog illustration.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive faces, playful legal-meets-tech scene, clean technology blog illustration, no photorealism, no 3D render",
+    "lighting": "Bright courthouse lighting with warm golden sunbeams through tall windows, soft shadows, cyan glow from the Git branch symbol, orange accent glow from the gavel strike impact, cheerful and authoritative mood",
+    "photo": "Medium shot from a slight low angle, depth of field keeping the judge and the Git symbol both readable, crisp linework, flat cel shading with subtle gradients",
+    "medium": "digital anime illustration, vector-like clean coloring, bold outlines, technology blog illustration art",
+    "color_palette": ["#FF6B00", "#00D4FF", "#1E293B", "#F8FAFC", "#64748B", "#FBBF24"]
+  },
+  "compositional_deconstruction": {
+    "canvas": "Wide 1216 x 832 landscape canvas. Normal upright orientation. The center 50% contains the judge and bench. The upper 30% has the glowing Git branch symbol. Leave some open space at the top for section heading overlay.",
+    "background": "A bright, clean courthouse interior with tall windows, marble columns, and warm sunlight streaming in. Simple and not overly detailed. The walls are light cream colored.",
+    "layout": "Center: judge character behind bench with gavel. Upper center: large glowing Git branch symbol. Foreground: open law book with floating k8s pod icons. The composition draws the eye to the gavel strike and then up to the Git branch.",
+    "elements": [
+      {
+        "type": "obj",
+        "desc": "A chibi judge character sitting behind a wooden bench. He has brown spiky hair, round glasses, and a small goatee. He wears a black judge robe with a white collar and a small blue cap on his head. He is slamming a wooden gavel down with a big triumphant expression, mouth open in a shout. His expression is exaggerated and passionate."
+      },
+      {
+        "type": "obj",
+        "desc": "A large glowing Git branch symbol floating behind the judge in the upper portion of the image. The branch has a central thick line splitting into two diverging paths, with circular commit nodes along each branch. The nodes glow cyan and the lines are orange. It looks like a stylized git branch diagram made of energy."
+      },
+      {
+        "type": "obj",
+        "desc": "An open law book on the bench in front of the judge. Above the book, small floating hexagonal Kubernetes pod icons glow softly in cyan and orange, suggesting infrastructure as code. The icons are simple and geometric."
+      },
+      {
+        "type": "obj",
+        "desc": "Impact lines radiating from the gavel strike point, in orange and yellow, emphasizing the force of the hit. Small dust particles fly up from the bench."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text GitOps is Law in clean bold sans-serif letters, appearing as a carved stone plaque on the wall behind the judge. The text is white with dark shadow, perfectly readable, horizontal, and front-facing."
+      }
+    ]
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama and Dr. Slump. A chibi mechanic in an orange jumpsuit sits in a control room surrounded by multiple glowing screens showing colorful Grafana dashboard panels - line graphs, gauges, bar charts, and heat maps. The screens are arranged in rows. Two machines are visible below the screens: a sleek black k3s server with cyan LEDs and a beige OMV NAS with green LEDs. The mechanic leans back in his chair with a satisfied expression, arms behind his head, looking at all the panels. The scene represents having built a comprehensive 29-panel monitoring dashboard. Cel-shaded, vibrant, playful, safe for a technology blog illustration.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive faces, playful tech illustration, clean technology blog illustration, no photorealism, no 3D render",
+    "lighting": "Multi-colored glow from the dashboard screens - orange, cyan, green, and yellow graph lights illuminate the room. The mechanic's face is lit by the screens. Satisfied and accomplished mood.",
+    "photo": "Medium shot, all elements clearly visible and readable, crisp linework, flat cel shading with subtle gradients",
+    "medium": "digital anime illustration, vector-like clean coloring, bold outlines, technology blog illustration art",
+    "color_palette": ["#FF6B00", "#00D4FF", "#1E293B", "#F8FAFC", "#64748B", "#FBBF24"]
+  },
+  "compositional_deconstruction": {
+    "canvas": "Wide 1216 x 832 landscape canvas. Normal upright orientation. The upper 60% contains the wall of dashboard screens. The lower 40% contains the mechanic in his chair and the two machines. Leave minimal open space.",
+    "background": "A dark control room interior with dark gray walls. The screens provide all the lighting. Minimal and atmospheric.",
+    "layout": "Upper area: wall of glowing dashboard screens arranged in rows. Lower center: mechanic in chair leaning back. Lower left: k3s server. Lower right: OMV NAS.",
+    "elements": [
+      {"type": "obj", "desc": "A large wall of glowing dashboard screens filling the upper portion of the image. The screens are arranged in rows of varying sizes. Each screen shows different Grafana-style visualizations: colorful line graphs in orange and cyan, circular gauge meters with green and yellow needles, bar charts with orange bars, and a heat map with blue-to-red gradient cells. The screens have thin dark borders and dark navy backgrounds with glowing data. At least 15-20 visible panels of varying sizes."},
+      {"type": "obj", "desc": "A chibi mechanic sitting in a rolling office chair in the lower center. He has brown spiky hair, round glasses, a small goatee, and wears an orange jumpsuit. He is leaning back in the chair with arms behind his head in a relaxed, satisfied pose. His expression is a content grin with slightly closed eyes. The dashboard glow illuminates his face."},
+      {"type": "obj", "desc": "A sleek black k3s server tower on the lower left, with glowing cyan LED strips and a small Kubernetes wheel logo. It looks active and healthy."},
+      {"type": "obj", "desc": "A beige OMV NAS box on the lower right, with green HDD activity lights blinking in a row. It looks sturdy and dependable."},
+      {"type": "obj", "desc": "The large orange Grafana spiral logo glowing in the upper center above the wall of screens, like a sun illuminating the control room."},
+      {"type": "text", "desc": "The exact text 29 panels in clean bold green sans-serif letters on a small banner at the top of the dashboard wall. Perfectly readable, horizontal, front-facing."}
+    ]
+  }
+}

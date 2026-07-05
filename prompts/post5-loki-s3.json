@@ -1,0 +1,50 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama. A chibi character is carrying heavy stacks of glowing log entries from a small NVMe storage box toward a large MinIO S3 bucket server. A small red error goblin is holding a key with a confused expression, representing the InvalidAccessKeyId mistake. The scene is cel-shaded, vibrant, and playful.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive comedic faces, playful technology blog illustration, no photorealism, no 3D render",
+    "lighting": "Warm workshop lighting with cyan glow from log entries, orange glow from the NVMe box, dramatic spotlight on the MinIO bucket, energetic mood",
+    "medium": "digital anime illustration, vector-like clean coloring, bold outlines, technology blog inline art",
+    "art_style": "Akira Toriyama, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon",
+    "color_palette": ["#FF6B00", "#00D4FF", "#1E293B", "#F8FAFC", "#EF4444", "#FBBF24"]
+  },
+  "compositional_deconstruction": {
+    "background": "A clean homelab workshop interior with gray concrete floor and soft walls. On the far left a small NVMe storage box sits on a workbench with a 20Gi label. On the right a large industrial MinIO server with two bucket openings. Floating orange and cyan log entry rectangles drift between them.",
+    "elements": [
+      {
+        "type": "obj",
+        "desc": "A short chubby chibi human mechanic in the center, carrying a tall stack of glowing orange rectangular log entries in both arms like boxes. He has brown spiky hair, round glasses, an orange jumpsuit, and a blue cap. He is walking from left to right with a determined but strained expression, sweating drops."
+      },
+      {
+        "type": "obj",
+        "desc": "A small black NVMe storage box on the left workbench with a label reading 20Gi. It has dim cyan LEDs and looks nearly empty. A small sign on it reads local-path."
+      },
+      {
+        "type": "obj",
+        "desc": "A large white and orange MinIO server on the right side shaped like a friendly industrial storage unit. It has the MinIO logo on top and two large bucket openings labeled loki-chunks and loki-ruler. Glowing orange log entries are being deposited into the buckets."
+      },
+      {
+        "type": "obj",
+        "desc": "A small red Toriyama-style error goblin sitting on the floor near the mechanic's feet. It is holding a golden key in one hand and scratching its head with the other, with a confused and embarrassed expression. A red warning symbol floats above its head. This represents the InvalidAccessKeyId mistake."
+      },
+      {
+        "type": "obj",
+        "desc": "A tiny chibi version of the Loki mascot character, a small green and orange serpent dragon, perched on top of the MinIO server, happily watching log entries flow into the buckets."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text MinIO in clean sans-serif letters on the front of the large white storage server. Horizontal and front-facing.",
+        "text": "MinIO"
+      },
+      {
+        "type": "text",
+        "desc": "The exact text 20Gi in small clean sans-serif letters on a label on the NVMe box. Horizontal.",
+        "text": "20Gi"
+      },
+      {
+        "type": "text",
+        "desc": "The exact text InvalidAccessKeyId in small red sans-serif letters on a warning bubble above the error goblin's head. Horizontal.",
+        "text": "InvalidAccessKeyId"
+      }
+    ]
+  }
+}

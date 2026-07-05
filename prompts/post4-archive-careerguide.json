@@ -1,0 +1,43 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama and Dr. Slump. A chibi mechanic in an orange jumpsuit and blue cap stands next to a large old wooden chest or trunk labeled careerguide on a brass nameplate. The chest is wrapped in brown packing tape and a glowing teleport beam is pulling it upward into the sky. The mechanic waves goodbye with a salute. Above, the chest is being compressed into a small glowing tar.gz archive cube. A few ghostly skill icons float out of the chest as it shrinks. The scene represents archiving and deleting an old unused Hermes profile. Cel-shaded, vibrant, playful, safe for a technology blog.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive nostalgic face, clean technology blog illustration, no photorealism, no 3D render",
+    "lighting": "Soft sunset lighting from the right side, warm golden rays, magical blue-white teleport beam from above, gentle nostalgic mood",
+    "medium": "digital anime illustration, vector-like clean coloring, bold outlines, technology blog inline art",
+    "art_style": "Akira Toriyama cel-shaded anime, Dr. Slump chibi proportions, Dragon Ball style bold linework",
+    "color_palette": ["#FF6B00", "#00D4FF", "#1E293B", "#F8FAFC", "#FBBF24", "#92400E", "#94A3B8"]
+  },
+  "compositional_deconstruction": {
+    "background": "A quiet backyard or courtyard at sunset. Warm orange and purple gradient sky. A few simple buildings or walls in the far background. The ground is simple paving stones. Clean and peaceful, slightly nostalgic mood. A few small particles float in the air catching the sunset light.",
+    "elements": [
+      {
+        "type": "obj",
+        "desc": "A chibi mechanic standing on the left side, saluting toward the chest with his right hand raised to his forehead in a military-style goodbye salute. He has brown spiky hair, round glasses, a small goatee, orange jumpsuit, blue cap with white wrench emblem. His expression is a wistful smile — one eye slightly closed, a small tear drop drawn manga-style near his eye. Nostalgic but cheerful."
+      },
+      {
+        "type": "obj",
+        "desc": "A large old wooden chest or trunk standing on the right side of the image, about the same height as the mechanic. The chest is made of dark brown wood with brass corners and hinges. A brass nameplate on the front reads careerguide. The chest is wrapped with brown packing tape in a cross pattern. It looks old and a bit dusty."
+      },
+      {
+        "type": "obj",
+        "desc": "A glowing blue-white teleport beam shooting straight up from above the chest into the sky. The beam is cylindrical with swirling light particles inside it. The chest is being pulled upward by the beam, slightly levitating off the ground. At the top of the beam, the chest is being compressed into a small glowing cube shape — a tar.gz archive — with a green digital glow around it."
+      },
+      {
+        "type": "obj",
+        "desc": "A few small ghostly translucent icons floating out of the wooden chest as it rises — simple geometric shapes representing skills, like a small gear, a wrench, a folder, and a document. They drift upward gently and fade out. These represent the 100 skills stored in the old profile."
+      },
+      {
+        "type": "obj",
+        "desc": "A small floating glowing green cube at the top of the teleport beam, representing the compressed tar.gz archive. The cube has a subtle file icon label on one face. It pulses with green light."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text careerguide in clean sans-serif letters engraved on a brass nameplate attached to the front of the wooden chest. The text has a metallic gold sheen. Perfectly readable, horizontal, front-facing."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text .tar.gz in small green monospace letters near the glowing cube at the top of the beam. The text is a small floating label, perfectly readable."
+      }
+    ]
+  }
+}

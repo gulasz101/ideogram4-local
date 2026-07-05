@@ -1,0 +1,50 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama. A chibi mechanic is discovering that a server box labeled grafana-community actually contains old deprecated upstream charts inside. He is pulling off a false label to reveal the real upstream label underneath. Behind him, two new shiny boxes with the Grafana and Tempo logos are being installed. The scene is comedic, cel-shaded, vibrant, and playful.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive shocked comedic faces, playful technology blog illustration, no photorealism, no 3D render",
+    "lighting": "Dramatic spotlight on the false label discovery, warm workshop ambient light, cyan glow from new server LEDs, energetic comedic mood",
+    "medium": "digital anime illustration, vector-like clean coloring, bold outlines, technology blog inline art",
+    "art_style": "Akira Toriyama, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon",
+    "color_palette": ["#FF6B00", "#00D4FF", "#1E293B", "#F8FAFC", "#F4682E", "#FBBF24"]
+  },
+  "compositional_deconstruction": {
+    "background": "A clean homelab workshop with gray walls and server racks. On the left an old beige server box with a false label. On the right two new shiny black server boxes with glowing LEDs. Floating holographic chart icons drift in the air. A large magnifying glass effect highlights the false label area.",
+    "elements": [
+      {
+        "type": "obj",
+        "desc": "A tall thin chibi human mechanic on the left with brown spiky hair, round glasses, and an orange jumpsuit with a blue cap. He has a huge shocked expression with his mouth wide open and eyes popping. He is peeling off a white label from an old server box with one hand, revealing a different label underneath. His other hand holds a magnifying glass."
+      },
+      {
+        "type": "obj",
+        "desc": "An old beige server box in the center-left. On its front is a white label that is being peeled away. The peeled label reads grafana-community. Underneath the peeling label, a dusty old label is visible reading grafana.github.io. The box has dim red deprecated LEDs and looks old."
+      },
+      {
+        "type": "obj",
+        "desc": "A new shiny black server box on the right with the official Grafana logo on its front panel, a circular orange swirl logo. It has bright cyan glowing LEDs and looks modern and powerful."
+      },
+      {
+        "type": "obj",
+        "desc": "Another new shiny black server box next to the Grafana one, with the Tempo logo on its front, a stylized orange and blue waveform logo. It also has bright cyan LEDs."
+      },
+      {
+        "type": "obj",
+        "desc": "A small Toriyama-style robot assistant with a round head and single cyclops eye, holding a clipboard and checking off items. It stands next to the new boxes with a satisfied expression."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text grafana-community in clean lowercase sans-serif letters on the white label being peeled off the old box. Horizontal and front-facing, slightly curled from peeling.",
+        "text": "grafana-community"
+      },
+      {
+        "type": "text",
+        "desc": "The exact text grafana.github.io in small faded lowercase sans-serif letters on the old dusty label revealed underneath. Horizontal and front-facing.",
+        "text": "grafana.github.io"
+      },
+      {
+        "type": "text",
+        "desc": "The exact text DEPRECATED in bold red sans-serif letters on a stamp across the old beige box. Horizontal.",
+        "text": "DEPRECATED"
+      }
+    ]
+  }
+}

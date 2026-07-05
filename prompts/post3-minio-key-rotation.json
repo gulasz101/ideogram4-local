@@ -1,0 +1,22 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama and Dr. Slump. A chibi mechanic in an orange jumpsuit is kneeling in front of a blue MinIO parrot mascot, presenting a new golden key card. The old key card on the ground is cracked and fading with a red X over it. The MinIO parrot looks happy and accepts the new key. Behind them, a glowing SOPS safe with an age lock sits on a shelf. The scene represents rotating stale MinIO credentials and updating the SOPS-encrypted secret. Cel-shaded, vibrant, playful, safe for a technology blog illustration.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive faces, playful tech illustration, clean technology blog illustration, no photorealism, no 3D render",
+    "lighting": "Bright indoor lighting with warm golden glow from the new key card, blue glow from the MinIO parrot, and a soft green glow from the SOPS safe. Focused and resolved mood.",
+    "photo": "Medium shot, all elements clearly visible and readable, crisp linework, flat cel shading with subtle gradients",
+    "medium": "digital anime illustration, vector-like clean coloring, bold outlines, technology blog illustration art",
+    "color_palette": ["#FF6B00", "#00D4FF", "#1E293B", "#F8FAFC", "#64748B", "#FBBF24"]
+  },
+  "compositional_deconstruction": {
+    "canvas": "Wide 1216 x 832 landscape canvas. Normal upright orientation. The center contains the mechanic and the MinIO parrot. The old key is on the ground to the left. The SOPS safe is on a shelf in the background. Leave top 15% relatively open.",
+    "background": "A clean workshop interior with light gray walls. A wooden shelf in the background holds the SOPS safe. Minimal and uncluttered.",
+    "layout": "Center-left: mechanic kneeling, presenting new key. Center-right: MinIO parrot accepting key. Left foreground: old cracked key on ground. Background: SOPS safe on shelf.",
+    "elements": [
+      {"type": "obj", "desc": "A chibi mechanic kneeling on the workshop floor. He has brown spiky hair, round glasses, a small goatee, and wears an orange jumpsuit with a blue cap. He is presenting a glowing golden key card with both hands, offering it to the MinIO parrot. His expression is relieved and satisfied with a small smile."},
+      {"type": "obj", "desc": "A chibi MinIO parrot mascot standing on the floor, orange and red colored with a friendly expression. The parrot holds out one wing to accept the new golden key card. The parrot looks happy with a small smile."},
+      {"type": "obj", "desc": "An old cracked key card lying on the ground to the left of the mechanic. It is grey and fading with a large red X mark over it. Small orange particles drift off it as it disintegrates. A small label reads 86YDG5... on the cracked card, partially visible and faded."},
+      {"type": "obj", "desc": "A small green glowing safe on a wooden shelf in the background. The safe has a small age lock symbol on it - a stylized key icon. A small label reads SOPS on the safe. The safe looks secure and well-maintained."},
+      {"type": "text", "desc": "The exact text SignatureDoesNotMatch in clean monospace letters, appearing as a faded red error message floating above the old cracked key on the ground. Perfectly readable, horizontal, front-facing."}
+    ]
+  }
+}

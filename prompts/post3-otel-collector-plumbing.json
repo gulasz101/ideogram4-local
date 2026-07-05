@@ -1,0 +1,23 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama and Dr. Slump. A chibi mechanic in an orange jumpsuit is operating a complex plumbing manifold with three pipes branching out. The input pipe on the left carries glowing blue logs, orange metrics, and green traces simultaneously. The three output pipes route to three separate containers: a yellow Loki horned helmet logo on the left, an orange Prometheus flame logo in the center, and a green Tempo wave logo on the right. The mechanic turns a big valve wheel to control the flow. The scene represents the OpenTelemetry Collector as plumbing that routes logs, metrics, and traces to their destinations. Cel-shaded, vibrant, playful, safe for a technology blog illustration.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive faces, playful tech illustration, clean technology blog illustration, no photorealism, no 3D render",
+    "lighting": "Bright indoor lighting with warm overhead lamps, soft shadows, cyan glow from screens and server LEDs, energetic and focused mood",
+    "photo": "Medium shot, all elements clearly visible and readable, crisp linework, flat cel shading with subtle gradients",
+    "medium": "digital anime illustration, vector-like clean coloring, bold outlines, technology blog illustration art",
+    "color_palette": ["#FF6B00", "#00D4FF", "#1E293B", "#F8FAFC", "#64748B", "#FBBF24"]
+  },
+  "compositional_deconstruction": {
+    "canvas": "Wide 1216 x 832 landscape canvas. Normal upright orientation. The center contains the mechanic at the valve manifold. Left output goes to Loki. Center output goes to Prometheus. Right output goes to Tempo. Leave top 15% relatively open.",
+    "background": "A clean workshop interior with light gray walls. Pipes and gauges run along the back wall. Minimal and uncluttered.",
+    "layout": "Center: chibi mechanic turning valve wheel on a manifold. Left: pipe flowing into Loki helmet logo. Center-right: pipe flowing into Prometheus flame logo. Right: pipe flowing into Tempo wave logo. Input pipe comes from the left with glowing logs, metrics, and traces flowing in.",
+    "elements": [
+      {"type": "obj", "desc": "A chibi mechanic standing at a large industrial valve manifold. He has brown spiky hair, round glasses, a small goatee, and wears an orange jumpsuit with a blue cap. Both hands are on a large red valve wheel, turning it with a determined expression. The manifold has three output pipes branching from it."},
+      {"type": "obj", "desc": "A thick glowing pipe entering the manifold from the left side. Inside the pipe, three types of glowing data flow simultaneously: blue log text fragments, orange metric numbers, and green trace lines. They swirl together in the pipe before being separated by the manifold."},
+      {"type": "obj", "desc": "The left output pipe routes blue glowing log text fragments toward a large yellow Loki horned helmet logo mounted on the wall. The helmet logo has a clean yellow and black design. A small label reads OTLP HTTP below it."},
+      {"type": "obj", "desc": "The center output pipe routes orange glowing metric numbers toward a large orange Prometheus flame logo mounted on the wall. The flame logo is stylized and clean. A small label reads remote_write below it."},
+      {"type": "obj", "desc": "The right output pipe routes green glowing trace lines toward a large green Tempo wave logo mounted on the wall. The wave logo has clean green and black styling. A small label reads OTLP gRPC below it."},
+      {"type": "text", "desc": "The exact text OpenTelemetry Collector in clean lowercase sans-serif letters on a small white sign above the manifold. Perfectly readable, horizontal, front-facing."}
+    ]
+  }
+}

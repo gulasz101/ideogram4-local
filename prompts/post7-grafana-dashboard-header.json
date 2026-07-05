@@ -1,0 +1,45 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama and Dr. Slump. A chibi engineer with brown spiky hair and round glasses sits cross-legged on a small hill, holding a glowing blue scouter-like visor over his eyes, watching two giant floating display screens. The left screen shows a Grafana dashboard with colorful time-series graphs and gauges. The right screen shows a Google Photos-style photo grid being emptied into a Nextcloud cloud icon. Below the hill, two server machines sit side by side: a sleek black k3s server with cyan LED lights and a beige NAS box with green HDD lights. The Grafana orange spiral logo glows in the sky like a sun. The scene represents building a monitoring dashboard while planning a Google Photos migration. Cel-shaded, vibrant, playful, safe for a technology blog header.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive faces, triumphant monitoring moment, clean technology blog header illustration, no photorealism, no 3D render",
+    "lighting": "Bright daylight with warm orange glow from the Grafana spiral sun in the sky, cyan glow from the dashboard screens and k3s server LEDs, green glow from the NAS HDD lights, energetic and focused mood",
+    "photo": "Wide shot from a slight low angle to make the floating screens heroic, depth of field keeping both servers readable at the bottom, crisp linework, flat cel shading with subtle gradients",
+    "medium": "digital anime illustration, vector-like clean coloring, bold outlines, technology blog header art",
+    "color_palette": ["#F46800", "#00D4FF", "#1E293B", "#F8FAFC", "#22C55E", "#FBBF24"]
+  },
+  "compositional_deconstruction": {
+    "canvas": "Wide 1216 x 832 landscape canvas. Normal upright orientation. The center contains the chibi engineer on the hill with the two floating screens above. The bottom foreground has the two server machines. The upper sky has the Grafana spiral logo. Leave the top 18% relatively open for blog title overlay.",
+    "background": "A bright blue sky with fluffy white clouds and a large orange Grafana spiral logo glowing like a sun in the upper center. Below the horizon, a simple green hill with a few rocks. Clean and uncluttered.",
+    "layout": "Center foreground: chibi engineer on the hill with scouter visor. Upper left: floating Grafana dashboard screen with graphs. Upper right: floating photo grid screen emptying into Nextcloud cloud. Bottom left: sleek black k3s server with cyan LEDs. Bottom right: beige NAS box with green HDD LEDs. The composition leads the eye from the engineer to the screens, then down to the servers.",
+    "elements": [
+      {
+        "type": "obj",
+        "desc": "A chibi engineer sitting cross-legged on top of the hill. He has brown spiky hair, round glasses, a small goatee, and wears an orange jumpsuit with a blue cap. He holds a glowing blue scouter-like visor over his right eye, looking at the floating dashboard screens with an excited wide-eyed expression and a big grin. One hand is raised pointing at the Grafana screen."
+      },
+      {
+        "type": "obj",
+        "desc": "A large floating holographic screen on the upper left showing a Grafana-style dashboard. The screen has a dark background with colorful time-series line graphs in orange, cyan, and green, plus two circular gauge panels. The Grafana orange spiral logo is small in the corner of this screen. The screen has a thin cyan border and floats with a slight tilt."
+      },
+      {
+        "type": "obj",
+        "desc": "A large floating holographic screen on the upper right showing a photo grid being emptied. The grid has small colorful photo thumbnails arranged in a 4x4 grid, with arrows flowing from the grid downward into a blue cloud icon labeled with a small Nextcloud-style icon. The cloud icon has a subtle green outline. The screen has a thin orange border."
+      },
+      {
+        "type": "obj",
+        "desc": "A sleek black server tower on the bottom left of the hill, labeled k3s. It has glowing cyan LED strips and small blinking status lights. It looks active and healthy, with a small antenna on top."
+      },
+      {
+        "type": "obj",
+        "desc": "A beige and grey NAS box on the bottom right of the hill, labeled OMV. It has green HDD activity lights blinking in a row and two drive bays visible. It looks sturdy and dependable."
+      },
+      {
+        "type": "obj",
+        "desc": "A large orange spiral logo resembling the Grafana logo glowing in the upper center of the sky like a sun. The spiral has warm radiating lines around it. It is the main light source for the scene."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text grafana.voitech.dev in clean lowercase sans-serif letters, appearing as a subtle glowing sign below the Grafana spiral logo in the sky. The text is white with an orange glow, perfectly readable, horizontal, and front-facing."
+      }
+    ]
+  }
+}

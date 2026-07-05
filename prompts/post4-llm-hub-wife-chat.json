@@ -1,0 +1,22 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama and Dr. Slump. A chibi character with long brown hair sits comfortably on a cozy couch with a laptop, chatting with an AI through a colorful chat interface. She looks happy and relaxed. Behind the laptop, a glowing data path connects through a small server labeled LiteLLM to a cloud with AI symbols. The scene represents a non-technical user chatting with LLMs through the self-hosted gateway. Cel-shaded, vibrant, playful, safe for a technology blog illustration.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive faces, cozy domestic tech scene, clean technology blog illustration, no photorealism, no 3D render",
+    "lighting": "Warm cozy living room lighting with a warm lamp glow, soft blue light from the laptop screen, gentle and inviting mood with soft volumetric light rays from a window",
+    "medium": "illustration",
+    "art_style": "digital anime illustration, vector-like clean coloring, bold outlines, cel-shaded, flat coloring with subtle gradients, no photorealism, no 3D render",
+    "color_palette": ["#FF6B00", "#00D4FF", "#1E293B", "#F8FAFC", "#FBBF24", "#92D36E", "#64748B"]
+  },
+  "compositional_deconstruction": {
+    "background": "A cozy living room interior with warm beige walls, a potted plant in the corner, a window with soft daylight coming through. A comfortable couch with cushions. Clean and homey, not tech-focused in the background.",
+    "elements": [
+      {"type": "obj", "desc": "A chibi character with long brown hair sitting on the couch, wearing a casual green sweater. She has a happy relaxed expression, one hand on the laptop keyboard, the other holding a cup of tea. She looks like a non-technical person comfortably using technology."},
+      {"type": "obj", "desc": "A laptop on her lap showing a colorful chat interface with speech bubbles in blue and white. The chat interface has a clean modern look with a model selector dropdown at the top. Small AI sparkle icons float above the screen."},
+      {"type": "obj", "desc": "A glowing data path flowing from the laptop screen upward and to the right, represented as a stream of small cyan and orange dots. The path leads to a small black server box labeled LiteLLM, then continues up to a fluffy cloud with a small AI brain icon inside. The data path represents the API traffic routing through LiteLLM to the LLM provider."},
+      {"type": "obj", "desc": "A small black server box floating to the right, about the size of a lunchbox, with glowing cyan LED lights and a small sign. It represents the LiteLLM proxy gateway. It looks friendly and approachable, not intimidating."},
+      {"type": "obj", "desc": "A fluffy white cloud floating above the server box with a small cartoon brain icon inside, representing the AI model provider. Gentle and cute, not ominous."},
+      {"type": "text", "text": "LiteLLM", "desc": "The exact text LiteLLM in clean white sans-serif letters on the small sign attached to the black server box. Perfectly readable, horizontal, front-facing."},
+      {"type": "text", "text": "ai-chat.voitech.dev", "desc": "The exact text ai-chat.voitech.dev in small clean cyan sans-serif letters appearing as a browser address bar label at the top of the laptop screen. Perfectly readable, horizontal, front-facing."}
+    ]
+  }
+}

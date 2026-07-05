@@ -1,0 +1,43 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama and Dr. Slump. A chibi mechanic in an orange jumpsuit and blue cap is debugging a ghost problem. He holds a magnifying glass up to a floating holographic config panel showing a YAML file. The YAML has a highlighted line reading api_key: ${LM_API_KEY} with a ghostly translucent figure emerging from that line, holding a literal cardboard sign reading the text LM_API_KEY instead of the real key. The ghost looks confused and spooky. A small green terminal at the bottom shows 401 Unauthorized. The mechanic has an expression of exasperated discovery. Cel-shaded, vibrant, playful, safe for a technology blog.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive exasperated face, clean technology blog illustration, no photorealism, no 3D render",
+    "lighting": "Cool blue-green glow from the holographic config panel, eerie pale green glow from the ghost figure, warm desk lamp light from upper right, dramatic spotlight on the highlighted YAML line",
+    "medium": "digital anime illustration, vector-like clean coloring, bold outlines, technology blog inline art",
+    "art_style": "Akira Toriyama cel-shaded anime, Dr. Slump chibi proportions, Dragon Ball style bold linework",
+    "color_palette": ["#22C55E", "#1E293B", "#F8FAFC", "#FF6B00", "#94A3B8", "#FBBF24"]
+  },
+  "compositional_deconstruction": {
+    "background": "A cozy desk workspace at night. The wall behind is dark blue with subtle grid lines suggesting a terminal interface. A small desk lamp glows warm orange from the upper right corner. The desk surface has a few scattered notes and a coffee mug. Clean and focused atmosphere.",
+    "elements": [
+      {
+        "type": "obj",
+        "desc": "A chibi mechanic sitting at the desk, holding a large magnifying glass up to the holographic config panel. He has brown spiky hair, round glasses, a small goatee, orange jumpsuit, blue cap with white wrench emblem. His expression is wide-eyed and exasperated — mouth open in a classic anime 'what?!' face, one hand on his forehead, the other holding the magnifying glass."
+      },
+      {
+        "type": "obj",
+        "desc": "A large holographic config panel floating in the center-right of the image, glowing soft blue-green. The panel shows a simplified YAML file with several lines of text. One line near the middle is highlighted with a bright yellow glow box around it. The panel has a thin cyan border and appears semi-transparent like a hologram."
+      },
+      {
+        "type": "obj",
+        "desc": "A ghostly translucent figure emerging from the highlighted YAML line on the config panel. The ghost is pale green and semi-transparent, shaped like a small floating sheet ghost with round black eyes and a wavy bottom edge. The ghost holds a cardboard sign in both hands. The ghost looks confused and slightly sad. Wisps of pale green smoke trail from it."
+      },
+      {
+        "type": "obj",
+        "desc": "A small black and green terminal window floating at the bottom of the image, showing a command prompt with the text 401 Unauthorized in red letters on a dark background. The terminal has a thin green border."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text api_key: ${LM_API_KEY} in monospace font on the highlighted line of the holographic YAML config panel. The text is inside a bright yellow highlight box. Perfectly readable, horizontal, front-facing."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text LM_API_KEY on a cardboard sign held by the ghost figure. The sign is brown cardboard with dark hand-written style letters. The text is perfectly readable and front-facing."
+      },
+      {
+        "type": "text",
+        "desc": "The exact text 401 Unauthorized in red monospace letters inside the small terminal window at the bottom. Perfectly readable, horizontal, front-facing."
+      }
+    ]
+  }
+}
