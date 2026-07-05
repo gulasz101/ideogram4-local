@@ -1,0 +1,21 @@
+{
+  "high_level_description": "The most magnificent, sharp, high-fidelity, realistic photo ever taken. A modern supercar parked inside a pristine underground automotive gallery. The car is the hero of the frame, shot from a low three-quarter front angle that emphasizes its aggressive aerodynamic lines and wide stance. The environment is immersive and unique: polished concrete floors mirror the car's underglow, and soft museum-grade spotlights rake across the sculpted bodywork. Every surface is crisp, from the carbon-fiber weave to the metallic flake in the paint. No grain, no blur, no retro styling — a clean, contemporary, hyper-real automotive portrait.",
+  "style_description": {
+    "aesthetics": "hyper-realistic automotive photography, ultra-sharp commercial car photography, high-fidelity detail, crisp and clean, no grain, no vintage filter",
+    "lighting": "museum-grade spotlights from above and behind, soft rim light outlining the roof and fenders, cool underglow reflecting off polished concrete, dramatic but controlled shadows",
+    "photo": "low three-quarter front angle, wide establishing shot, shallow depth of field keeping the car tack-sharp while the gallery softly blurs, leading lines in the floor draw the eye to the vehicle",
+    "medium": "high-resolution digital photograph, 8K commercial automotive render quality",
+    "color_palette": ["#0F172A", "#334155", "#EF4444", "#F8FAFC", "#94A3B8"]
+  },
+  "compositional_deconstruction": {
+    "canvas": "Wide 1216 x 832 landscape canvas",
+    "background": "A minimalist underground automotive gallery with polished dark concrete floors, subtle linear ceiling lights receding into perspective, and matte charcoal walls. The background is clean and unobtrusive so the car dominates the frame.",
+    "layout": "The supercar sits slightly left of center, facing toward the right of the frame. The front wheel is turned outward to show the rim design. The polished floor creates a crisp reflection beneath the car. Negative space above the car keeps the composition breathing.",
+    "elements": [
+      {"type": "obj", "desc": "A modern mid-engine supercar with a low, wide stance. The body is a deep metallic red with visible orange and gold flake under the spotlights. Sharp creases run along the sides, a prominent rear diffuser is visible, and thin LED headlights glow white. The wheels are large forged alloys with visible brake calipers."},
+      {"type": "obj", "desc": "Polished dark concrete floor that mirrors the underside of the car and the underglow lights like a still pool of water."},
+      {"type": "obj", "desc": "Subtle linear ceiling light strips running parallel to the car, creating perspective lines that lead the viewer's eye toward the front of the vehicle."},
+      {"type": "obj", "desc": "Soft atmospheric haze near the rear of the gallery, giving the space depth and a sense of scale without obscuring the car."}
+    ]
+  }
+}
