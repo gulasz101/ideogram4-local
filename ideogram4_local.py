@@ -61,10 +61,18 @@ DEFAULT_SAMPLE_STEPS = 20
 # guidance schedule for the first few denoising steps.
 DEFAULT_SAFETY_BYPASS = os.environ.get("IDEOGRAM4_SAFETY_BYPASS", "").lower() in ("1", "true", "yes")
 
+# Default LLM used by sd-cli as the vision-language/text encoder.
+# The unsloth instruct model is the original default. The "Heretic" abliterated
+# variant is a local-only, drop-in replacement that reduces the baked-in
+# prompt-refusal attractor that Ideogram 4's local GGUF build can exhibit.
+# Select it by setting IDEOGRAM4_LLM_MODEL=heretic in the worker environment.
+DEFAULT_LLM_MODEL_NAME = "Qwen3-VL-8B-Instruct-Q4_K_M.gguf"
+
 MODEL_URLS = {
     "ideogram4-Q4_0.gguf": "https://huggingface.co/leejet/ideogram-4-GGUF/resolve/main/ideogram4-Q4_0.gguf",
     "ideogram4_uncond-Q4_0.gguf": "https://huggingface.co/leejet/ideogram-4-GGUF/resolve/main/ideogram4_uncond-Q4_0.gguf",
     "Qwen3-VL-8B-Instruct-Q4_K_M.gguf": "https://huggingface.co/unsloth/Qwen3-VL-8B-Instruct-GGUF/resolve/main/Qwen3-VL-8B-Instruct-Q4_K_M.gguf",
+    "Qwen3-VL-8B-Heretic-1.3.0-Q4_K_M.gguf": "https://huggingface.co/DreamFast/Qwen3-VL-8B-Heretic-1.3.0/resolve/main/gguf/qwen3-vl-8b-heretic-1.3.0-Q4_K_M.gguf",
     "flux2-vae.safetensors": "https://huggingface.co/Comfy-Org/flux2-dev/resolve/main/split_files/vae/flux2-vae.safetensors",
 }
 
@@ -220,9 +228,32 @@ def _model_size_hint(name: str) -> int:
         "ideogram4-Q4_0.gguf": 5_643_820_832,
         "ideogram4_uncond-Q4_0.gguf": 5_643_820_832,
         "Qwen3-VL-8B-Instruct-Q4_K_M.gguf": 5_027_785_568,
+        "Qwen3-VL-8B-Heretic-1.3.0-Q4_K_M.gguf": 5_027_785_568,
         "flux2-vae.safetensors": 336_213_556,
     }
     return hints.get(name, 1_000_000_000)
+
+
+def llm_model_name() -> str:
+    """Return the selected Qwen3-VL GGUF filename for sd-cli --llm.
+
+    Choices:
+      - "instruct" (default) -> unsloth Qwen3-VL-8B-Instruct-Q4_K_M.gguf
+      - "heretic"            -> DreamFast Qwen3-VL-8B-Heretic-1.3.0-Q4_K_M.gguf
+
+    Override via environment: IDEOGRAM4_LLM_MODEL=heretic
+    Per-prompt override via JSON: generation.llm_model = "heretic"
+    """
+    env = os.environ.get("IDEOGRAM4_LLM_MODEL", DEFAULT_LLM_MODEL_NAME).lower()
+    if env in ("heretic", "dreamfast", "qwen3-vl-8b-heretic-1.3.0-q4_k_m.gguf"):
+        return "Qwen3-VL-8B-Heretic-1.3.0-Q4_K_M.gguf"
+    if env in ("instruct", "unsloth", "qwen3-vl-8b-instruct-q4_k_m.gguf"):
+        return "Qwen3-VL-8B-Instruct-Q4_K_M.gguf"
+    # Allow a literal filename if it exists in MODEL_URLS (future proofing).
+    if env in MODEL_URLS:
+        return env
+    log(f"Unknown IDEOGRAM4_LLM_MODEL value '{env}', falling back to default LLM")
+    return DEFAULT_LLM_MODEL_NAME
 
 
 def download_model(name: str) -> Path:
@@ -353,7 +384,8 @@ def parse_generation_config(prompt_type: str, prompt_value: str) -> dict:
             "safety_bypass_steps": 3,
             "safety_bypass_cfg": 1.0,
             "guidance_schedule": "1.0x3+7.0x17",
-            "steps": 20
+            "steps": 20,
+            "llm_model": "heretic"   // or "instruct"
           }
         }
 
@@ -366,6 +398,7 @@ def parse_generation_config(prompt_type: str, prompt_value: str) -> dict:
         "safety_bypass_cfg": 1.0,
         "guidance_schedule": None,
         "steps": DEFAULT_SAMPLE_STEPS,
+        "llm_model": llm_model_name(),
     }
 
     if prompt_type == "json":
@@ -384,6 +417,14 @@ def parse_generation_config(prompt_type: str, prompt_value: str) -> dict:
             config["guidance_schedule"] = str(gen["guidance_schedule"])
         if "steps" in gen:
             config["steps"] = int(gen["steps"])
+        if "llm_model" in gen:
+            value = str(gen["llm_model"]).lower()
+            if value in ("heretic", "dreamfast"):
+                config["llm_model"] = "Qwen3-VL-8B-Heretic-1.3.0-Q4_K_M.gguf"
+            elif value in ("instruct", "unsloth"):
+                config["llm_model"] = "Qwen3-VL-8B-Instruct-Q4_K_M.gguf"
+            else:
+                log(f"Ignoring unknown generation.llm_model value '{value}'")
 
     return config
 
@@ -424,15 +465,17 @@ def _sd_cli_cmd(
     init_img: Optional[Path] = None,
     strength: Optional[float] = None,
     guidance_schedule: Optional[str] = None,
+    llm_model: Optional[str] = None,
     verbose: bool = False,
 ) -> list:
     """Build the sd-cli command list."""
     models = ensure_models()
+    chosen_llm = llm_model or llm_model_name()
     cmd = [
         str(SD_CLI),
         "--diffusion-model", str(models["ideogram4-Q4_0.gguf"]),
         "--uncond-diffusion-model", str(models["ideogram4_uncond-Q4_0.gguf"]),
-        "--llm", str(models["Qwen3-VL-8B-Instruct-Q4_K_M.gguf"]),
+        "--llm", str(models[chosen_llm]),
         "--vae", str(models["flux2-vae.safetensors"]),
         "-p", prompt,
         "-o", str(output),
@@ -476,6 +519,8 @@ def generate(
     gen_config = parse_generation_config(prompt_type, prompt_value)
     guidance_schedule = build_guidance_schedule(gen_config)
     sample_steps = int(gen_config.get("steps", DEFAULT_SAMPLE_STEPS))
+    chosen_llm = gen_config.get("llm_model", llm_model_name())
+    log(f"Using LLM for generation: {chosen_llm}")
 
     if gen_config.get("safety_bypass") and gen_config.get("safety_bypass_mode") == "two_pass":
         # Two-pass safety bypass:
@@ -494,6 +539,7 @@ def generate(
             height=height,
             steps=bypass_steps,
             cfg_scale=bypass_cfg,
+            llm_model=chosen_llm,
             verbose=verbose,
         )
         result1 = subprocess.run(cmd1)
@@ -513,6 +559,7 @@ def generate(
             cfg_scale=7.0,
             init_img=temp_output,
             strength=0.75,
+            llm_model=chosen_llm,
             verbose=verbose,
         )
         result2 = subprocess.run(cmd2)
@@ -531,6 +578,7 @@ def generate(
             height=height,
             steps=sample_steps,
             guidance_schedule=guidance_schedule,
+            llm_model=chosen_llm,
             verbose=verbose,
         )
         if guidance_schedule:

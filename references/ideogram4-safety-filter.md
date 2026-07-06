@@ -24,6 +24,28 @@ Community experiments show the grey box is **not** a pixel-level classifier and 
 
 Conclusion: the local GGUF safety filter is **prompt-semantics driven** and hard to bypass with sampler tricks. The reliable fix is **prompt hygiene** — avoid human/anatomy/statue vocabulary and use objects, robots, diagrams, or abstract tech illustrations.
 
+## Alternative: swap the text encoder to the Heretic VLM
+
+As of 2026-07-06 we also test the `DreamFast/Qwen3-VL-8B-Heretic-1.3.0-Q4_K_M.gguf` encoder. It is a drop-in replacement for the default `unsloth/Qwen3-VL-8B-Instruct-Q4_K_M.gguf` used by `sd-cli --llm`. Because the grey box is driven by the prompt encoder and the local weights, using an abliterated text encoder can reduce the false-positive refusals without changing the diffusion sampler.
+
+Enable it:
+
+```bash
+export IDEOGRAM4_LLM_MODEL=heretic
+```
+
+or per-prompt:
+
+```json
+{
+  "generation": {
+    "llm_model": "heretic"
+  }
+}
+```
+
+Trade-off: the model is larger (another ~4.7 GB download) and the license/behaviour is different from the instruct model. It is easy to reverse by setting `IDEOGRAM4_LLM_MODEL=instruct`.
+
 ## First-line fix: prompt hygiene (use this first)
 
 The repo ships `ideogram4_prompt_tools.py` and `ideogram4_local.py lint`/`rewrite` commands to catch and fix risky prompts before generation.

@@ -30,9 +30,10 @@ Running it locally avoids API credits, keeps prompts private, and turns the M1 M
 | `ideogram4-Q4_0.gguf` | ~5.3 GB | `leejet/ideogram-4-GGUF` |
 | `ideogram4_uncond-Q4_0.gguf` | ~5.3 GB | `leejet/ideogram-4-GGUF` |
 | `Qwen3-VL-8B-Instruct-Q4_K_M.gguf` | ~4.7 GB | `unsloth/Qwen3-VL-8B-Instruct-GGUF` |
+| `Qwen3-VL-8B-Heretic-1.3.0-Q4_K_M.gguf` | ~4.7 GB | `DreamFast/Qwen3-VL-8B-Heretic-1.3.0` |
 | `flux2-vae.safetensors` | ~321 MB | `Comfy-Org/flux2-dev` |
 
-Total: ~15.6 GB.
+Total with the default instruct LLM: ~15.6 GB. Total if you also keep the Heretic variant: ~20.3 GB.
 
 ## Build stable-diffusion.cpp
 
@@ -195,6 +196,45 @@ Plan accordingly. A small queue of 3 images will keep the machine busy for over 
 | `IDEOGRAM4_DB` | `./jobs.db` | SQLite queue database path |
 | `IDEOGRAM4_SAFETY_BYPASS` | unset | Set to `1` to enable the safety-filter backend workaround on every generation |
 
+## Swapping the text encoder / VLM
+
+`sd-cli` uses a Qwen3-VL GGUF as the `--llm` text encoder for Ideogram 4. The default is the stock `unsloth/Qwen3-VL-8B-Instruct-Q4_K_M.gguf`. You can swap in the abliterated `DreamFast/Qwen3-VL-8B-Heretic-1.3.0-Q4_K_M.gguf` model to reduce the baked-in prompt-refusal attractor that causes false-positive "blocked by safety filter" grey boxes.
+
+This is a **local-only, drop-in model swap** — not a separate review stage, not an internet-exposed service, and easy to reverse.
+
+### Enable Heretic globally
+
+```bash
+export IDEOGRAM4_LLM_MODEL=heretic
+```
+
+Or set it in the LaunchAgent environment block (`~/Library/LaunchAgents/com.gulasz101.ideogram4-local.worker.plist`) and restart the worker.
+
+### Enable Heretic per job
+
+Add to the JSON prompt's optional `generation` block:
+
+```json
+{
+  "high_level_description": "...",
+  "style_description": { ... },
+  "compositional_deconstruction": { ... },
+  "generation": {
+    "llm_model": "heretic"
+  }
+}
+```
+
+Valid values are `"heretic"` (DreamFast) and `"instruct"` (unsloth, default).
+
+### Switch back to the safe model
+
+```bash
+export IDEOGRAM4_LLM_MODEL=instruct
+```
+
+or set `generation.llm_model: "instruct"` per prompt.
+
 ## Safety filter grey-out workaround
 
 Ideogram 4's local GGUF build can grey-out images with a "blocked by safety filter" message, sometimes even on ordinary prompts. The grey box is **primarily a prompt-vocabulary and JSON-structure filter baked into the model weights**, not a pixel-level classifier. Start with prompt hygiene; sampler workarounds are secondary.
@@ -248,7 +288,32 @@ Modes:
 
 All keys in `"generation"` are optional. The wrapper strips the block before passing JSON to `sd-cli`, so agents do not need to change CLI commands.
 
-See `references/ideogram4-safety-filter.md` for the full details, tuning, and the underlying `guidance_schedule` syntax.
+## Testing the safety layer with a false-positive prompt
+
+A good canary is a harmless summer/beach scene that uses vocabulary the filter often misreads. Submit two identical jobs — one with the default instruct encoder, one with Heretic — and compare:
+
+```bash
+# Instruct baseline (default)
+JOB_BASE=$(python3 ideogram4_local.py submit \
+  --prompt-json prompts/test-beach-false-positive.json \
+  -o output/test-beach-instruct.png -W 832 -H 1216 -v)
+
+# Heretic variant
+JOB_HERETIC=$(IDEOGRAM4_LLM_MODEL=heretic python3 ideogram4_local.py submit \
+  --prompt-json prompts/test-beach-false-positive.json \
+  -o output/test-beach-heretic.png -W 832 -H 1216 -v)
+```
+
+Then wait and inspect:
+
+```bash
+python3 ideogram4_local.py wait "$JOB_BASE"
+python3 ideogram4_local.py wait "$JOB_HERETIC"
+```
+
+If the instruct run greys out while the Heretic run renders the scene, the encoder swap is doing its job.
+
+See `references/ideogram4-safety-filter.md` for full details, tuning, and the underlying `guidance_schedule` syntax.
 
 ## Troubleshooting
 

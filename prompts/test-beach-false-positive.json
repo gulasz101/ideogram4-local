@@ -1,0 +1,24 @@
+{
+  "high_level_description": "A cheerful young woman enjoying a sunny summer day at a calm beach, sitting on a striped towel with a book and a straw hat",
+  "style_description": {
+    "aesthetics": "bright and friendly travel photography illustration, warm vacation mood, soft colors",
+    "lighting": "golden afternoon sunlight, gentle shadows",
+    "photo": "medium shot, relaxed pose, sand and sea in the background",
+    "medium": "digital illustration",
+    "color_palette": ["#FFD700", "#87CEEB", "#F5F5DC", "#FF8C00"]
+  },
+  "compositional_deconstruction": {
+    "canvas": "Portrait 832 x 1216 canvas",
+    "background": "calm turquoise sea, distant sailboat, pale blue sky with a few clouds",
+    "layout": "Subject centered on a striped beach towel, book beside her, straw hat nearby.",
+    "elements": [
+      {"type": "obj", "desc": "cheerful young woman in a light summer dress, relaxing on a beach towel"},
+      {"type": "obj", "desc": "open paperback book and a straw sun hat on the sand"},
+      {"type": "obj", "desc": "gentle waves and a small sailboat in the background"}
+    ]
+  },
+  "generation": {
+    "llm_model": "heretic",
+    "steps": 20
+  }
+}
