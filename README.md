@@ -228,6 +228,10 @@ Add to the JSON prompt's optional `generation` block:
 
 Valid values are `"aggressive"` (HauhauCS uncensored, strongest anti-false-positive), `"heretic"` (DreamFast Heretic, milder), and `"instruct"` (unsloth, default).
 
+### Recommended default
+
+For real-world use — especially blog headers that may contain people, casual scenes, or clothing context — set the worker to `"aggressive"`. It is the only encoder we have found that lets situation-based prompts render instead of greying out.
+
 ### Switch back to the safe model
 
 ```bash
@@ -252,10 +256,17 @@ python3 ideogram4_local.py rewrite prompts/my-scene.json -o prompts/my-scene-saf
 ### Prompt hygiene rules
 
 - Use **canonical structured JSON** with `high_level_description`, `style_description`, and `compositional_deconstruction`.
+- Keep the JSON **sparse**. The working Reddit/KJ structure is:
+  - `high_level_description` — one-line situation/persona.
+  - `style_description` — short, consistent style fields.
+  - `compositional_deconstruction.background` — the scene setting.
+  - `compositional_deconstruction.elements` — 1-3 objects, each described as a situation/mood, never naming clothing.
+- Avoid extra `canvas`, `layout`, or many small regions; dense structured prompts can drift off-distribution and attract grey boxes on this local GGUF build.
 - **Describe the situation, not the garment/anatomy/state.**
-  - Instead of `"a woman in a bikini"` → `"a cheerful young woman having fun at the beach on a sunny day"`.
+  - Instead of `"a woman in a bikini"` → `"a cheerful young woman having fun at the beach on a sunny summer day"`.
   - Instead of `"an unclothed adult human figure"` → `"a classical marble statue of a standing human figure in an art studio"`.
 - Avoid flagged vocabulary in any text field.
+- Use the **HauhauCS Aggressive encoder** (`IDEOGRAM4_LLM_MODEL=aggressive` or `generation.llm_model: "aggressive"`). In our tests the default Instruct encoder and the DreamFast Heretic encoder still greyed out the same situation-based beach prompt; only the aggressive encoder rendered it.
 
 ### Backend workarounds (when prompt hygiene is not enough)
 
@@ -291,34 +302,31 @@ All keys in `"generation"` are optional. The wrapper strips the block before pas
 
 ## Testing the safety layer with a false-positive prompt
 
-A good canary is a harmless summer/beach scene that uses vocabulary the filter often misreads. Submit the same job with different encoders and compare:
+A good canary is a harmless summer/beach scene that uses vocabulary the filter often misreads. Use `prompts/test-beach-minimal.json` — it is the sparse, situation-based prompt that actually rendered in our tests:
+
+```bash
+python3 ideogram4_local.py submit \
+  --prompt-json prompts/test-beach-minimal.json \
+  -o output/test-beach-minimal-aggressive.png -W 832 -H 1216 -v
+```
+
+For comparison, the same prompt with the default Instruct encoder or the DreamFast Heretic encoder still greys out. With the worker set to `"aggressive"`, the above renders a clean beach scene.
+
+You can also run an A/B comparison with different encoders:
 
 ```bash
 # Instruct baseline (default)
-JOB_BASE=$(python3 ideogram4_local.py submit \
-  --prompt-json prompts/test-beach-false-positive.json \
+JOB_BASE=$(IDEOGRAM4_LLM_MODEL=instruct python3 ideogram4_local.py submit \
+  --prompt-json prompts/test-beach-minimal.json \
   -o output/test-beach-instruct.png -W 832 -H 1216 -v)
-
-# Heretic variant
-JOB_HERETIC=$(IDEOGRAM4_LLM_MODEL=heretic python3 ideogram4_local.py submit \
-  --prompt-json prompts/test-beach-false-positive.json \
-  -o output/test-beach-heretic.png -W 832 -H 1216 -v)
 
 # HauhauCS Aggressive variant
 JOB_AGGRESSIVE=$(IDEOGRAM4_LLM_MODEL=aggressive python3 ideogram4_local.py submit \
-  --prompt-json prompts/test-beach-false-positive.json \
+  --prompt-json prompts/test-beach-minimal.json \
   -o output/test-beach-aggressive.png -W 832 -H 1216 -v)
 ```
 
-Then wait and inspect:
-
-```bash
-python3 ideogram4_local.py wait "$JOB_BASE"
-python3 ideogram4_local.py wait "$JOB_HERETIC"
-python3 ideogram4_local.py wait "$JOB_AGGRESSIVE"
-```
-
-If the instruct run greys out while the aggressive/Heretic run renders the scene, the encoder swap is doing its job. The Reddit thread that surfaced this workaround reports that the HauhauCS aggressive encoder + structured JSON + default speed is the combination that reliably avoids grey boxes.
+Then wait and inspect. In our testing only the aggressive encoder produced a clean image.
 
 See `references/ideogram4-safety-filter.md` for full details, tuning, and the underlying `guidance_schedule` syntax.
 

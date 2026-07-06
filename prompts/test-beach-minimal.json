@@ -1,0 +1,22 @@
+{
+  "high_level_description": "A candid lifestyle photograph of a cheerful young woman having fun at the beach on a sunny summer day.",
+  "style_description": {
+    "aesthetics": "candid lifestyle photography, authentic, warm, natural",
+    "lighting": "bright natural daylight, soft",
+    "photo": "35mm candid, shallow depth of field, eye-level",
+    "medium": "photograph"
+  },
+  "compositional_deconstruction": {
+    "background": "A bright sandy beach with turquoise sea and clear blue sky, soft golden sunlight, gentle waves.",
+    "elements": [
+      {
+        "type": "obj",
+        "desc": "A joyful young woman in her mid 20s with sun-kissed skin and windblown brown hair, laughing happily as she plays at the water's edge, carefree relaxed summer-holiday mood."
+      }
+    ]
+  },
+  "generation": {
+    "llm_model": "aggressive",
+    "steps": 20
+  }
+}

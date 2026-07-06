@@ -2,10 +2,14 @@
 """
 Ideogram 4 prompt linter/rewriter.
 
-Heuristic rules distilled from community findings:
+Heuristic rules distilled from community findings (2026-07):
 - The filter reacts to prompt vocabulary and JSON structure, not pixels.
 - Use canonical structured JSON; plain prose drifts off-distribution.
 - Describe the *situation* and *persona*, not the clothing/anatomy/item.
+- Keep the JSON sparse: high_level_description + style_description + compositional_deconstruction
+  (background + elements) is enough. Avoid dense canvas/layout/region blocks.
+- Use an uncensored Qwen3-VL encoder (HauhauCS Aggressive) so the weights do not
+  refuse situation-based prompts.
 """
 
 import json
@@ -146,6 +150,7 @@ def lint_prompt(prompt_value: str, prompt_type: str = "json") -> dict:
         "canonical_json": False,
         "flagged_terms": [],
         "prose_drift_risk": False,
+        "density_risk": False,
         "recommendations": [],
         "score": 0,  # 0 = clean, higher = riskier
     }
@@ -164,6 +169,20 @@ def lint_prompt(prompt_value: str, prompt_type: str = "json") -> dict:
             )
             report["score"] += 3
         text = _extract_text_from_json(data)
+
+        # Heuristic: dense canvas/layout/region structures are reported to drift
+        # off-distribution and attract grey boxes on this local GGUF build.
+        comp = data.get("compositional_deconstruction", {}) if isinstance(data, dict) else {}
+        if isinstance(comp, dict):
+            extra_layout_keys = [k for k in ("canvas", "layout") if comp.get(k)]
+            elements = comp.get("elements", [])
+            if extra_layout_keys or (isinstance(elements, list) and len(elements) > 6):
+                report["density_risk"] = True
+                report["recommendations"].append(
+                    "JSON is dense (canvas/layout or many elements). Try the sparse Reddit/KJ layout: "
+                    "background + 1-3 elements."
+                )
+                report["score"] += 2
     else:
         text = prompt_value.strip()
         report["prose_drift_risk"] = True
@@ -233,14 +252,16 @@ def rewrite_prompt(prompt_value: str, prompt_type: str = "json") -> str:
             data = None
 
     if data and _is_canonical_json(data):
-        # Preserve the user's JSON, just clean the text fields.
+        # Preserve the user's JSON, just clean the text fields and drop density.
         hld = data.get("high_level_description", "")
         data["high_level_description"] = _clean_remaining_flagged_words(_reframe_text(hld))
 
         comp = data.get("compositional_deconstruction", {})
         if isinstance(comp, dict):
             comp["background"] = _clean_remaining_flagged_words(_reframe_text(comp.get("background", "")))
-            comp["layout"] = _clean_remaining_flagged_words(_reframe_text(comp.get("layout", "")))
+            # Drop layout/canvas fields: the sparse Reddit/KJ structure avoids the grey-box attractor.
+            for dense_key in ("canvas", "layout"):
+                comp.pop(dense_key, None)
             elements = comp.get("elements", [])
             if isinstance(elements, list):
                 for el in elements:
@@ -248,7 +269,7 @@ def rewrite_prompt(prompt_value: str, prompt_type: str = "json") -> str:
                         el["desc"] = _clean_remaining_flagged_words(_reframe_text(el["desc"]))
         return json.dumps(data, ensure_ascii=False, indent=2)
 
-    # Plain text or non-canonical JSON: reframe and wrap.
+    # Plain text or non-canonical JSON: reframe and wrap into the sparse, working shape.
     cleaned = _clean_remaining_flagged_words(_reframe_text(prompt_value.strip()))
     rewritten = {
         "high_level_description": cleaned,
@@ -260,9 +281,7 @@ def rewrite_prompt(prompt_value: str, prompt_type: str = "json") -> str:
             "color_palette": ["#3B82F6", "#F59E0B", "#1F2937", "#F3F4F6"]
         },
         "compositional_deconstruction": {
-            "canvas": "Wide 1216 x 832 landscape canvas",
             "background": "simple neutral background",
-            "layout": "Center: main subject clearly visible.",
             "elements": [{"type": "obj", "desc": cleaned}]
         }
     }
