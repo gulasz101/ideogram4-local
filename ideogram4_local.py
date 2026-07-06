@@ -73,6 +73,7 @@ MODEL_URLS = {
     "ideogram4_uncond-Q4_0.gguf": "https://huggingface.co/leejet/ideogram-4-GGUF/resolve/main/ideogram4_uncond-Q4_0.gguf",
     "Qwen3-VL-8B-Instruct-Q4_K_M.gguf": "https://huggingface.co/unsloth/Qwen3-VL-8B-Instruct-GGUF/resolve/main/Qwen3-VL-8B-Instruct-Q4_K_M.gguf",
     "Qwen3-VL-8B-Heretic-1.3.0-Q4_K_M.gguf": "https://huggingface.co/DreamFast/Qwen3-VL-8B-Heretic-1.3.0/resolve/main/gguf/qwen3-vl-8b-heretic-1.3.0-Q4_K_M.gguf",
+    "Qwen3VL-8B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf": "https://huggingface.co/HauhauCS/Qwen3VL-8B-Uncensored-HauhauCS-Aggressive/resolve/main/Qwen3VL-8B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf",
     "flux2-vae.safetensors": "https://huggingface.co/Comfy-Org/flux2-dev/resolve/main/split_files/vae/flux2-vae.safetensors",
 }
 
@@ -229,6 +230,7 @@ def _model_size_hint(name: str) -> int:
         "ideogram4_uncond-Q4_0.gguf": 5_643_820_832,
         "Qwen3-VL-8B-Instruct-Q4_K_M.gguf": 5_027_785_568,
         "Qwen3-VL-8B-Heretic-1.3.0-Q4_K_M.gguf": 5_027_785_568,
+        "Qwen3VL-8B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf": 5_027_784_800,
         "flux2-vae.safetensors": 336_213_556,
     }
     return hints.get(name, 1_000_000_000)
@@ -245,6 +247,8 @@ def llm_model_name() -> str:
     Per-prompt override via JSON: generation.llm_model = "heretic"
     """
     env = os.environ.get("IDEOGRAM4_LLM_MODEL", DEFAULT_LLM_MODEL_NAME).lower()
+    if env in ("hauhaucs", "aggressive", "qwen3vl-8b-uncensored-hauhaucs-aggressive-q4_k_m.gguf"):
+        return "Qwen3VL-8B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf"
     if env in ("heretic", "dreamfast", "qwen3-vl-8b-heretic-1.3.0-q4_k_m.gguf"):
         return "Qwen3-VL-8B-Heretic-1.3.0-Q4_K_M.gguf"
     if env in ("instruct", "unsloth", "qwen3-vl-8b-instruct-q4_k_m.gguf"):
@@ -419,7 +423,9 @@ def parse_generation_config(prompt_type: str, prompt_value: str) -> dict:
             config["steps"] = int(gen["steps"])
         if "llm_model" in gen:
             value = str(gen["llm_model"]).lower()
-            if value in ("heretic", "dreamfast"):
+            if value in ("hauhaucs", "aggressive"):
+                config["llm_model"] = "Qwen3VL-8B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf"
+            elif value in ("heretic", "dreamfast"):
                 config["llm_model"] = "Qwen3-VL-8B-Heretic-1.3.0-Q4_K_M.gguf"
             elif value in ("instruct", "unsloth"):
                 config["llm_model"] = "Qwen3-VL-8B-Instruct-Q4_K_M.gguf"

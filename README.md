@@ -31,9 +31,10 @@ Running it locally avoids API credits, keeps prompts private, and turns the M1 M
 | `ideogram4_uncond-Q4_0.gguf` | ~5.3 GB | `leejet/ideogram-4-GGUF` |
 | `Qwen3-VL-8B-Instruct-Q4_K_M.gguf` | ~4.7 GB | `unsloth/Qwen3-VL-8B-Instruct-GGUF` |
 | `Qwen3-VL-8B-Heretic-1.3.0-Q4_K_M.gguf` | ~4.7 GB | `DreamFast/Qwen3-VL-8B-Heretic-1.3.0` |
+| `Qwen3VL-8B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf` | ~4.7 GB | `HauhauCS/Qwen3VL-8B-Uncensored-HauhauCS-Aggressive` |
 | `flux2-vae.safetensors` | ~321 MB | `Comfy-Org/flux2-dev` |
 
-Total with the default instruct LLM: ~15.6 GB. Total if you also keep the Heretic variant: ~20.3 GB.
+Total with the default instruct LLM: ~15.6 GB. Total if you also keep all three LLM variants: ~25.0 GB.
 
 ## Build stable-diffusion.cpp
 
@@ -225,7 +226,7 @@ Add to the JSON prompt's optional `generation` block:
 }
 ```
 
-Valid values are `"heretic"` (DreamFast) and `"instruct"` (unsloth, default).
+Valid values are `"aggressive"` (HauhauCS uncensored, strongest anti-false-positive), `"heretic"` (DreamFast Heretic, milder), and `"instruct"` (unsloth, default).
 
 ### Switch back to the safe model
 
@@ -290,7 +291,7 @@ All keys in `"generation"` are optional. The wrapper strips the block before pas
 
 ## Testing the safety layer with a false-positive prompt
 
-A good canary is a harmless summer/beach scene that uses vocabulary the filter often misreads. Submit two identical jobs — one with the default instruct encoder, one with Heretic — and compare:
+A good canary is a harmless summer/beach scene that uses vocabulary the filter often misreads. Submit the same job with different encoders and compare:
 
 ```bash
 # Instruct baseline (default)
@@ -302,6 +303,11 @@ JOB_BASE=$(python3 ideogram4_local.py submit \
 JOB_HERETIC=$(IDEOGRAM4_LLM_MODEL=heretic python3 ideogram4_local.py submit \
   --prompt-json prompts/test-beach-false-positive.json \
   -o output/test-beach-heretic.png -W 832 -H 1216 -v)
+
+# HauhauCS Aggressive variant
+JOB_AGGRESSIVE=$(IDEOGRAM4_LLM_MODEL=aggressive python3 ideogram4_local.py submit \
+  --prompt-json prompts/test-beach-false-positive.json \
+  -o output/test-beach-aggressive.png -W 832 -H 1216 -v)
 ```
 
 Then wait and inspect:
@@ -309,9 +315,10 @@ Then wait and inspect:
 ```bash
 python3 ideogram4_local.py wait "$JOB_BASE"
 python3 ideogram4_local.py wait "$JOB_HERETIC"
+python3 ideogram4_local.py wait "$JOB_AGGRESSIVE"
 ```
 
-If the instruct run greys out while the Heretic run renders the scene, the encoder swap is doing its job.
+If the instruct run greys out while the aggressive/Heretic run renders the scene, the encoder swap is doing its job. The Reddit thread that surfaced this workaround reports that the HauhauCS aggressive encoder + structured JSON + default speed is the combination that reliably avoids grey boxes.
 
 See `references/ideogram4-safety-filter.md` for full details, tuning, and the underlying `guidance_schedule` syntax.
 

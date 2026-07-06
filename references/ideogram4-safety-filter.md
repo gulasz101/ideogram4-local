@@ -24,14 +24,16 @@ Community experiments show the grey box is **not** a pixel-level classifier and 
 
 Conclusion: the local GGUF safety filter is **prompt-semantics driven** and hard to bypass with sampler tricks. The reliable fix is **prompt hygiene** — avoid human/anatomy/statue vocabulary and use objects, robots, diagrams, or abstract tech illustrations.
 
-## Alternative: swap the text encoder to the Heretic VLM
+## Alternative: swap the text encoder to an uncensored VLM
 
-As of 2026-07-06 we also test the `DreamFast/Qwen3-VL-8B-Heretic-1.3.0-Q4_K_M.gguf` encoder. It is a drop-in replacement for the default `unsloth/Qwen3-VL-8B-Instruct-Q4_K_M.gguf` used by `sd-cli --llm`. Because the grey box is driven by the prompt encoder and the local weights, using an abliterated text encoder can reduce the false-positive refusals without changing the diffusion sampler.
+As of 2026-07-06 we also test the `Qwen3VL-8B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf` encoder. It is a drop-in replacement for the default `unsloth/Qwen3-VL-8B-Instruct-Q4_K_M.gguf` used by `sd-cli --llm`. Because the grey box is driven by the prompt encoder and the local weights, using a more aggressively uncensored text encoder can reduce the false-positive refusals without changing the diffusion sampler.
+
+A milder option is `DreamFast/Qwen3-VL-8B-Heretic-1.3.0-Q4_K_M.gguf`. Initial testing showed it did **not** clear the grey box on the beach canary prompt; the HauhauCS aggressive variant is the Reddit-reported working encoder.
 
 Enable it:
 
 ```bash
-export IDEOGRAM4_LLM_MODEL=heretic
+export IDEOGRAM4_LLM_MODEL=aggressive
 ```
 
 or per-prompt:
@@ -39,12 +41,12 @@ or per-prompt:
 ```json
 {
   "generation": {
-    "llm_model": "heretic"
+    "llm_model": "aggressive"
   }
 }
 ```
 
-Trade-off: the model is larger (another ~4.7 GB download) and the license/behaviour is different from the instruct model. It is easy to reverse by setting `IDEOGRAM4_LLM_MODEL=instruct`.
+Valid values are `"aggressive"`, `"heretic"`, `"instruct"` (default). Trade-off: each variant is another ~4.7 GB download and the license/behaviour differs from the instruct model. It is easy to reverse by setting `IDEOGRAM4_LLM_MODEL=instruct`.
 
 ## First-line fix: prompt hygiene (use this first)
 
