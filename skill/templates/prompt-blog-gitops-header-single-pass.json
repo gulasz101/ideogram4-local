@@ -1,0 +1,36 @@
+{
+  "high_level_description": "A wide 16:9 header illustration for a technology blog post about Kubernetes GitOps, showing friendly flat-design server racks in a clean data-center corridor with soft blue and amber LED glow.",
+  "style_description": {
+    "aesthetics": "clean flat vector illustration, technology blog hero image, minimal, organized",
+    "lighting": "soft ambient blue and amber LED glow, no harsh shadows",
+    "medium": "digital vector illustration",
+    "art_style": "flat vector art with crisp shapes, subtle gradients, and a modern tech editorial feel",
+    "color_palette": ["#1E3A8A", "#3B82F6", "#F59E0B", "#F3F4F6"]
+  },
+  "compositional_deconstruction": {
+    "background": "Soft gradient from dark blue at the top to light grey at the bottom, subtle data-center ceiling lights receding into perspective down a tidy corridor.",
+    "elements": [
+      {
+        "type": "obj",
+        "bbox": [100, 50, 750, 350],
+        "desc": "A tall friendly server rack with rounded corners, soft blue metal, amber and green status LEDs arranged in a grid, placed in the left third."
+      },
+      {
+        "type": "obj",
+        "bbox": [250, 500, 650, 900],
+        "desc": "A glowing Git branch and merge icon made of thick white lines, floating in the center of the corridor."
+      },
+      {
+        "type": "obj",
+        "bbox": [500, 700, 900, 980],
+        "desc": "Floating geometric cubes and rectangles representing containers and microservices, in blue and amber, in the right third."
+      }
+    ]
+  },
+  "generation": {
+    "safety_bypass": true,
+    "safety_bypass_mode": "single_pass",
+    "steps": 20,
+    "llm_model": "aggressive"
+  }
+}

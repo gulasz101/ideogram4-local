@@ -1,3 +1,5 @@
+> **Agent note:** This repo ships an embedded Hermes skill under [`skill/`](./skill). Load it with `skill_view(name="ideogram4-local")` (if installed) or read `skill/SKILL.md` directly. The skill contains ready-to-use templates, reference docs, and scripts for agents.
+
 # ideogram4-local
 
 A small, reusable, queue-backed local image generator using **Ideogram 4** via [stable-diffusion.cpp](https://github.com/leejet/stable-diffusion.cpp). Built for an Apple Silicon M1 Max with 32 GB unified RAM.

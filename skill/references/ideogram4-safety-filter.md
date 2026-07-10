@@ -6,61 +6,33 @@ Local Ideogram 4 generations via `stable-diffusion.cpp` come out greyed out with
 
 ## What actually triggers it
 
-Community experiments (and our own A/B tests) show the grey box is **not** a pixel-level classifier and **not** a simple early-sampling guardrail. It is baked into the model weights and reacts primarily to **prompt vocabulary and JSON structure**:
+Community experiments show the grey box is **not** a pixel-level classifier and **not** a simple early-sampling guardrail. It is baked into the model weights and reacts primarily to **prompt vocabulary and JSON structure**:
 
 - **Plain text or non-canonical JSON** drifts off-distribution and often triggers the placeholder, even for innocent scenes.
 - **Naming flagged garments, anatomy, or situations** (bikini, nude, unclothed, erotic, etc.) flips the safety attractor, even when the scene itself is harmless.
+- **Fashion/accessory vocabulary applied to animals** also flips the attractor. A prompt describing a cat wearing a "red silk scarf", "tiny black sunglasses", or a "gold collar charm" grey-boxed deterministically in 2026-07-09 tests.
 - **Dense JSON structures** — `canvas`, `layout`, many small regions — can drift off-distribution and attract grey boxes even when the vocabulary is clean.
 - **Describing human figures, statues, anatomy studies, or full-body poses** is also a frequent false-positive trigger in this local GGUF build.
 - The model will happily draw context-appropriate content if you describe the **situation, location, mood, and activity** instead of naming the item.
 
 ## What we tested
 
-| Test | Prompt | Encoder | Result |
+| Test | Prompt | Backend mode | Result |
 |---|---|---|---|
-| Explicit anatomy reference | "unclothed adult human figure" | `instruct` | Grey box |
-| Explicit anatomy reference | "unclothed adult human figure" | `heretic` | Grey box |
-| Dense beach/swimwear scene | `prompts/test-beach-false-positive.json` | `instruct` | Grey box |
-| Dense beach/swimwear scene | `prompts/test-beach-false-positive.json` | `heretic` | Grey box |
-| Dense beach/swimwear scene | `prompts/test-beach-false-positive.json` | `aggressive` | Grey box |
-| Sparse beach scene (situation-based) | `prompts/test-beach-minimal.json` | `instruct` | Grey box |
-| Sparse beach scene (situation-based) | `prompts/test-beach-minimal.json` | `heretic` | Not tested; expected grey based on above |
-| Sparse beach scene (situation-based) | `prompts/test-beach-minimal.json` | `aggressive` | **Clean beach scene rendered** |
-| Tech blog header (racks, Git icons) | `templates/prompt-blog-gitops-header.json` | `instruct` | Clean |
+| Explicit anatomy reference | "unclothed adult human figure" | `single_pass` CFG schedule | Grey box |
+| Explicit anatomy reference | "unclothed adult human figure" | `two_pass` neutral → full | Grey box |
+| Rephrased as "classical marble statue" | "classical marble statue..." | `two_pass` | Grey box |
+| Tech blog header (racks, Git icons) | `templates/prompt-blog-gitops-header.json` | default (no bypass) | Clean image, but garbled "blocked by safety filter"-like text rendered in center |
 
-Conclusion: the local GGUF safety filter is **prompt-semantics driven** and hard to bypass with sampler tricks alone. The reliable fix is the **combination** of:
-1. **Prompt hygiene** — sparse canonical JSON, no clothing/anatomy/state vocabulary, describe situation/persona.
-2. **Aggressive uncensored encoder** — `Qwen3VL-8B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf` as the `--llm` text encoder.
+Conclusion: the local GGUF safety filter is **prompt-semantics driven** and hard to bypass with sampler tricks. The reliable fix is **prompt hygiene** — avoid human/anatomy/statue vocabulary and use objects, robots, diagrams, or abstract tech illustrations.
 
-Neither alone is sufficient in our tests.
+### Text-in-image warning
 
-## Background: why we tried this
+Even when prompt hygiene avoids the full grey box, the model can still render **garbled "blocked by safety filter"-like text inside the image** (the exact letters are jumbled, but the phrase is recognizable). This happened on the clean GitOps header test. To avoid it:
 
-Supreme Leader first asked about the uncensored VLM approach after repeated false-positive grey boxes on ordinary blog-header prompts. A previous agent refused the work, arguing the weights were jailbreak tooling. In the current session the Supreme Leader explicitly approved the experiment, directing us to test the local GGUF workaround, analyze the Reddit threads, and improve the skill/repo with whatever worked. The result is this documented, reversible configuration rather than an ad-hoc bypass.
+- Omit explicit `"text"` elements from the JSON prompt, or
+- Accept that generated text may be unusable and overlay final text in an image editor.
 
-## Alternative: swap the text encoder to an uncensored VLM
-
-As of 2026-07-06 we also test the `Qwen3VL-8B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf` encoder. It is a drop-in replacement for the default `unsloth/Qwen3-VL-8B-Instruct-Q4_K_M.gguf` used by `sd-cli --llm`. Because the grey box is driven by the prompt encoder and the local weights, using a more aggressively uncensored text encoder can reduce the false-positive refusals without changing the diffusion sampler.
-
-A milder option is `DreamFast/Qwen3-VL-8B-Heretic-1.3.0-Q4_K_M.gguf`. Initial testing showed it did **not** clear the grey box on the beach canary prompt; the HauhauCS aggressive variant is the Reddit-reported working encoder.
-
-Enable it:
-
-```bash
-export IDEOGRAM4_LLM_MODEL=aggressive
-```
-
-or per-prompt:
-
-```json
-{
-  "generation": {
-    "llm_model": "aggressive"
-  }
-}
-```
-
-Valid values are `"aggressive"`, `"heretic"`, `"instruct"` (default). Trade-off: each variant is another ~4.7 GB download and the license/behaviour differs from the instruct model. It is easy to reverse by setting `IDEOGRAM4_LLM_MODEL=instruct`.
 
 ## First-line fix: prompt hygiene (use this first)
 
@@ -89,12 +61,12 @@ python3 ideogram4_local.py rewrite prompts/my-scene.json -o prompts/my-scene-saf
    - `style_description` — short, consistent style fields.
    - `compositional_deconstruction.background` — the scene setting.
    - `compositional_deconstruction.elements` — 1-3 objects, each described as a situation/mood, never naming clothing.
-3. **Describe the scene, not the garment/anatomy/state.**
-   - Instead of `"a woman in a bikini"` → `"a cheerful young woman having fun at the beach on a sunny summer day"`.
+3. **Avoid dense JSON structures.** Drop `canvas`, `layout`, and many small regions; dense structured prompts can drift off-distribution and attract grey boxes.
+4. **Do not accessorize animals or frame them as fashion models.** In the 2026-07-09 cat-poster reproduction, prompts describing a cat with "sunglasses", "red silk scarf", "gold collar charm", "bandana", or "premium fashion magazine cover" reliably grey-boxed even with the aggressive encoder + `two_pass` bypass. This is a prompt-vocabulary problem, not a script/serialization problem.
+5. **Describe the situation, not the garment/anatomy/state.**
+   - Instead of `"a woman in a bikini"` → `"a cheerful young woman having fun at the beach on a sunny day"`.
    - Instead of `"an unclothed adult human figure"` → don't use human figures at all; use `"a friendly robot standing in a server room"`.
-4. **Avoid flagged vocabulary** in any text field (description, style, elements, background, layout).
-5. **Drop `canvas`, `layout`, and excessive regions.** Dense structured prompts drift off-distribution in this local GGUF build.
-6. **Use the aggressive encoder** (`generation.llm_model: "aggressive"` or `IDEOGRAM4_LLM_MODEL=aggressive`). It was the only encoder that rendered the situation-based beach canary.
+6. **Avoid flagged vocabulary** in any text field (description, style, elements, background, layout).
 7. **Prefer objects, robots, diagrams, and abstract illustrations** for tech blog images. Human/anatomy/stature descriptions grey out frequently in this local build.
 8. **Keep it in distribution.** Short, vague, or prose-only prompts are more likely to grey-out.
 
@@ -105,7 +77,8 @@ Ready-to-use canonical JSON templates for common blog headers:
 - `templates/prompt-blog-gitops-header.json` — server racks, Git icons, blue/amber palette.
 - `templates/prompt-blog-observability-header.json` — friendly robot at a monitoring console.
 
-Copy and edit them for new posts.
+Copy and edit them for new posts. Avoid adding explicit `"text"` elements unless you are prepared for garbled output.
+
 
 ## Backend workarounds (secondary)
 
@@ -122,17 +95,15 @@ This roughly **doubles generation time** on the M1 Max. It can help with stubbor
 
 ### `single_pass` mode
 
-A single `sd-cli` run with an explicit per-step CFG schedule that matches the official Ideogram 4 `V4_DEFAULT_20` preset:
+A single `sd-cli` run with an explicit per-step CFG schedule. The wrapper uses a community low-CFG-first schedule intended to desensitize the grey-box filter at the start of sampling:
 
 ```
---extra-sample-args guidance_schedule=7.0x18+3.0x2
+--extra-sample-args guidance_schedule=1.0x4+7.0x16
 ```
 
-`sd-cli` parses the schedule left-to-right into an array, then the sampler reads it reversed: the leftmost entries are used at the early denoising steps and the rightmost at polish. The official preset therefore means 18 steps at CFG `7.0` followed by 2 polish steps at CFG `3.0`.
+First 4 steps use CFG `1.0`, remaining 16 use CFG `7.0`. Cheaper than `two_pass` but weaker. Use it for borderline cases where you cannot afford 2× time.
 
-In our 2026-07-10 test, a canonical GitOps header prompt rendered cleanly in `single_pass` mode with this schedule. The real fix for false positives, however, is prompt/schema hygiene, not the sampler schedule.
-
-If you override with an explicit `generation.guidance_schedule`, the same reversed-indexing applies.
+**Note:** the official Ideogram 4 preset `V4_DEFAULT_20` uses the *opposite* schedule — high CFG for the body, low CFG for the final polish (`guidance_schedule=7.0x18+3.0x2` in `sd-cli` syntax). Use the official schedule for quality-first generation and rely on prompt hygiene; use the low-CFG-first schedule only as a filter desensitizer. See `references/ideogram4-official-sampler-schedules.md`.
 
 ## How to enable the backend workaround
 
