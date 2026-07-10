@@ -2,6 +2,8 @@
 
 A small, reusable, queue-backed local image generator using **Ideogram 4** via [stable-diffusion.cpp](https://github.com/leejet/stable-diffusion.cpp). Built for an Apple Silicon M1 Max with 32 GB unified RAM.
 
+> **Agents:** this repo also ships a Hermes skill. Load it with `skill_view(name="ideogram4-local")` for the established prompt schema, safety-filter workarounds, and verified templates. The skill and the repo are kept in sync.
+
 ## Why this exists
 
 The [Ideogram 4 open-weights release](https://github.com/ideogram-oss/ideogram4) is extremely good at:
@@ -125,7 +127,9 @@ Plain text works, but structured JSON gives far better control over composition 
 
 ## JSON prompt structure
 
-Ideogram 4 is trained on structured JSON captions. The wrapper passes the JSON verbatim to `sd-cli`. The canonical shape is:
+Ideogram 4 is trained on a specific structured JSON caption schema. The wrapper passes the JSON verbatim to `sd-cli`, but it also **auto-canonicalizes** every JSON prompt on submit: it drops unknown keys like `canvas`/`layout`, reorders fields to the trained order, and preserves the wrapper-only `"generation"` block.
+
+The canonical shape is:
 
 ```json
 {
@@ -133,25 +137,41 @@ Ideogram 4 is trained on structured JSON captions. The wrapper passes the JSON v
   "style_description": {
     "aesthetics": "...",
     "lighting": "...",
-    "photo": "...",
     "medium": "...",
+    "art_style": "...",
     "color_palette": ["#FF6B00", "#00D4FF"]
   },
   "compositional_deconstruction": {
-    "canvas": "...",
     "background": "...",
-    "layout": "...",
     "elements": [
-      {"type": "obj", "desc": "a mechanic installing a server"},
-      {"type": "text", "desc": "exact text 'homelab-2nd' on a sign"}
+      {
+        "type": "obj",
+        "bbox": [y1, x1, y2, x2],
+        "desc": "a mechanic installing a server"
+      },
+      {
+        "type": "text",
+        "bbox": [y1, x1, y2, x2],
+        "text": "homelab-2nd",
+        "desc": "exact text on a sign"
+      }
     ]
   }
 }
 ```
 
-See `prompts/homelab-toriyama.json` for the full working example that produced the `homelab-2nd` migration header.
+Key schema rules:
 
-The wrapper also accepts an optional top-level `"generation"` block for backend-only options. It is stripped before the prompt reaches `sd-cli`. See [Safety filter workaround](#safety-filter-grey-out-workaround) below.
+- Only three top-level keys are passed to the model: `high_level_description`, `style_description`, `compositional_deconstruction`.
+- `style_description` must contain **exactly one** of `photo` or `art_style`.
+  - Use `photo` for photographic prompts.
+  - Use `art_style` for illustrations, cartoons, 3D renders, vector art.
+- `compositional_deconstruction` must contain only `background` and `elements`.
+- Each element needs `type` (`obj` or `text`).
+- `bbox` is `[y1, x1, y2, x2]` normalized to `[0, 1000]`.
+- `canvas` and `layout` are **not** in the trained schema — the wrapper strips them automatically, but it is better not to include them.
+
+See `templates/prompt-blog-gitops-header.json` and `templates/prompt-blog-observability-header.json` for ready-to-use examples.
 
 ## How the queue works
 
@@ -255,14 +275,17 @@ python3 ideogram4_local.py rewrite prompts/my-scene.json -o prompts/my-scene-saf
 
 ### Prompt hygiene rules
 
-- Use **canonical structured JSON** with `high_level_description`, `style_description`, and `compositional_deconstruction`.
-- Keep the JSON **sparse**. The working Reddit/KJ structure is:
-  - `high_level_description` — one-line situation/persona.
-  - `style_description` — short, consistent style fields.
-  - `compositional_deconstruction.background` — the scene setting.
-  - `compositional_deconstruction.elements` — 1-3 objects, each described as a situation/mood, never naming clothing.
-- Avoid extra `canvas`, `layout`, or many small regions; dense structured prompts can drift off-distribution and attract grey boxes on this local GGUF build.
-- **Describe the situation, not the garment/anatomy/state.**
+- Use **canonical structured JSON** with exactly these top-level keys:
+  - `high_level_description`
+  - `style_description`
+  - `compositional_deconstruction`
+- In `style_description`, use **exactly one** of `photo` or `art_style`:
+  - `photo` for photographic prompts.
+  - `art_style` for illustrations, cartoons, vector art, 3D renders.
+- In `compositional_deconstruction`, use only `background` and `elements`.
+- Use **bboxes** for important elements. Format is `[y1, x1, y2, x2]` normalized to `[0, 1000]`.
+- **Do not use `canvas` or `layout`.** The wrapper strips them, but they drift the model off-distribution.
+- Describe the situation, not the garment/anatomy/state.
   - Instead of `"a woman in a bikini"` → `"a cheerful young woman having fun at the beach on a sunny summer day"`.
   - Instead of `"an unclothed adult human figure"` → `"a classical marble statue of a standing human figure in an art studio"`.
 - Avoid flagged vocabulary in any text field.
@@ -296,7 +319,7 @@ Or per-prompt in the JSON:
 Modes:
 
 - `"two_pass"` (default): neutral prompt first pass → img2img second pass. Most reliable, ~2× time.
-- `"single_pass"`: one generation with `guidance_schedule=1.0x4+7.0x16`. Cheaper, weaker.
+- `"single_pass"`: one generation with the official Ideogram 4 `V4_DEFAULT_20` guidance schedule. For 20 steps this is `7.0x18+3.0x2` — high CFG for the main denoise, low CFG for the last two polish steps. This matches the trained preset rather than inventing a backwards schedule.
 
 All keys in `"generation"` are optional. The wrapper strips the block before passing JSON to `sd-cli`, so agents do not need to change CLI commands.
 

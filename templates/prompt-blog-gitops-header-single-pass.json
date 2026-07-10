@@ -26,5 +26,11 @@
         "desc": "Floating geometric cubes and rectangles representing containers and microservices, in blue and amber, in the right third."
       }
     ]
+  },
+  "generation": {
+    "safety_bypass": true,
+    "safety_bypass_mode": "single_pass",
+    "steps": 20,
+    "llm_model": "aggressive"
   }
 }

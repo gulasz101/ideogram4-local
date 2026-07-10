@@ -366,6 +366,34 @@ class QueueLock:
 # ---------------------------------------------------------------------------
 
 
+def canonicalize_prompt(prompt_type: str, prompt_value: str) -> str:
+    """Return a cleaned, schema-correct prompt value for storage and generation.
+
+    For JSON prompts this runs canonicalization (drop canvas/layout, reorder
+    keys to match the official Ideogram 4 caption schema) and keeps the
+    wrapper-only "generation" block intact. Plain text prompts pass through.
+    """
+    if prompt_type != "json":
+        return prompt_value.strip()
+    try:
+        data = json.loads(prompt_value)
+    except json.JSONDecodeError:
+        # If JSON is broken, leave it as-is; the worker will fail loudly later.
+        return prompt_value.strip()
+    if not isinstance(data, dict):
+        return prompt_value.strip()
+
+    # Import locally so the linter/rewriter can also be used standalone.
+    from ideogram4_prompt_tools import canonicalize_caption
+
+    generation_block = data.get("generation")
+    canonical = canonicalize_caption(data, drop_generation=True)
+    # Preserve wrapper-only generation metadata.
+    if generation_block is not None:
+        canonical["generation"] = generation_block
+    return json.dumps(canonical, ensure_ascii=False, separators=(",", ":"))
+
+
 def build_prompt(prompt_type: str, prompt_value: str) -> str:
     if prompt_type == "json":
         data = json.loads(prompt_value)
@@ -436,7 +464,25 @@ def parse_generation_config(prompt_type: str, prompt_value: str) -> dict:
 
 
 def build_guidance_schedule(config: dict) -> Optional[str]:
-    """Return an --extra-sample-args guidance_schedule string if safety bypass is enabled."""
+    """Return an --extra-sample-args guidance_schedule string if needed.
+
+    The official Ideogram 4 V4_DEFAULT_20 preset uses loop-index order where
+    index 0 is the LAST sampling step. In sd-cli the spec is parsed left-to-
+    right into that array, and the runtime reads it reversed, so the leftmost
+    entries are used at the early denoising steps and the rightmost at polish.
+
+    Official preset for 20 steps:
+        loop-index order  = (3.0, 3.0, 7.0 x 18)
+        sd-cli spec       = "7.0x18+3.0x2"
+
+    We default to that schedule whenever safety bypass is enabled, but still
+    allow an explicit override via generation.guidance_schedule.
+    """
+    # An explicit schedule always wins.
+    explicit = config.get("guidance_schedule")
+    if explicit:
+        return str(explicit)
+
     if not config.get("safety_bypass"):
         return None
 
@@ -444,21 +490,11 @@ def build_guidance_schedule(config: dict) -> Optional[str]:
     if config.get("safety_bypass_mode") == "two_pass":
         return None
 
-    # Respect an explicit schedule if the user provided one.
-    explicit = config.get("guidance_schedule")
-    if explicit:
-        return str(explicit)
-
     total_steps = max(1, int(config.get("steps", DEFAULT_SAMPLE_STEPS)))
-    bypass_steps = max(0, min(total_steps - 1, int(config.get("safety_bypass_steps", 4))))
-    remaining = total_steps - bypass_steps
-    bypass_cfg = float(config.get("safety_bypass_cfg", 1.0))
-    normal_cfg = 7.0  # sd-cli default for Ideogram4-style CFG
-
-    if bypass_steps <= 0:
-        return None
-
-    return f"{bypass_cfg}x{bypass_steps}+{normal_cfg}x{remaining}"
+    # Official polish: last 2 steps at CFG 3.0. Keep at least 1 main step.
+    polish_steps = max(1, min(total_steps - 1, 2))
+    main_steps = total_steps - polish_steps
+    return f"7.0x{main_steps}+3.0x{polish_steps}"
 
 
 def _sd_cli_cmd(
@@ -625,7 +661,7 @@ def cmd_submit(args) -> int:
 
     job_id = queue.submit(
         prompt_type=prompt_type,
-        prompt_value=prompt_value,
+        prompt_value=canonicalize_prompt(prompt_type, prompt_value),
         output_path=output,
         width=args.width,
         height=args.height,

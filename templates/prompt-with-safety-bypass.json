@@ -1,0 +1,38 @@
+{
+  "high_level_description": "A wide 16:9 header illustration for a technology blog post, showing a friendly cartoon robot holding a glowing key card in front of a tidy homelab server rack.",
+  "style_description": {
+    "aesthetics": "flat vector cartoon, friendly technology blog illustration, clean shapes, soft gradients",
+    "lighting": "soft even lighting with a warm glow from the key card",
+    "medium": "digital vector illustration",
+    "art_style": "flat vector cartoon with bold shapes, soft gradients, and a playful tech editorial feel",
+    "color_palette": ["#3B82F6", "#F59E0B", "#1F2937", "#F3F4F6"]
+  },
+  "compositional_deconstruction": {
+    "background": "Plain light gray background with a subtle dot pattern.",
+    "elements": [
+      {
+        "type": "obj",
+        "bbox": [250, 400, 700, 600],
+        "desc": "A cute friendly cartoon robot with round eyes and a small antenna, holding a glowing orange key card in one hand."
+      },
+      {
+        "type": "obj",
+        "bbox": [150, 650, 450, 900],
+        "desc": "A simple server rack in the background with small status lights."
+      },
+      {
+        "type": "text",
+        "bbox": [520, 580, 620, 680],
+        "text": "homelab-2nd",
+        "desc": "Small horizontal label on the key card, sans-serif, dark text."
+      }
+    ]
+  },
+  "generation": {
+    "safety_bypass": true,
+    "safety_bypass_mode": "two_pass",
+    "safety_bypass_steps": 4,
+    "safety_bypass_cfg": 1.0,
+    "steps": 20
+  }
+}

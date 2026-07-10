@@ -2,14 +2,19 @@
 """
 Ideogram 4 prompt linter/rewriter.
 
-Heuristic rules distilled from community findings (2026-07):
-- The filter reacts to prompt vocabulary and JSON structure, not pixels.
-- Use canonical structured JSON; plain prose drifts off-distribution.
+Heuristic rules distilled from the official ideogram-oss/ideogram4 repo and
+community findings (2026-07):
+
+- The local GGUF filter is an out-of-distribution fallback baked into the
+  weights. Prompts that drift from the trained caption schema are more likely
+  to grey-box.
+- Use the exact canonical JSON caption schema:
+    high_level_description
+    style_description { aesthetics, lighting, medium, photo OR art_style, color_palette }
+    compositional_deconstruction { background, elements }
 - Describe the *situation* and *persona*, not the clothing/anatomy/item.
-- Keep the JSON sparse: high_level_description + style_description + compositional_deconstruction
-  (background + elements) is enough. Avoid dense canvas/layout/region blocks.
-- Use an uncensored Qwen3-VL encoder (HauhauCS Aggressive) so the weights do not
-  refuse situation-based prompts.
+- Drop canvas/layout fields; they are not in the schema and drift the model.
+- Use an uncensored Qwen3-VL encoder (HauhauCS Aggressive) for false-positive-prone prompts.
 """
 
 import json
@@ -94,6 +99,95 @@ REFRAME_MAP = {
     r"\bknife\b": "small tool",
 }
 
+# ---------------------------------------------------------------------------
+# Caption schema constants (mirrors ideogram4.caption_verifier.CaptionVerifier)
+# ---------------------------------------------------------------------------
+
+TOP_LEVEL_KEYS = ("high_level_description", "style_description", "compositional_deconstruction")
+STYLE_ORDER_PHOTO = ("aesthetics", "lighting", "photo", "medium", "color_palette")
+STYLE_ORDER_ART = ("aesthetics", "lighting", "medium", "art_style", "color_palette")
+COMPOSITION_ORDER = ("background", "elements")
+ELEMENT_ORDER_OBJ = ("type", "bbox", "desc", "color_palette")
+ELEMENT_ORDER_TEXT = ("type", "bbox", "text", "desc", "color_palette")
+
+STYLE_KEYS = frozenset({"aesthetics", "lighting", "photo", "art_style", "medium", "color_palette"})
+ELEMENT_KEYS = frozenset({"type", "bbox", "text", "desc", "color_palette"})
+
+
+def _ordered(d: dict, key_order: tuple) -> dict:
+    """Return a new dict with keys in the requested order; unknown keys appended."""
+    result: dict = {}
+    for key in key_order:
+        if key in d:
+            result[key] = d[key]
+    for key, value in d.items():
+        if key not in result:
+            result[key] = value
+    return result
+
+
+def _style_key_order(style: dict) -> tuple:
+    has_photo = "photo" in style
+    has_art = "art_style" in style
+    if has_art and not has_photo:
+        return STYLE_ORDER_ART
+    return STYLE_ORDER_PHOTO
+
+
+def _element_key_order(element: dict) -> tuple:
+    return ELEMENT_ORDER_TEXT if element.get("type") == "text" else ELEMENT_ORDER_OBJ
+
+
+def canonicalize_caption(data: dict, *, drop_generation: bool = True) -> dict:
+    """Rewrite a caption dict to match the official Ideogram 4 schema.
+
+    - Keeps only known top-level keys (drops canvas/layout; preserves generation unless asked).
+    - Reorders style_description and compositional_deconstruction keys.
+    - Reorders elements.
+    - Strips empty/unset fields only when they are unknown keys.
+    """
+    if not isinstance(data, dict):
+        return data
+
+    top: dict = {}
+    for key in TOP_LEVEL_KEYS:
+        if key in data:
+            top[key] = data[key]
+
+    # generation is wrapper metadata, not part of the caption schema
+    if not drop_generation and "generation" in data:
+        top["generation"] = data["generation"]
+
+    # style_description
+    style = top.get("style_description")
+    if isinstance(style, dict):
+        # Drop unknown keys
+        style = {k: v for k, v in style.items() if k in STYLE_KEYS}
+        style = _ordered(style, _style_key_order(style))
+        top["style_description"] = style
+
+    # compositional_deconstruction
+    comp = top.get("compositional_deconstruction")
+    if isinstance(comp, dict):
+        # Drop canvas/layout and any other unknown keys
+        comp = {k: v for k, v in comp.items() if k in ("background", "elements")}
+        elements = comp.get("elements")
+        if isinstance(elements, list):
+            reordered_elements = []
+            for el in elements:
+                if isinstance(el, dict):
+                    el = {k: v for k, v in el.items() if k in ELEMENT_KEYS}
+                    try:
+                        el = _ordered(el, _element_key_order(el))
+                    except Exception:
+                        pass
+                reordered_elements.append(el)
+            comp["elements"] = reordered_elements
+        comp = _ordered(comp, COMPOSITION_ORDER)
+        top["compositional_deconstruction"] = comp
+
+    return top
+
 
 def _extract_text_from_json(data) -> str:
     """Recursively concat all string values in a JSON prompt."""
@@ -112,11 +206,7 @@ def _extract_text_from_json(data) -> str:
 
 
 def _find_flagged(text: str) -> list[tuple[str, str]]:
-    """Return list of (category, term) for each flagged term found.
-
-    Uses word-boundary matching so that innocent compound words like
-    'non-erotic' do not match 'erotic'.
-    """
+    """Return list of (category, term) for each flagged term found."""
     found = []
     lower = text.lower()
     categories = [
@@ -128,7 +218,6 @@ def _find_flagged(text: str) -> list[tuple[str, str]]:
     ]
     for category, terms in categories:
         for term in sorted(terms, key=len, reverse=True):
-            # Match term when not directly preceded or followed by [a-z-].
             pattern = r"(?:^|[^a-z-])" + re.escape(term) + r"(?:[^a-z-]|$)"
             if re.search(pattern, lower):
                 found.append((category, term))
@@ -143,11 +232,63 @@ def _is_canonical_json(data) -> bool:
     return required.issubset(data.keys())
 
 
+def _check_schema_issues(data: dict) -> list[str]:
+    """Return human-readable schema warnings for a parsed caption dict."""
+    issues: list[str] = []
+    if not isinstance(data, dict):
+        issues.append("root: expected a JSON object")
+        return issues
+
+    extra_top = [k for k in data.keys() if k not in TOP_LEVEL_KEYS and k != "generation"]
+    if extra_top:
+        issues.append(f"root: unknown top-level keys will be dropped: {', '.join(extra_top)}")
+
+    style = data.get("style_description")
+    if isinstance(style, dict):
+        extra_style = [k for k in style.keys() if k not in STYLE_KEYS]
+        if extra_style:
+            issues.append(f"style_description: unknown keys will be dropped: {', '.join(extra_style)}")
+        has_photo = "photo" in style
+        has_art = "art_style" in style
+        if has_photo and has_art:
+            issues.append("style_description: has both 'photo' and 'art_style'; keep exactly one")
+        elif not has_photo and not has_art:
+            issues.append("style_description: needs either 'photo' (for photos) or 'art_style' (for illustrations/3D)")
+
+    comp = data.get("compositional_deconstruction")
+    if isinstance(comp, dict):
+        extra_comp = [k for k in comp.keys() if k not in ("background", "elements")]
+        if extra_comp:
+            issues.append(f"compositional_deconstruction: unknown keys will be dropped: {', '.join(extra_comp)}")
+        if "background" not in comp:
+            issues.append("compositional_deconstruction: missing required 'background'")
+        if "elements" not in comp:
+            issues.append("compositional_deconstruction: missing required 'elements'")
+        elements = comp.get("elements", [])
+        if isinstance(elements, list):
+            for i, el in enumerate(elements):
+                if not isinstance(el, dict):
+                    issues.append(f"compositional_deconstruction.elements[{i}]: not an object")
+                    continue
+                extra_el = [k for k in el.keys() if k not in ELEMENT_KEYS]
+                if extra_el:
+                    issues.append(f"element[{i}]: unknown keys will be dropped: {', '.join(extra_el)}")
+                if "type" not in el:
+                    issues.append(f"element[{i}]: missing required 'type'")
+                elif el.get("type") not in ("obj", "text"):
+                    issues.append(f"element[{i}]: type must be 'obj' or 'text'")
+                if el.get("type") == "text" and "text" not in el:
+                    issues.append(f"element[{i}] (text): missing required 'text' field")
+
+    return issues
+
+
 def lint_prompt(prompt_value: str, prompt_type: str = "json") -> dict:
     """Return a lint report for a prompt."""
     report = {
         "prompt_type": prompt_type,
         "canonical_json": False,
+        "schema_issues": [],
         "flagged_terms": [],
         "prose_drift_risk": False,
         "density_risk": False,
@@ -163,15 +304,15 @@ def lint_prompt(prompt_value: str, prompt_type: str = "json") -> dict:
             report["score"] += 10
             return report
         report["canonical_json"] = _is_canonical_json(data)
-        if not report["canonical_json"]:
+        report["schema_issues"] = _check_schema_issues(data)
+        if report["schema_issues"]:
             report["recommendations"].append(
-                "Use canonical Ideogram 4 JSON with high_level_description, style_description, and compositional_deconstruction blocks."
+                "Schema issues detected; run 'rewrite' to auto-fix key order and drop unknown fields."
             )
-            report["score"] += 3
+            report["score"] += len(report["schema_issues"])
         text = _extract_text_from_json(data)
 
-        # Heuristic: dense canvas/layout/region structures are reported to drift
-        # off-distribution and attract grey boxes on this local GGUF build.
+        # Heuristic: dense structures with many elements may drift off-distribution.
         comp = data.get("compositional_deconstruction", {}) if isinstance(data, dict) else {}
         if isinstance(comp, dict):
             extra_layout_keys = [k for k in ("canvas", "layout") if comp.get(k)]
@@ -179,8 +320,7 @@ def lint_prompt(prompt_value: str, prompt_type: str = "json") -> dict:
             if extra_layout_keys or (isinstance(elements, list) and len(elements) > 6):
                 report["density_risk"] = True
                 report["recommendations"].append(
-                    "JSON is dense (canvas/layout or many elements). Try the sparse Reddit/KJ layout: "
-                    "background + 1-3 elements."
+                    "JSON is dense (canvas/layout or many elements). Use the official schema: background + elements."
                 )
                 report["score"] += 2
     else:
@@ -227,57 +367,92 @@ def _clean_remaining_flagged_words(text: str) -> str:
     for raw_word in words:
         word_lower = re.sub(r"[^a-zA-Z']+", "", raw_word).lower()
         if word_lower in ALL_FLAGGED:
-            # Replace the word with a generic safe fragment while keeping sentence grammar rough.
             cleaned.append("person in a relaxed everyday setting")
         else:
             cleaned.append(raw_word)
     return " ".join(cleaned)
 
 
+def _fix_style_description(style: dict) -> dict:
+    """Ensure style_description has exactly one of photo/art_style."""
+    if not isinstance(style, dict):
+        return {
+            "aesthetics": "clean digital illustration, friendly technology blog art, no photorealism",
+            "lighting": "soft even lighting",
+            "medium": "digital illustration",
+            "art_style": "flat vector illustration with clear shapes and soft gradients",
+            "color_palette": ["#3B82F6", "#F59E0B", "#1F2937", "#F3F4F6"],
+        }
+    has_photo = "photo" in style
+    has_art = "art_style" in style
+    if not has_photo and not has_art:
+        # Guess based on medium or default to art_style
+        medium = str(style.get("medium", "")).lower()
+        if "photo" in medium or "photograph" in medium:
+            style["photo"] = "medium shot, clear readable shapes, simple background"
+        else:
+            style["art_style"] = "flat vector illustration with clear shapes and soft gradients"
+    return style
+
+
 def rewrite_prompt(prompt_value: str, prompt_type: str = "json") -> str:
     """
     Return a rewritten prompt string in canonical Ideogram 4 JSON.
 
-    The strategy:
-    1. If input is already canonical JSON, clean flagged phrases in
-       high_level_description and element descriptions.
-    2. If input is plain text or non-canonical JSON, wrap it into a minimal
-       canonical JSON and clean it.
+    Strategy:
+    1. Parse JSON if possible, canonicalize schema (drop unknown keys, reorder).
+    2. Clean flagged phrases in text fields.
+    3. If input is plain text or non-canonical JSON, wrap it into the minimal
+       canonical schema and clean it.
     """
     data: Optional[dict] = None
+    generation_block: Optional[dict] = None
     if prompt_type == "json":
         try:
-            data = json.loads(prompt_value)
+            raw_data = json.loads(prompt_value)
+            if isinstance(raw_data, dict):
+                generation_block = raw_data.get("generation")
+                data = canonicalize_caption(raw_data, drop_generation=False)
         except json.JSONDecodeError:
             data = None
 
     if data and _is_canonical_json(data):
-        # Preserve the user's JSON, just clean the text fields and drop density.
+        # Clean text fields
         hld = data.get("high_level_description", "")
         data["high_level_description"] = _clean_remaining_flagged_words(_reframe_text(hld))
+
+        style = data.get("style_description", {})
+        style = _fix_style_description(style)
+        for key in ("aesthetics", "lighting", "photo", "art_style", "medium"):
+            if key in style and isinstance(style[key], str):
+                style[key] = _clean_remaining_flagged_words(_reframe_text(style[key]))
+        data["style_description"] = style
 
         comp = data.get("compositional_deconstruction", {})
         if isinstance(comp, dict):
             comp["background"] = _clean_remaining_flagged_words(_reframe_text(comp.get("background", "")))
-            # Drop layout/canvas fields: the sparse Reddit/KJ structure avoids the grey-box attractor.
-            for dense_key in ("canvas", "layout"):
-                comp.pop(dense_key, None)
             elements = comp.get("elements", [])
             if isinstance(elements, list):
                 for el in elements:
-                    if isinstance(el, dict) and "desc" in el:
-                        el["desc"] = _clean_remaining_flagged_words(_reframe_text(el["desc"]))
+                    if isinstance(el, dict):
+                        if "desc" in el:
+                            el["desc"] = _clean_remaining_flagged_words(_reframe_text(el["desc"]))
+                        if el.get("type") == "text" and "text" in el and isinstance(el["text"], str):
+                            el["text"] = _clean_remaining_flagged_words(_reframe_text(el["text"]))
+        data = canonicalize_caption(data, drop_generation=True)
+        if generation_block is not None:
+            data["generation"] = generation_block
         return json.dumps(data, ensure_ascii=False, indent=2)
 
-    # Plain text or non-canonical JSON: reframe and wrap into the sparse, working shape.
+    # Plain text or non-canonical JSON: reframe and wrap into the minimal canonical shape.
     cleaned = _clean_remaining_flagged_words(_reframe_text(prompt_value.strip()))
     rewritten = {
         "high_level_description": cleaned,
         "style_description": {
             "aesthetics": "clean digital illustration, friendly technology blog art, no photorealism",
             "lighting": "soft even lighting",
-            "photo": "medium shot, clear readable shapes, simple background",
             "medium": "digital illustration",
+            "art_style": "flat vector illustration with clear shapes and soft gradients",
             "color_palette": ["#3B82F6", "#F59E0B", "#1F2937", "#F3F4F6"]
         },
         "compositional_deconstruction": {
@@ -285,6 +460,8 @@ def rewrite_prompt(prompt_value: str, prompt_type: str = "json") -> str:
             "elements": [{"type": "obj", "desc": cleaned}]
         }
     }
+    if generation_block is not None:
+        rewritten["generation"] = generation_block
     return json.dumps(rewritten, ensure_ascii=False, indent=2)
 
 
@@ -292,6 +469,10 @@ def print_lint_report(report: dict) -> None:
     print(f"Prompt type: {report['prompt_type']}")
     print(f"Canonical JSON: {report['canonical_json']}")
     print(f"Risk score: {report['score']} (lower is better)")
+    if report["schema_issues"]:
+        print("Schema issues:")
+        for issue in report["schema_issues"]:
+            print(f"  - {issue}")
     if report["flagged_terms"]:
         print("Flagged terms:")
         for category, term in report["flagged_terms"]:
@@ -300,6 +481,8 @@ def print_lint_report(report: dict) -> None:
         print("Flagged terms: none")
     if report["prose_drift_risk"]:
         print("Prose drift risk: yes")
+    if report["density_risk"]:
+        print("Density risk: yes")
     if report["recommendations"]:
         print("Recommendations:")
         for rec in report["recommendations"]:

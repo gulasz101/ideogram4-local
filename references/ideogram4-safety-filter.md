@@ -122,13 +122,15 @@ This roughly **doubles generation time** on the M1 Max. It can help with stubbor
 
 ### `single_pass` mode
 
-A single `sd-cli` run with an explicit per-step CFG schedule:
+A single `sd-cli` run with an explicit per-step CFG schedule that matches the official Ideogram 4 `V4_DEFAULT_20` preset:
 
 ```
---extra-sample-args guidance_schedule=1.0x4+7.0x16
+--extra-sample-args guidance_schedule=7.0x18+3.0x2
 ```
 
-First 4 steps use CFG `1.0`, remaining 16 use CFG `7.0`. Cheaper than `two_pass` but weaker. Use it for borderline cases where you cannot afford 2× time.
+`sd-cli` parses the schedule left-to-right into an array, then the sampler reads it reversed: the leftmost entries are used at the early denoising steps and the rightmost entries at the final polish steps. The official preset therefore means 18 steps at CFG `7.0` followed by 2 polish steps at CFG `3.0`. This is the trained configuration, so `single_pass` is now quality-first rather than a low-CFG desensitizer.
+
+If you override with an explicit `generation.guidance_schedule`, the same reversed-indexing applies.
 
 ## How to enable the backend workaround
 
