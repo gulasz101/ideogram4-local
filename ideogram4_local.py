@@ -27,6 +27,7 @@ import fcntl
 import json
 import os
 import secrets
+import signal
 import sqlite3
 import subprocess
 import sys
@@ -710,6 +711,12 @@ def cmd_wait(args) -> int:
         time.sleep(args.poll_interval)
 
 
+def _mark_failed_on_signal(signum: int, frame, job_id: str, queue: QueueBackend) -> None:
+    queue.update_status(job_id, "failed", pid=os.getpid(), error=f"killed by signal {signum}")
+    log(f"Job {job_id} killed by signal {signum}")
+    sys.exit(128 + signum)
+
+
 def _run_one_job(queue: QueueBackend, lock: QueueLock) -> bool:
     """Pick up one pending job, run it under the lock, return True if work was done."""
     job = queue.next_pending()
@@ -719,6 +726,9 @@ def _run_one_job(queue: QueueBackend, lock: QueueLock) -> bool:
     job_id = job["id"]
     queue.update_status(job_id, "running", pid=os.getpid())
     log(f"Processing job {job_id}")
+
+    old_sigint = signal.signal(signal.SIGINT, lambda s, f: _mark_failed_on_signal(s, f, job_id, queue))
+    old_sigterm = signal.signal(signal.SIGTERM, lambda s, f: _mark_failed_on_signal(s, f, job_id, queue))
 
     try:
         output = Path(job["output_path"])
@@ -735,14 +745,19 @@ def _run_one_job(queue: QueueBackend, lock: QueueLock) -> bool:
     except Exception as e:
         queue.update_status(job_id, "failed", pid=os.getpid(), error=str(e))
         log(f"Job {job_id} failed: {e}")
+    finally:
+        signal.signal(signal.SIGINT, old_sigint)
+        signal.signal(signal.SIGTERM, old_sigterm)
 
     return True
 
 
 def cmd_worker(args) -> int:
     queue = QueueBackend(DB_PATH)
-    log("Worker started; polling for pending jobs...")
+    log("Worker started; reaping any zombie jobs before polling...")
+    _reap_zombie_jobs(queue)
 
+    log("Polling for pending jobs...")
     while True:
         job = queue.next_pending()
         if not job:
@@ -754,8 +769,8 @@ def cmd_worker(args) -> int:
             continue
 
         try:
-            with QueueLock(LOCK_FILE, timeout=args.queue_timeout, no_wait=args.no_wait):
-                _run_one_job(queue, QueueLock)
+            with QueueLock(LOCK_FILE, timeout=args.queue_timeout, no_wait=args.no_wait) as lock:
+                _run_one_job(queue, lock)
         except Exception as e:
             log(f"Worker error: {e}")
             if args.one_shot:
@@ -771,6 +786,30 @@ def cmd_lint(args) -> int:
     report = lint_prompt(prompt_value, "json")
     print_lint_report(report)
     return 0 if report["score"] == 0 else 1
+
+
+def _reap_zombie_jobs(queue: QueueBackend) -> None:
+    """Mark running jobs whose PID is dead and output missing as failed."""
+    with sqlite3.connect(queue.db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        cur = conn.execute("SELECT id, pid, output_path FROM jobs WHERE status = 'running'")
+        zombies = [dict(r) for r in cur.fetchall()]
+
+    for job in zombies:
+        pid = job.get("pid")
+        output_path = Path(job["output_path"]) if job.get("output_path") else None
+        pid_alive = False
+        if pid:
+            try:
+                os.kill(pid, 0)
+                pid_alive = True
+            except (OSError, ProcessLookupError):
+                pass
+        output_exists = output_path.exists() if output_path else False
+        if not pid_alive and not output_exists:
+            error = f"worker PID {pid} gone and output file missing"
+            queue.update_status(job["id"], "failed", pid=pid, error=error)
+            log(f"Reaped zombie job {job['id']}: {error}")
 
 
 def cmd_rewrite(args) -> int:
