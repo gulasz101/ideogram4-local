@@ -752,6 +752,30 @@ def _run_one_job(queue: QueueBackend, lock: QueueLock) -> bool:
     return True
 
 
+def _reap_zombie_jobs(queue: QueueBackend) -> None:
+    """Mark running jobs whose PID is dead and output missing as failed."""
+    with sqlite3.connect(queue.db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        cur = conn.execute("SELECT id, pid, output_path FROM jobs WHERE status = 'running'")
+        zombies = [dict(r) for r in cur.fetchall()]
+
+    for job in zombies:
+        pid = job.get("pid")
+        output_path = Path(job["output_path"]) if job.get("output_path") else None
+        pid_alive = False
+        if pid:
+            try:
+                os.kill(pid, 0)
+                pid_alive = True
+            except (OSError, ProcessLookupError):
+                pass
+        output_exists = output_path.exists() if output_path else False
+        if not pid_alive and not output_exists:
+            error = f"worker PID {pid} gone and output file missing"
+            queue.update_status(job["id"], "failed", pid=pid, error=error)
+            log(f"Reaped zombie job {job['id']}: {error}")
+
+
 def cmd_worker(args) -> int:
     queue = QueueBackend(DB_PATH)
     log("Worker started; reaping any zombie jobs before polling...")
