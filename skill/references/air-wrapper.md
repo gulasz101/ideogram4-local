@@ -36,9 +36,12 @@ JOB_ID=$(imagegen submit \
 echo "Job ID: $JOB_ID"
 imagegen status "$JOB_ID"
 # ~21 minutes later
-imagegen fetch "$JOB_ID"
-ls -l ~/image-studio/staging/*.png
+PNG=$(imagegen fetch "$JOB_ID")
+echo "Fetched: $PNG"
+ls -l "$PNG"
 ```
+
+`fetch` prints the local path on stdout, under `~/image-studio/staging/<date>/`; the filename is `<slug>-<8 hex>.png`. Use that path for the size check and the upload rather than guessing a `<slug>.png` name.
 
 The wrapper prints only the job ID to stdout. A 1216×832 render takes about 21 minutes on the M1 Max; do not poll in the same run. Schedule a Paperclip issue monitor (`references/review-loop.md`) and end the run, or resume on a later wake.
 

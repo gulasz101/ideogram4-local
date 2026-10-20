@@ -57,23 +57,24 @@ Statuses used here: `in_progress` while rendering, `in_review` while the card is
 
 ## Schedule a monitor
 
-The issue must be assigned to Matejko and be `in_progress` or `in_review`. Use `scheduledBy: "assignee"`.
+The issue must be assigned to Matejko and be `in_progress` or `in_review`. Use `scheduledBy: "assignee"`, and take the wait from the last queued job's `eta_minutes` rather than a fixed number.
 
 ```bash
-NEXT=$(python3 -c 'import datetime; print((datetime.datetime.now(datetime.UTC)+datetime.timedelta(minutes=26)).isoformat().replace("+00:00","Z"))')
+ETA=$(imagegen status "$JOB_LAST" | jq -r '.eta_minutes')
+NEXT=$(ETA="$ETA" python3 -c 'import datetime, os; print((datetime.datetime.now(datetime.UTC)+datetime.timedelta(minutes=int(os.environ["ETA"])+5)).isoformat().replace("+00:00","Z"))')
 BODY=$(printf '{"executionPolicy":{"monitor":{"nextCheckAt":"%s","scheduledBy":"assignee","notes":"render ETA"}}}' "$NEXT")
 curl -s -X PATCH "${AUTH[@]}" -H 'Content-Type: application/json' -d "$BODY" \
-  "$API/issues/$ISSUE_ID" | jq '{id, status, executionPolicy}'
+  "$API/issues/$ISSUE_ID" | jq '{id, status, assigneeAgentId, assigneeUserId, monitorNextCheckAt}'
 ```
 
-Confirm the response carries a non-null `monitorNextCheckAt` (or `executionPolicy.monitor.nextCheckAt`). If the field is null or the body is empty, the write failed; re-read the issue before ending the run.
+Confirm the response carries a non-null `monitorNextCheckAt` (or `executionPolicy.monitor.nextCheckAt`). If the field is null or the body is empty, the write failed; re-read the issue before ending the run. The monitor only fires when the issue has an agent assignee, a null user assignee, and is `in_progress` or `in_review`.
 
 ## Upload an attachment
 
-`POST` multipart field `file` to the company-scoped endpoint, and keep the returned id:
+`POST` multipart field `file` to the company-scoped endpoint, and keep the returned id. Use the path `imagegen fetch` printed: the fetched filename is `<slug>-<8 hex>.png`, so a hand-built `<slug>.png` path will not exist.
 
 ```bash
-PNG=~/image-studio/staging/2026-10-21/gitops-header-a.png
+PNG="$PNG_A"   # the path imagegen fetch printed, e.g. .../2026-10-21/gitops-header-a-7f3a9c21.png
 UPLOAD=$(curl -s -X POST "${AUTH[@]}" \
   -F "file=@$PNG;type=image/png" \
   "$API/companies/$COMPANY_ID/issues/$ISSUE_ID/attachments")

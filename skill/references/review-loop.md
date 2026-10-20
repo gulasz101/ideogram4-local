@@ -44,15 +44,15 @@ curl -s -X POST "${AUTH[@]}" -H 'Content-Type: application/json' \
 Read the ETA for the last job, then add five minutes:
 
 ```bash
-imagegen status "$JOB_B" | jq '.eta_minutes'
-```
-
-```bash
-NEXT=$(python3 -c 'import datetime; print((datetime.datetime.now(datetime.UTC)+datetime.timedelta(minutes=26)).isoformat().replace("+00:00","Z"))')
+JOB_LAST=$JOB_B   # the last variant you submitted
+ETA=$(imagegen status "$JOB_LAST" | jq -r '.eta_minutes')
+NEXT=$(ETA="$ETA" python3 -c 'import datetime, os; print((datetime.datetime.now(datetime.UTC)+datetime.timedelta(minutes=int(os.environ["ETA"])+5)).isoformat().replace("+00:00","Z"))')
 BODY=$(printf '{"executionPolicy":{"monitor":{"nextCheckAt":"%s","scheduledBy":"assignee","notes":"render ETA"}}}' "$NEXT")
 curl -s -X PATCH "${AUTH[@]}" -H 'Content-Type: application/json' -d "$BODY" \
-  "$API/issues/$ISSUE_ID" | jq '{id, status, executionPolicy}'
+  "$API/issues/$ISSUE_ID" | jq '{id, status, assigneeAgentId, assigneeUserId, monitorNextCheckAt}'
 ```
+
+Use the last job you submitted (`$JOB_LAST`), not a fixed number: with three variants queued the last ETA is about 63 minutes, and a hard-coded wait fires the monitor early.
 
 Keep the issue `in_progress`. Do not poll `imagegen status` in a loop; the monitor is the wake. End the run after the PATCH.
 
@@ -65,12 +65,13 @@ for JOB in "$JOB_A" "$JOB_B"; do imagegen status "$JOB" | jq -r '"\(.id) \(.stat
 ```
 
 - Any `pending` or `running` → PATCH the monitor again and end the run.
-- All `done` → fetch each one:
+- All `done` → fetch each one. `fetch` prints the local path on stdout and the filename keeps the random token:
 
 ```bash
-imagegen fetch "$JOB_A"
-imagegen fetch "$JOB_B"
-ls -l ~/image-studio/staging/2026-10-21/
+PNG_A=$(imagegen fetch "$JOB_A")
+PNG_B=$(imagegen fetch "$JOB_B")
+printf '%s\n%s\n' "$PNG_A" "$PNG_B"
+ls -l "$PNG_A" "$PNG_B"
 ```
 
 A `fetch` exit of 3 means still active; exit 4 means the job failed. On failure, read `imagegen status` for the error and decide whether a prompt fix or a re-render is justified.
@@ -82,7 +83,7 @@ A `fetch` exit of 3 means still active; exit 4 means the job failed. On failure,
 Run `vision_analyze` on each PNG and check text spelling, grey box/margins, and intent. Run the margin diagnostic:
 
 ```bash
-python3 scripts/check-grey-bars.py ~/image-studio/staging/2026-10-21/gitops-forklift-a.png
+python3 scripts/check-grey-bars.py "$PNG_A"
 ```
 
 A failed variant gets one silent re-render with a corrected prompt; it does not go on the card. Your check may remove an image, never approve one.
@@ -94,9 +95,8 @@ A failed variant gets one silent re-render with a corrected prompt; it does not 
 Upload each passing PNG, keep the id, then create one card for the round:
 
 ```bash
-PNG=~/image-studio/staging/2026-10-21/gitops-forklift-a.png
 UPLOAD=$(curl -s -X POST "${AUTH[@]}" \
-  -F "file=@$PNG;type=image/png" \
+  -F "file=@$PNG_A;type=image/png" \
   "$API/companies/$COMPANY_ID/issues/$ISSUE_ID/attachments")
 AID_A=$(echo "$UPLOAD" | jq -r '.id // empty')
 ```
@@ -129,9 +129,11 @@ curl -s "${AUTH[@]}" "$API/issues/$ISSUE_ID/interactions" \
 For each newly resolved item:
 
 1. `hindsight_retain` the verdict, the reason, the post, and the prompt traits that mattered; tags `taste`, `verdict`.
-2. **approve** → copy the PNG to `~/wojtek.second.brain.obsidian.vault/tech_blog/assets/<YYYY-MM-DD>/<slug>.png` and write the record (`references/library-records.md`).
+2. **approve** → copy the PNG to `~/wojtek.second.brain.obsidian.vault/tech_blog/assets/<YYYY-MM-DD>/<label>.png` (the label slug, without the token) and write the record (`references/library-records.md`).
 3. **reject** → revise the prompt from the reason and go back to step 3 with `round-<n+1>`.
 4. **defer** → leave the item untouched.
+
+A user comment while the card is pending supersedes the rest of the card with `superseded_by_comment`. On a comment wake, read the comment first; if the card was superseded, open the next round's card with a new idempotency key, carrying the remaining items and revised by the comment.
 
 After round 3, if a slot is still unapproved, post a comment asking Wojtek what to change and stop rendering. Do not open an endless sequence of cards.
 
@@ -143,7 +145,7 @@ When every requested slot has an approved image:
 
 ```bash
 curl -s -X PATCH "${AUTH[@]}" -H 'Content-Type: application/json' \
-  -d '{"status":"done","comment":"Approved: tech_blog/assets/2026-10-21/gitops-forklift-a.png. Record: 3-resources/image-library/2026-10/gitops-forklift-a--<job-id>.md"}' \
+  -d '{"status":"done","comment":"Approved: tech_blog/assets/2026-10-21/gitops-forklift-a.png. Record: 3-resources/image-library/2026-10/2026-10-21-gitops-forklift-a-7f3a9c21--<job-id>.md"}' \
   "$API/issues/$ISSUE_ID" | jq '{id, status}'
 ```
 

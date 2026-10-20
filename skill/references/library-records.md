@@ -5,18 +5,18 @@ One record per rendered image, in the Obsidian vault. The format is the one `stu
 ## Where records live
 
 ```
-~/wojtek.second.brain.obsidian.vault/3-resources/image-library/<YYYY-MM>/<YYYY-MM-DD>-<slug>--<job_id>.md
+~/wojtek.second.brain.obsidian.vault/3-resources/image-library/<YYYY-MM>/<YYYY-MM-DD>-<stem>--<job_id>.md
 ```
 
 - `<YYYY-MM>` and `<YYYY-MM-DD>` come from the job's `created_at`.
-- `<slug>` is the `label` you gave the verdict-card item (the `--name` slug).
+- `<stem>` is the **fetched PNG stem**, i.e. the `label` slug plus the wrapper's 8-hex token: `<slug>-<token>`. `imagegen fetch` prints that path, so use its basename. `library_backfill.py`'s `record_relative_path()` builds the same filename and skips a job only if that exact path exists; using the label alone would make the next backfill write a duplicate `verdict: unreviewed` record.
 - `<job_id>` is the job id `imagegen submit` printed.
 
-Approved images live in the vault at `tech_blog/assets/<YYYY-MM-DD>/<slug>.png`.
+Approved images live in the vault at `tech_blog/assets/<YYYY-MM-DD>/<slug>.png`, with the readable label slug (no token).
 
 ## Format
 
-Use exactly the frontmatter keys and the three sections of `render_record()`: `## Why`, `## Prompt`, `## Verdicts`. Studio records differ from back-filled ones only in these values:
+Use exactly the frontmatter keys and the three sections of `render_record()`: `## Why`, `## Prompt`, `## Verdicts`. The `# heading` is the record's `<stem>`, matching the filename. Studio records differ from back-filled ones only in these values:
 
 | field | studio value |
 | --- | --- |
@@ -60,6 +60,8 @@ Write the record for a rejected render too, with `asset: null`, `asset_location:
 
 ## Complete example
 
+This is `3-resources/image-library/2026-10/2026-10-21-gitops-forklift-a-7f3a9c21--K3n8Qw7tY2c.md`:
+
 ```markdown
 ---
 type: "image-record"
@@ -81,7 +83,7 @@ verdict: "approved"
 source: "studio"
 ---
 
-# gitops-forklift-a
+# gitops-forklift-a-7f3a9c21
 
 ![[tech_blog/assets/2026-10-21/gitops-forklift-a.png]]
 
@@ -112,7 +114,8 @@ From [[2026-10-15-my-homelab-agent-lied-about-its-own-model]], section "Why GitO
       {"type": "obj", "bbox": [0, 0, 1000, 400], "desc": "rows of dark server racks with small amber status lights, reaching the top edge"},
       {"type": "obj", "bbox": [0, 620, 1000, 1000], "desc": "a polished concrete floor with painted safety lines, reaching the bottom edge"}
     ]
-  }
+  },
+  "generation": {"safety_bypass": true, "safety_bypass_mode": "single_pass"}
 }
 ```
 
