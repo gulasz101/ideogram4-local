@@ -93,7 +93,7 @@ class SubmitTests(unittest.TestCase):
             runner.calls[1],
             SCP_PREFIX
             + [
-                str(self.prompt),
+                str(self.prompt.resolve()),
                 "m1max:git/ideogram4-local/studio-incoming/my-prompt-file-a1b2c3d4.json",
             ],
         )
@@ -132,12 +132,32 @@ class SubmitTests(unittest.TestCase):
         )
         self.assertEqual(
             runner.calls[1][-1],
-            "m1max:'git/my ideogram 4/studio-incoming/my-fancy-prompt-a1b2c3d4.json'",
+            "m1max:git/my ideogram 4/studio-incoming/my-fancy-prompt-a1b2c3d4.json",
         )
         self.assertIn(
             "cd 'git/my ideogram 4' && python3 ideogram4_local.py submit",
             runner.calls[2][-1],
         )
+
+    @patch("imagegen._today_str", return_value="2026-10-20")
+    @patch("imagegen.secrets.token_hex", return_value="a1b2c3d4")
+    def test_submit_uses_absolute_local_scp_path_with_colon(self, _token, _today):
+        prompt = Path(self.tmp.name) / "a:b.json"
+        prompt.write_text('{"high_level_description": "x"}', encoding="utf-8")
+        runner = FakeRunner(
+            [
+                imagegen.Result(0, "", ""),
+                imagegen.Result(0, "", ""),
+                imagegen.Result(0, "abc123DEF\n", ""),
+            ]
+        )
+
+        code, out, err = run_cli(["submit", "--prompt-json", str(prompt)], runner)
+
+        self.assertEqual(code, 0, err)
+        local_arg = runner.calls[1][-2]
+        self.assertTrue(local_arg.startswith("/"), local_arg)
+        self.assertEqual(local_arg, str(prompt.resolve()))
 
     @patch("imagegen._today_str", return_value="2026-10-20")
     @patch("imagegen.secrets.token_hex", return_value="a1b2c3d4")
@@ -278,7 +298,7 @@ class FetchTests(unittest.TestCase):
 
         self.assertEqual(code, 0, err)
         local = Path(out.strip())
-        self.assertEqual(local, self.dest / "job1.png")
+        self.assertEqual(local, self.dest.resolve() / "job1.png")
         self.assertGreater(local.stat().st_size, 0)
         self.assertEqual(
             runner.calls[1],

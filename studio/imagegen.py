@@ -109,7 +109,9 @@ def ssh_argv(cfg, command):
 
 
 def scp_target(cfg, path):
-    return "{}:{}".format(cfg.host, shlex.quote(path))
+    # SFTP-mode scp (OpenSSH >= 9.0) passes paths verbatim; only the ssh
+    # command strings go through a remote shell, so do not quote here.
+    return "{}:{}".format(cfg.host, path)
 
 
 def scp_to_remote_argv(cfg, local_path, remote):
@@ -192,7 +194,9 @@ def cmd_submit(args, cfg, runner):
         )
         return 1
 
-    copied = runner(scp_to_remote_argv(cfg, prompt_path, remote_prompt_incoming))
+    copied = runner(
+        scp_to_remote_argv(cfg, prompt_path.resolve(), remote_prompt_incoming)
+    )
     if copied.returncode != 0:
         print(
             (copied.stderr or copied.stdout).strip()
@@ -307,7 +311,7 @@ def cmd_fetch(args, cfg, runner):
     else:
         dest_dir = Path(cfg.staging).expanduser() / _today_str()
     dest_dir.mkdir(parents=True, exist_ok=True)
-    local_path = dest_dir / posixpath.basename(remote_output)
+    local_path = dest_dir.resolve() / posixpath.basename(remote_output)
 
     fetched = runner(scp_from_remote_argv(cfg, remote_output, local_path))
     if fetched.returncode != 0:
