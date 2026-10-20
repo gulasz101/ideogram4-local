@@ -1,0 +1,40 @@
+{
+  "high_level_description": "A wide cinematic 1216 x 832 anime illustration in the style of Akira Toriyama. A chibi mechanic in an orange jumpsuit operates a small forklift to swap old dusty server boxes for shiny new ones. A small green serpent dragon blows glowing log entries into a large white storage server. The scene fills the entire frame edge to edge with no empty borders. Cel-shaded, vibrant, playful, technology blog header about a forklift upgrade of an observability stack.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dragon Ball cel-shaded cartoon, bold black outlines, rounded exaggerated proportions, expressive comedic faces, playful technology blog illustration, no photorealism, no 3D render",
+    "lighting": "Bright workshop lighting with warm overhead lamps, soft shadows, cyan and orange glow from server LEDs and log streams, energetic cheerful mood filling the whole frame",
+    "medium": "digital anime illustration, vector-like clean coloring, bold outlines, technology blog header art",
+    "art_style": "Akira Toriyama, Dr. Slump chibi style, Dragon Ball cel-shaded cartoon",
+    "color_palette": ["#FF6B00", "#00D4FF", "#1E293B", "#F8FAFC", "#FBBF24", "#F4682E"]
+  },
+  "compositional_deconstruction": {
+    "background": "A clean homelab workshop filling the entire frame. Light gray concrete floor at the bottom, soft gray walls, server racks lining the back wall with blinking green and amber LED lights from floor to ceiling. Floating holographic log streams in orange and cyan drift through the air across the full height. A bright open sky is visible through a large workshop window in the upper portion. The scene fills the entire canvas with content from the very top edge to the very bottom edge, no empty space.",
+    "elements": [
+      {
+        "type": "obj",
+        "bbox": [300, 50, 750, 550],
+        "desc": "A short chubby chibi human mechanic on the left center operating a small orange forklift. He has brown spiky hair, round glasses, a goatee, and an orange jumpsuit with a blue cap. He has a big confident grin. The forklift is lifting a shiny new black server box with bright cyan glowing LEDs and a clean orange circular community logo on its front panel."
+      },
+      {
+        "type": "obj",
+        "bbox": [550, 150, 800, 550],
+        "desc": "An old dusty beige server box on the floor being pushed away by the forklift. It has crossed-out circular stickers and dim red LEDs. It looks deprecated and sad."
+      },
+      {
+        "type": "obj",
+        "bbox": [50, 550, 350, 950],
+        "desc": "A small Toriyama-style green serpent dragon character coiled around a server rack in the lower left, blowing a stream of glowing orange log entries from its mouth. The log entries look like small rectangular pieces of paper with text lines flowing toward the right side."
+      },
+      {
+        "type": "obj",
+        "bbox": [550, 650, 1000, 1000],
+        "desc": "A large white industrial storage server box on the right side shaped like a friendly storage container with two bucket openings at the top. Glowing orange log entries from the dragon are flowing into the bucket openings."
+      },
+      {
+        "type": "obj",
+        "bbox": [650, 0, 1000, 250],
+        "desc": "Floating holographic dashboard panels in the upper right showing green line charts and blue log streams, glowing softly against the workshop wall."
+      }
+    ]
+  }
+}
