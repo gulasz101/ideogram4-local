@@ -43,7 +43,7 @@ Use this skill on any of these branches:
    - Run at most 3 rounds per request. After round 3 with a slot still unapproved, ask Wojtek on the issue what to change instead of rendering again.
    *Done when every newly resolved item is retained and handled.*
 
-9. **Close** when every requested slot has an approved image. Comment with the asset paths and the record links, then set the issue to `done`.
+9. **Close** when every requested slot has an approved image. Comment with the asset paths and the record links, then set the issue to `done`. *Done when the issue is `done` and the comment carries every asset path and record link.*
 
 ## Rules
 
