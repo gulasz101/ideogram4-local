@@ -127,6 +127,37 @@ python3 ideogram4_local.py wait "$JOB_ID"
 
 Plain text works, but structured JSON gives far better control over composition and text.
 
+## Image Studio: submitting from the Air
+
+`studio/imagegen.py` is a stdlib-only client that queues and fetches jobs on the M1 Max
+(`m1max`) over the existing LAN SSH key. Run it on the Air; no service or port is needed.
+
+```bash
+# Queue a prompt (prints the job id)
+studio/imagegen.py submit --prompt-json prompts/my-scene.json --name my-scene -W 1216 -H 832
+
+# Position in the queue and rough ETA (the job JSON plus queue_ahead / eta_minutes)
+studio/imagegen.py status <job-id>
+
+# Download a finished job (default: ~/image-studio/staging/<YYYY-MM-DD>/)
+studio/imagegen.py fetch <job-id> [--dest DIR]
+```
+
+Add `--json` to `submit` for a machine-readable result (`job_id`, `engine`,
+`remote_output`, `submitted_at`). `fetch` exits `0` when the file is downloaded, `3`
+while the job is pending or running, and `4` when it failed (the job's error is printed).
+
+Configuration lives in the environment:
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `IMAGEGEN_HOST` | `m1max` | SSH alias of the generation host |
+| `IMAGEGEN_REMOTE_DIR` | `git/ideogram4-local` | Repo directory relative to the remote home |
+| `IMAGEGEN_STAGING` | `~/image-studio/staging` | Local download root |
+| `IMAGEGEN_MIN_PER_JOB` | `21` | Minutes per queued job, used for the ETA |
+
+Tests: `python3 -m unittest discover -s studio/tests -v` (no network, SSH runner is faked).
+
 ## JSON prompt structure
 
 Ideogram 4 is trained on a specific structured JSON caption schema. The wrapper passes the JSON verbatim to `sd-cli`, but it also **auto-canonicalizes** every JSON prompt on submit: it drops unknown keys like `canvas`/`layout`, reorders fields to the trained order, and preserves the wrapper-only `"generation"` block.
