@@ -33,7 +33,7 @@ The remaining keys keep the back-fill meanings:
 - `width`, `height` as integers.
 - `generation` is the prompt's wrapper-only `generation` block, or `null`.
 - `created_at` and `finished_at` come from `imagegen status`.
-- `superseded_by` is `null` unless a later job replaced this image.
+- `superseded_by` is `null` unless a later job replaced this image; a rejected render whose slot was later approved points at the approved job id (see **Multi-round slots**).
 - `post_status` is the post's frontmatter `status` (for example `draft` or `published`), or `null`.
 - `asset_location` values match the back-fill: `vault` or `max-only`.
 
@@ -57,6 +57,21 @@ Never rewrite an earlier row. The table is the verdict history; a later rejectio
 ## Rejected renders
 
 Write the record for a rejected render too, with `asset: null`, `asset_location: "max-only"`, `asset_present: false`, and the rejection reason in the table. The render may be deleted from staging; the record is what preserves why that prompt did not work.
+
+## Multi-round slots
+
+A slot normally takes more than one round, and every render that reached a card gets its own record — rejected ones included. Write the records so the slot's history reads correctly from either of them:
+
+- **The approved record carries the history of the slot.** Its Verdicts table has one row per round: the round-1 `rejected` row, with the reason prefixed by the rejected render's stem so the row names the image it is about, then the round-2 `approved` row.
+- **The rejected record keeps its own single `rejected` row**, with `asset: null`, `asset_location: "max-only"`, `asset_present: false`, and `superseded_by` set to the job id of the render that replaced it.
+- **The approved record keeps `superseded_by: null`** — nothing replaced it.
+
+```markdown
+| round | date | verdict | reason | issue |
+| --- | --- | --- | --- | --- |
+| 1 | 2026-10-21 | rejected | zeroclaw-claim-a-1a2b3c4d: the star placard reads as a prize, not as a claim about the model. | [GUL-34](/GUL/issues/GUL-34) |
+| 2 | 2026-10-21 | approved | The cable from the robot to the dusty machine names the downgrade at a glance. | [GUL-34](/GUL/issues/GUL-34) |
+```
 
 ## Complete example
 

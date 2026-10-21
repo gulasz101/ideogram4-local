@@ -53,7 +53,26 @@ curl -s -X PATCH "${AUTH[@]}" -H 'Content-Type: application/json' \
   "$API/issues/$ISSUE_ID" | jq '{id, status}'
 ```
 
-Statuses used here: `in_progress` while rendering, `in_review` while the card is pending, `done` when every slot is approved.
+Statuses used here: `in_progress` while rendering, `in_review` while the card is pending, `done` when every slot is approved, `blocked` when the board itself needs Wojtek (recipe below).
+
+## Block to ask Wojtek for an action
+
+`PATCH {"status":"blocked"}` on its own is rejected with **422** (`Entering blocked requires unresolved blockers, a pending interaction/approval, or unblockDescriptor`), and an agent may only name *itself* in `unblockDescriptor.owner` (403 otherwise) — so you cannot hand the block to the board or to Wojtek directly. For anything that needs him at the machine, open a confirmation card first, then the block is legal and the card is what wakes you back:
+
+```bash
+jq -n '{kind:"request_confirmation", resolverPolicy:"human_only", continuationPolicy:"wake_assignee",
+  idempotencyKey:"<slug>-action-1", title:"<what he must do>",
+  summary:"<one line: what is blocked and why>",
+  payload:{version:1, prompt:"I did it — go ahead.", acceptLabel:"Done, go ahead",
+    rejectLabel:"Not now", rejectRequiresReason:true, rejectReasonLabel:"What should I do instead?",
+    detailsMarkdown:"<evidence: the error, what you ruled out, where the files are>"}}' > /tmp/ask.json
+curl -s -X POST "${AUTH[@]}" -H 'Content-Type: application/json' --data-binary @/tmp/ask.json \
+  "$API/issues/$ISSUE_ID/interactions" | jq '{id, kind, status, continuationPolicy}'
+curl -s -X PATCH "${AUTH[@]}" -H 'Content-Type: application/json' -d '{"status":"blocked"}' \
+  "$API/issues/$ISSUE_ID" | jq '{identifier, status}'
+```
+
+`resolverPolicy: "human_only"` keeps the card for Wojtek alone. A blocked issue carries no monitor, so do not set both: the card is the only thing that brings the work back. Verify by re-reading the issue (`status: blocked`) and the interactions list (`status: pending`).
 
 ## Schedule a monitor
 
@@ -84,6 +103,12 @@ AID=$(echo "$UPLOAD" | jq -r '.id // empty')
 
 The returned `id` is the `attachmentId` used by the verdict card and by comment `attachmentIds`.
 
+A `201` is not proof the file landed. Read it back before it goes on a card — this returns `200` and the byte count you just uploaded:
+
+```bash
+curl -s -o /dev/null -w 'HTTP=%{http_code} bytes=%{size_download}\n' "${AUTH[@]}" "$API/attachments/$AID/content"
+```
+
 ## Create the item-verdict card
 
 One card per round, one item per image. `items[].id` is a short stable key; `items[].label` is the slug; `items[].description` is the prompt summary plus the why.
@@ -92,6 +117,7 @@ One card per round, one item per image. `items[].id` is a short stable key; `ite
 cat >/tmp/verdict-card.json <<'JSON'
 {
   "kind": "request_item_verdicts",
+  "resolverPolicy": "human_only",
   "title": "Pick the header for the GitOps post",
   "summary": "Round 1: three variants, each 1216x832.",
   "continuationPolicy": "wake_assignee",
@@ -122,6 +148,11 @@ curl -s -X POST "${AUTH[@]}" -H 'Content-Type: application/json' \
 
 Replace `<issueId>` in the idempotency key with the real issue id, and increment `round-<n>` per round. Reuse the same key when retrying the same card; a new round gets a new key.
 
+Two constraints on the payload that surface only as rejections:
+
+- **`items[].description` is capped at 500 characters.** A longer one fails the whole POST with `400 Validation error` / `code: "too_big"` / `path: ["payload","items",0,"description"]`. Draft the prompt summary, the why and the self-check note to fit, then check before submitting: `jq -r '.payload.items[] | "\(.label) \(.description|length)"' /tmp/verdict-card.json`.
+- **Set `resolverPolicy: "human_only"` on a verdict card.** The default is inherited `anyone`, which would let an agent resolve its own image verdict — the one thing your rules forbid.
+
 ## Read the verdicts back
 
 ```bash
@@ -134,7 +165,14 @@ The interaction's `result.items[]` carries `verdict` and `reason` for each resol
 ## Pitfalls
 
 - **Always prefix paths with `/api`.** The bare origin returns the SPA as HTML with HTTP 200, which looks like success and is not.
+- **A 500 on attachment upload is usually the S3 store, not your request.** The attachments route writes to `storage.s3.endpoint` (MinIO on the OMV box). Read `~/.paperclip/instances/default/logs/service.log` for the `ERROR: POST .../attachments 500` line: `connect EHOSTUNREACH <ip>:9000` means the Paperclip process cannot reach MinIO, while `curl http://<endpoint>/minio/health/live` and a fresh `node` connect from your own shell still succeed. Confirm the field name is right first — `file` is the only accepted multipart field, other names return 400, not 500. Restarting Paperclip alone does not cure this, so do not promise that it will: macOS local-network privacy blocks the Homebrew `node` binary from LAN hosts even though `curl` and a fresh `node` launched from your own shell reach the same address, and the durable fix is a **localhost relay** — a launchd job (e.g. `io.paperclip.minio-proxy`) running the system `python3` on `127.0.0.1:9000` and forwarding to `<lan-host>:9000` — with `storage.s3.endpoint` in `~/.paperclip/instances/default/config.json` pointed at `http://127.0.0.1:9000`, then the service restarted. That is the board owner's change, never yours. Keep the renders in staging, comment the diagnosis with the log line, set one monitor for a retry, and if the retry still fails, block the issue with a `request_confirmation` (see the block recipe above). Never restart the board yourself, and never rebuild the same image hoping the store comes back.
+- **Check the store before blaming your request.** Run `curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:9000/minio/health/live`. A 200 means MinIO and the relay are fine and the fault is inside the board process; a failure means the relay or the OMV box is down.
+- **A `request_item_verdicts` item `description` is capped at 500 characters.** A longer one fails the whole card with `400 Validation error ... path: ["payload","items",0,"description"]`. Put the prompt summary, the why and the self-check note in those 500 characters, and check with `jq -r '.payload.items[] | "\(.label) \(.description|length)"'` before posting; the fuller story belongs in `detailsMarkdown` (20000 chars).
+- **Cancel an interaction yourself with `withdraw`, not `cancel`.** `POST /api/issues/<id>/interactions/<interactionId>/cancel` is board-only and answers `403 Agent actors cannot cancel issue-thread interactions through this board-only route`. `POST .../withdraw` with `{"reason":"..."}` is allowed for the card's creator and the issue's current assignee, and settles it as `cancelled` — the right way to clear a card made moot by someone else's fix.
 - **An empty PATCH body means the write failed.** Investigate the response and re-read the issue; do not assume the status or monitor landed.
 - **Unattended runs refuse `execute_code`.** Use `terminal` with `curl`, as above.
 - **Monitor timestamps are ISO-8601 UTC with a `Z` suffix.** `datetime.isoformat()` returns `+00:00`; strip it before sending.
 - **The run id is required on mutations.** A write without `X-Paperclip-Run-Id` is rejected or misattributed.
+- **An agent cannot cancel or dismiss an interaction.** `POST .../interactions/<id>/cancel` is a board-only route (`403 Agent actors cannot cancel issue-thread interactions through this board-only route`). A confirmation card you opened for a blocker that later cleared stays `pending` and competes with the round's verdict card; say plainly on the issue that it is moot and ask the board to dismiss it, rather than opening a second card to cover the first.
+- **`curl --data-binary @~/file` does not expand `~`.** curl takes the path literally and fails with `option --data-binary: error encountered when reading a file`. Use `$HOME/...` or an absolute path.
+- **Comments come back newest-first.** `.[0]` is the latest comment; `.[-1]` is the oldest, which makes a comment you just posted look missing.
