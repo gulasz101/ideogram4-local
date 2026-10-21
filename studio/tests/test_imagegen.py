@@ -526,7 +526,7 @@ class StatusTests(unittest.TestCase):
         self.assertEqual(code, 0, err)
         payload = json.loads(out)
         self.assertEqual(payload["queue_ahead"], 2)
-        self.assertEqual(payload["eta_minutes"], 21 + 2 + 2)
+        self.assertEqual(payload["eta_minutes"], 21 + 3 + 3)
 
     def test_status_surfaces_remote_error(self):
         runner = FakeRunner([imagegen.Result(1, "", "Job not found: nope")])

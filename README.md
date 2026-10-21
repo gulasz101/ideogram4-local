@@ -155,7 +155,7 @@ Configuration lives in the environment:
 | `IMAGEGEN_REMOTE_DIR` | `git/ideogram4-local` | Repo directory relative to the remote home |
 | `IMAGEGEN_STAGING` | `~/image-studio/staging` | Local download root |
 | `IMAGEGEN_MIN_PER_JOB` | `21` | Minutes per Ideogram 4 job, used for the ETA |
-| `IMAGEGEN_FLUX_MIN_PER_JOB` | `2` | Minutes per FLUX.2-klein job, used for the ETA |
+| `IMAGEGEN_FLUX_MIN_PER_JOB` | `3` | Minutes per FLUX.2-klein job, used for the ETA |
 
 Tests: `python3 -m unittest discover -s studio/tests -v` (no network, SSH runner is faked).
 
@@ -163,8 +163,8 @@ Tests: `python3 -m unittest discover -s studio/tests -v` (no network, SSH runner
 
 Phase 6 of the Image Studio plan (decision **D2**) keeps Ideogram 4 as the main
 engine and adds **FLUX.2-klein-4B** (`black-forest-labs/FLUX.2-klein-4B`, Apache-2.0) for fast
-drafts: about two minutes per 1216×832 render at four steps, against roughly 21 minutes for an
-Ideogram render. Use it to explore compositions, then commit the keepers to Ideogram 4.
+drafts: about three minutes per 1216×832 render at four steps, against roughly 21 minutes for an
+Ideogram render (first live run, 2026-10-21: 173 s, of which 75 s model load and 89 s render). Use it to explore compositions, then commit the keepers to Ideogram 4.
 
 The worker itself stays stdlib-only on Homebrew Python (no torch). For a `flux2-klein` job it runs
 `flux2_klein.py` in the `~/.venvs/sou-flux` venv as a subprocess, the same way the Ideogram path runs
@@ -186,7 +186,7 @@ From the Air: `imagegen submit --engine flux2-klein --prompt "…" --json`.
 |---|---|---|
 | `IDEOGRAM4_FLUX_PYTHON` | `~/.venvs/sou-flux/bin/python` | Interpreter that runs `flux2_klein.py` |
 | `HF_HUB_OFFLINE` | `1` (the worker sets it if unset) | Use the cached weights; never download |
-| `IMAGEGEN_FLUX_MIN_PER_JOB` | `2` | Minutes per FLUX job, used for the Air ETA |
+| `IMAGEGEN_FLUX_MIN_PER_JOB` | `3` | Minutes per FLUX job, used for the Air ETA |
 
 FLUX prompts are plain natural language (the text encoder truncates at 512 tokens): there is no
 `lint` and no JSON. Each FLUX job stores an integer `seed`, and its library record carries

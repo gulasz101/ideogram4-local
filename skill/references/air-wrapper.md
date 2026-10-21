@@ -47,7 +47,7 @@ The wrapper prints only the job ID to stdout. A 1216×832 render takes about 21 
 
 ## FLUX.2-klein fast drafts
 
-`imagegen submit --engine flux2-klein` queues a fast draft: about 2 minutes per 1216×832
+`imagegen submit --engine flux2-klein` queues a fast draft: about 3 minutes per 1216×832
 render. The prompt is natural language. `--prompt "…"` uploads a temporary `.txt` to
 `<IMAGEGEN_REMOTE_DIR>/studio-incoming/` (and removes it locally afterwards);
 `--prompt-file path` uploads that file. `--prompt-json` is rejected for FLUX, and
@@ -56,10 +56,10 @@ render. The prompt is natural language. `--prompt "…"` uploads a temporary `.t
 ```bash
 JOB_ID=$(imagegen submit --engine flux2-klein \
   --prompt "a fox in a server room, warm monitor light" --json | jq -r '.job_id')
-imagegen status "$JOB_ID"   # eta_minutes counts 2 per FLUX job, 21 per Ideogram job
+imagegen status "$JOB_ID"   # eta_minutes counts 3 per FLUX job, 21 per Ideogram job
 ```
 
-`IMAGEGEN_FLUX_MIN_PER_JOB` (default `2`) is the per-FLUX-job ETA, alongside
+`IMAGEGEN_FLUX_MIN_PER_JOB` (default `3`) is the per-FLUX-job ETA, alongside
 `IMAGEGEN_MIN_PER_JOB` (default `21`) for Ideogram 4; a row with no `engine` counts as an
 Ideogram job. The Ideogram argv is unchanged, so this wrapper still drives a Max whose
 checkout predates phase 6; the FLUX path needs the phase-6 CLI and the
