@@ -55,7 +55,7 @@ render. The prompt is natural language. `--prompt "…"` uploads a temporary `.t
 
 ```bash
 JOB_ID=$(imagegen submit --engine flux2-klein \
-  --prompt "a fox in a server room, warm monitor light" --json)
+  --prompt "a fox in a server room, warm monitor light" --json | jq -r '.job_id')
 imagegen status "$JOB_ID"   # eta_minutes counts 2 per FLUX job, 21 per Ideogram job
 ```
 

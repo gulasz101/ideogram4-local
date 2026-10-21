@@ -738,11 +738,14 @@ def _submit_error(args) -> Optional[str]:
     if args.engine not in ENGINES:
         return f"unknown engine '{args.engine}': choose {' or '.join(ENGINES)}"
 
-    # FLUX needs latent-friendly dimensions; apply the rule to both engines so
-    # a rejected render fails at submit rather than after 21 minutes.
-    for flag, value in (("-W", args.width), ("-H", args.height)):
-        if value % 16 or not 256 <= value <= 2048:
-            return f"{flag} must be a multiple of 16 between 256 and 2048, got {value}"
+    # FLUX needs latent-friendly dimensions, so a bad size fails at submit
+    # rather than in the worker. Ideogram keeps its old rule-free sizes: 21
+    # done jobs are 1088x1350 (LinkedIn portrait), and 1350 is not a multiple
+    # of 16.
+    if args.engine == "flux2-klein":
+        for flag, value in (("-W", args.width), ("-H", args.height)):
+            if value % 16 or not 256 <= value <= 2048:
+                return f"{flag} must be a multiple of 16 between 256 and 2048, got {value}"
 
     if args.engine == "ideogram4":
         if args.prompt_file:

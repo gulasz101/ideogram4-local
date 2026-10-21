@@ -153,6 +153,12 @@ source: "studio"
 
 # flux-fox-2b4c6d8e
 
+![[tech_blog/assets/2026-10-21/flux-fox.png]]
+
+## Why
+
+…written exactly as for an Ideogram record…
+
 ## Prompt
 
 ```

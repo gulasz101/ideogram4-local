@@ -316,6 +316,30 @@ class CliTests(QueueTestCase):
         self.assertEqual(out, "")
         self.assertIn("-W", err)
 
+    def test_ideogram_keeps_sizes_that_are_not_multiples_of_16(self):
+        # 21 done Ideogram jobs on the Max are 1088x1350 (LinkedIn portrait).
+        prompt = Path(self.tmp.name) / "portrait.json"
+        prompt.write_text('{"high_level_description": "x"}', encoding="utf-8")
+
+        code, out, err = main_with_argv(
+            [
+                "submit",
+                "--prompt-json",
+                str(prompt),
+                "-W",
+                "1088",
+                "-H",
+                "1350",
+                "-o",
+                str(Path(self.tmp.name) / "portrait.png"),
+            ],
+            self.db,
+        )
+
+        self.assertEqual(code, 0, err)
+        job = ideogram4_local.SQLiteQueueBackend(self.db).get(out.strip())
+        self.assertEqual((job["engine"], job["width"], job["height"]), ("ideogram4", 1088, 1350))
+
     def test_ideogram_rejects_a_seed(self):
         prompt = Path(self.tmp.name) / "x.json"
         prompt.write_text("{}", encoding="utf-8")
