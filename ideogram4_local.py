@@ -8,6 +8,9 @@ Usage:
     # Submit a job
     python ideogram4_local.py submit --prompt-json prompts/homelab-toriyama.json -o output/header.png
 
+    # Submit a FLUX.2-klein fast draft (natural-language prompt)
+    python ideogram4_local.py submit --engine flux2-klein --prompt "a fox in a server room" -o output/fox.png
+
     # Run the worker (singleton, picks up pending jobs)
     python ideogram4_local.py worker
 
@@ -52,6 +55,16 @@ DB_PATH = Path(os.environ.get("IDEOGRAM4_DB", SCRIPT_DIR / "jobs.db"))
 DEFAULT_SD_CPP = Path("~/sd.cpp").expanduser()
 SD_CPP_DIR = Path(os.environ.get("SD_CPP_DIR", DEFAULT_SD_CPP))
 SD_CLI = SD_CPP_DIR / "build" / "bin" / "sd-cli"
+
+# Phase 6: one queue, two engines. Ideogram 4 stays the main engine; FLUX.2-klein
+# is the fast-draft engine and runs in its own venv as a subprocess (the worker
+# itself must stay stdlib-only on Homebrew Python, which has no torch).
+ENGINES = ("ideogram4", "flux2-klein")
+FLUX_MODEL_ID = "black-forest-labs/FLUX.2-klein-4B"
+FLUX_STEPS = 4  # klein is distilled; 4 steps is the documented schedule
+FLUX_PYTHON = Path(
+    os.environ.get("IDEOGRAM4_FLUX_PYTHON", "~/.venvs/sou-flux/bin/python")
+).expanduser()
 
 DEFAULT_WIDTH = 1216
 DEFAULT_HEIGHT = 832
@@ -119,6 +132,15 @@ def _init_sqlite_schema(conn: sqlite3.Connection) -> None:
         CREATE INDEX IF NOT EXISTS idx_jobs_created ON jobs(created_at);
         """
     )
+    # The CREATE TABLE above stays at its original shape on purpose: old and
+    # new databases then take the same migration path. PRAGMA first, so a
+    # second init is a no-op and existing rows keep their data (they become
+    # ideogram4 jobs with no seed, which is exactly what they were).
+    columns = {row[1] for row in conn.execute("PRAGMA table_info(jobs)")}
+    if "engine" not in columns:
+        conn.execute("ALTER TABLE jobs ADD COLUMN engine TEXT NOT NULL DEFAULT 'ideogram4'")
+    if "seed" not in columns:
+        conn.execute("ALTER TABLE jobs ADD COLUMN seed INTEGER")
     conn.commit()
 
 
@@ -140,16 +162,24 @@ class SQLiteQueueBackend:
         width: int,
         height: int,
         verbose: bool,
+        engine: str = "ideogram4",
+        seed: Optional[int] = None,
     ) -> str:
+        if engine not in ENGINES:
+            raise ValueError(f"unknown engine '{engine}': choose {' or '.join(ENGINES)}")
+        # FLUX needs an explicit seed to be reproducible; Ideogram keeps the
+        # NULL seed it always had.
+        if engine == "flux2-klein" and seed is None:
+            seed = secrets.randbelow(2**32)
         job_id = secrets.token_urlsafe(8)
         now = datetime.datetime.now().isoformat()
         with sqlite3.connect(self.db_path) as conn:
             conn.execute(
                 """
-                INSERT INTO jobs (id, status, prompt_type, prompt_value, output_path, width, height, verbose, created_at)
-                VALUES (?, 'pending', ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO jobs (id, status, prompt_type, prompt_value, output_path, width, height, verbose, created_at, engine, seed)
+                VALUES (?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                (job_id, prompt_type, prompt_value, str(output_path), width, height, int(verbose), now),
+                (job_id, prompt_type, prompt_value, str(output_path), width, height, int(verbose), now, engine, seed),
             )
             conn.commit()
         return job_id
@@ -541,6 +571,53 @@ def _sd_cli_cmd(
     return cmd
 
 
+def _flux_cmd(output: Path, width: int, height: int, seed: int) -> list:
+    """Build the FLUX.2-klein runner command list (pure; tests compare it)."""
+    return [
+        str(FLUX_PYTHON),
+        str(SCRIPT_DIR / "flux2_klein.py"),
+        "-o", str(output),
+        "-W", str(width),
+        "-H", str(height),
+        "--seed", str(seed),
+    ]
+
+
+def generate_flux2_klein(
+    prompt: str,
+    output: Path,
+    width: int,
+    height: int,
+    seed: Optional[int],
+    verbose: bool = False,
+) -> Path:
+    """Run one FLUX.2-klein render in the sou-flux venv, prompt on stdin."""
+    if not FLUX_PYTHON.exists():
+        raise RuntimeError(
+            f"FLUX python not found at {FLUX_PYTHON}. Create the venv described "
+            "in the README (FLUX.2-klein engine) or set IDEOGRAM4_FLUX_PYTHON."
+        )
+
+    ensure_dir(output.parent)
+    env = dict(os.environ)
+    # The model is already in the Hugging Face cache and the Max is nearly full;
+    # never let the pipeline surprise-download 15 GB.
+    env.setdefault("HF_HUB_OFFLINE", "1")
+    env.setdefault("PYTORCH_MPS_HIGH_WATERMARK_RATIO", "0.0")
+
+    cmd = _flux_cmd(output, width, height, seed)
+    log(f"Running FLUX.2-klein generation ({width}x{height}, steps={FLUX_STEPS})...")
+    # stdin rather than argv: a long prompt or one starting with "-" is data.
+    result = subprocess.run(cmd, input=prompt, text=True, env=env)
+    if result.returncode != 0:
+        raise RuntimeError(f"flux2_klein.py exited with code {result.returncode}")
+    if not output.exists():
+        raise RuntimeError(f"Expected output file not found: {output}")
+
+    log(f"Generated image: {output} ({output.stat().st_size} bytes)")
+    return output
+
+
 def generate(
     prompt_type: str,
     prompt_value: str,
@@ -548,7 +625,17 @@ def generate(
     width: int = DEFAULT_WIDTH,
     height: int = DEFAULT_HEIGHT,
     verbose: bool = False,
+    engine: str = "ideogram4",
+    seed: Optional[int] = None,
 ) -> Path:
+    # Dispatch on the engine before touching sd-cli: a FLUX job never uses that
+    # binary, so a worker without an sd.cpp build must still run it.
+    if engine == "flux2-klein":
+        prompt = build_prompt(prompt_type, prompt_value)
+        return generate_flux2_klein(prompt, output, width, height, seed, verbose)
+    if engine != "ideogram4":
+        raise RuntimeError(f"unknown engine '{engine}': choose {', '.join(ENGINES)}")
+
     ensure_dir(OUTPUT_DIR)
 
     if not SD_CLI.exists():
@@ -646,19 +733,58 @@ def generate(
 # ---------------------------------------------------------------------------
 
 
+def _submit_error(args) -> Optional[str]:
+    """Return one plain sentence for a bad submit, or None when it is valid."""
+    if args.engine not in ENGINES:
+        return f"unknown engine '{args.engine}': choose {' or '.join(ENGINES)}"
+
+    # FLUX needs latent-friendly dimensions; apply the rule to both engines so
+    # a rejected render fails at submit rather than after 21 minutes.
+    for flag, value in (("-W", args.width), ("-H", args.height)):
+        if value % 16 or not 256 <= value <= 2048:
+            return f"{flag} must be a multiple of 16 between 256 and 2048, got {value}"
+
+    if args.engine == "ideogram4":
+        if args.prompt_file:
+            return "ideogram4 takes --prompt-json; --prompt-file is for flux2-klein"
+        if args.seed is not None:
+            return "ideogram4 has no --seed; it is only used by flux2-klein"
+        if not (args.prompt_json or args.prompt):
+            return "ideogram4 needs --prompt-json or --prompt"
+        return None
+
+    # flux2-klein: natural-language text only, exactly one source.
+    if args.prompt_json:
+        return "flux2-klein takes a natural-language prompt"
+    if bool(args.prompt) == bool(args.prompt_file):
+        return "flux2-klein needs exactly one of --prompt or --prompt-file"
+    return None
+
+
+def _read_prompt(args) -> tuple[str, str]:
+    if args.prompt_file:
+        return "text", args.prompt_file.read_text(encoding="utf-8")
+    if args.prompt_json:
+        return "json", args.prompt_json.read_text(encoding="utf-8")
+    return "text", args.prompt
+
+
 def cmd_submit(args) -> int:
+    error = _submit_error(args)
+    if error:
+        print(error, file=sys.stderr)
+        return 2
+    try:
+        prompt_type, prompt_value = _read_prompt(args)
+    except OSError as exc:
+        print(f"could not read the prompt: {exc}", file=sys.stderr)
+        return 2
+    if not prompt_value.strip():
+        print("prompt is empty", file=sys.stderr)
+        return 2
+
     queue = QueueBackend(DB_PATH)
     output = args.output.expanduser().resolve()
-
-    if args.prompt_json:
-        prompt_type = "json"
-        with open(args.prompt_json, "r", encoding="utf-8") as f:
-            prompt_value = f.read()
-    elif args.prompt:
-        prompt_type = "text"
-        prompt_value = args.prompt
-    else:
-        raise ValueError("Either --prompt or --prompt-json is required")
 
     job_id = queue.submit(
         prompt_type=prompt_type,
@@ -667,6 +793,8 @@ def cmd_submit(args) -> int:
         width=args.width,
         height=args.height,
         verbose=args.verbose,
+        engine=args.engine,
+        seed=args.seed,
     )
     log(f"Submitted job {job_id}")
     print(job_id)
@@ -739,6 +867,8 @@ def _run_one_job(queue: QueueBackend, lock: QueueLock) -> bool:
             width=job["width"],
             height=job["height"],
             verbose=bool(job["verbose"]),
+            engine=job.get("engine") or "ideogram4",
+            seed=job.get("seed"),
         )
         queue.update_status(job_id, "done", pid=os.getpid())
         log(f"Job {job_id} completed: {output}")
@@ -853,8 +983,11 @@ def main() -> int:
 
     # submit
     p_submit = sub.add_parser("submit", help="Submit a generation job to the queue")
-    p_submit.add_argument("--prompt-json", type=Path, help="Path to structured JSON prompt file")
-    p_submit.add_argument("--prompt", type=str, help="Plain text prompt")
+    p_submit.add_argument("--engine", default="ideogram4", help=f"generation engine: {' or '.join(ENGINES)}")
+    p_submit.add_argument("--prompt-json", type=Path, help="Path to structured JSON prompt file (ideogram4)")
+    p_submit.add_argument("--prompt", type=str, help="Plain text prompt (natural language for flux2-klein)")
+    p_submit.add_argument("--prompt-file", type=Path, help="UTF-8 text prompt file (flux2-klein)")
+    p_submit.add_argument("--seed", type=int, help="Integer seed (flux2-klein; default: random)")
     p_submit.add_argument("-o", "--output", type=Path, required=True)
     p_submit.add_argument("-W", "--width", type=int, default=DEFAULT_WIDTH)
     p_submit.add_argument("-H", "--height", type=int, default=DEFAULT_HEIGHT)
