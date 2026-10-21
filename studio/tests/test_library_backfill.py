@@ -8,7 +8,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from library_backfill import backfill  # noqa: E402
+from library_backfill import _first_paragraph_after, backfill  # noqa: E402
 
 MAX_ROOT = "/Users/wojciechgula/wojtek.second.brain.obsidian.vault"
 
@@ -308,6 +308,20 @@ class LibraryBackfillTest(unittest.TestCase):
         counts = self._run(dry_run=True)
         self.assertEqual(counts["created"], 6)
         self.assertEqual(list(self.library.rglob("*")), [])
+
+    def test_excerpt_skips_fenced_code_after_embed(self):
+        lines = [
+            "![x](assets/a.png)",
+            "",
+            "```bash",
+            "kubectl get pods",
+            "",
+            "kubectl logs foo",
+            "```",
+            "",
+            "Real prose here.",
+        ]
+        self.assertEqual(_first_paragraph_after(lines, 0), "Real prose here.")
 
     def test_index_is_deterministic(self):
         self._write_post()

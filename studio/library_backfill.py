@@ -73,7 +73,15 @@ def _first_paragraph_after(lines, index: int) -> str:
         if not stripped:
             cursor += 1
             continue
-        if stripped.startswith(("#", "!", "```", "---", "|", ">", "- ", "* ")):
+        if stripped.startswith(("```", "~~~")):
+            # Skip the whole fenced block, not just its opening line.
+            fence = stripped[:3]
+            cursor += 1
+            while cursor < len(lines) and not lines[cursor].strip().startswith(fence):
+                cursor += 1
+            cursor += 1
+            continue
+        if stripped.startswith(("#", "!", "---", "|", ">", "- ", "* ")):
             cursor += 1
             continue
         block = [stripped]
