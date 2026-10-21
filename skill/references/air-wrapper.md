@@ -45,6 +45,27 @@ ls -l "$PNG"
 
 The wrapper prints only the job ID to stdout. A 1216×832 render takes about 21 minutes on the M1 Max; do not poll in the same run. Schedule a Paperclip issue monitor (`references/review-loop.md`) and end the run, or resume on a later wake.
 
+## FLUX.2-klein fast drafts
+
+`imagegen submit --engine flux2-klein` queues a fast draft: about 2 minutes per 1216×832
+render. The prompt is natural language. `--prompt "…"` uploads a temporary `.txt` to
+`<IMAGEGEN_REMOTE_DIR>/studio-incoming/` (and removes it locally afterwards);
+`--prompt-file path` uploads that file. `--prompt-json` is rejected for FLUX, and
+`--seed N` is optional — the remote CLI picks a random 32-bit seed when it is omitted.
+
+```bash
+JOB_ID=$(imagegen submit --engine flux2-klein \
+  --prompt "a fox in a server room, warm monitor light" --json | jq -r '.job_id')
+imagegen status "$JOB_ID"   # eta_minutes counts 2 per FLUX job, 21 per Ideogram job
+```
+
+`IMAGEGEN_FLUX_MIN_PER_JOB` (default `2`) is the per-FLUX-job ETA, alongside
+`IMAGEGEN_MIN_PER_JOB` (default `21`) for Ideogram 4; a row with no `engine` counts as an
+Ideogram job. The Ideogram argv is unchanged, so this wrapper still drives a Max whose
+checkout predates phase 6; the FLUX path needs the phase-6 CLI and the
+`~/.venvs/sou-flux` venv on the Max. The library record and the review loop are the same
+for both engines (`references/library-records.md`).
+
 ## Pause the dead Mattermost watchdog (legacy)
 
 After moving Hermes to the Air, the old `ideogram4-progress-watchdog` cron becomes a silent no-op because `jobs.db` lives on the Max. Pause it, do not delete it:

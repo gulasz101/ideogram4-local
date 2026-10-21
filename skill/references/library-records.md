@@ -125,3 +125,45 @@ From [[2026-10-15-my-homelab-agent-lied-about-its-own-model]], section "Why GitO
 | --- | --- | --- | --- | --- |
 | 1 | 2026-10-21 | approved | Warm light and the forklift read as the migration story. | [GUL-42](/GUL/issues/GUL-42) |
 ```
+
+## FLUX.2-klein record
+
+A `flux2-klein` job is a natural-language draft. Its record has the same shape, with three differences: `engine` names the engine, `prompt_type` is `"text"`, and — because a text prompt carries no wrapper `generation` block — `generation` records what actually rendered: the model, the four distilled steps, and the job's seed.
+
+```markdown
+---
+type: "image-record"
+job_id: "K3n8Qw7tY2d"
+engine: "flux2-klein"
+prompt_type: "text"
+width: 1216
+height: 832
+generation: {"model": "black-forest-labs/FLUX.2-klein-4B", "steps": 4, "seed": 1938475623}
+created_at: "2026-10-21T10:02:11"
+finished_at: "2026-10-21T10:04:03"
+asset: "tech_blog/assets/2026-10-21/flux-fox.png"
+asset_location: "vault"
+asset_present: true
+superseded_by: null
+posts: ["tech_blog/2026-10-15-my-homelab-agent-lied-about-its-own-model.md"]
+post_status: "draft"
+verdict: "approved"
+source: "studio"
+---
+
+# flux-fox-2b4c6d8e
+
+![[tech_blog/assets/2026-10-21/flux-fox.png]]
+
+## Why
+
+…written exactly as for an Ideogram record…
+
+## Prompt
+
+```
+a fox in a server room, warm monitor light
+```
+```
+
+The `## Why` section and the Verdicts table are written exactly as for an Ideogram record.
