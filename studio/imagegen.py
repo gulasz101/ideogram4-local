@@ -7,7 +7,7 @@ remote CLI over the LAN SSH key, so any Hermes agent can request an image
 without a new service, port or secret.
 
 Two engines share the one queue and worker: `ideogram4` (the main engine, JSON
-prompts) and `flux2-klein` (fast natural-language drafts, 1216x832 in about two
+prompts) and `flux2-klein` (fast natural-language drafts, 1216x832 in about three
 minutes). Remote paths given to --prompt-json / --prompt-file / -o on the Max
 are relative to IMAGEGEN_REMOTE_DIR; the job rows the remote CLI stores carry
 absolute paths.
@@ -18,7 +18,7 @@ Environment:
                                (default: git/ideogram4-local)
     IMAGEGEN_STAGING           local download root (default: ~/image-studio/staging)
     IMAGEGEN_MIN_PER_JOB       minutes per Ideogram 4 job, for ETA (default: 21)
-    IMAGEGEN_FLUX_MIN_PER_JOB  minutes per FLUX.2-klein job, for ETA (default: 2)
+    IMAGEGEN_FLUX_MIN_PER_JOB  minutes per FLUX.2-klein job, for ETA (default: 3)
 """
 
 import argparse
@@ -39,7 +39,7 @@ DEFAULT_HOST = "m1max"
 DEFAULT_REMOTE_DIR = "git/ideogram4-local"
 DEFAULT_STAGING = "~/image-studio/staging"
 DEFAULT_MIN_PER_JOB = 21
-DEFAULT_FLUX_MIN_PER_JOB = 2
+DEFAULT_FLUX_MIN_PER_JOB = 3
 DEFAULT_WIDTH = 1216
 DEFAULT_HEIGHT = 832
 SUPPORTED_ENGINES = ("ideogram4", "flux2-klein")
