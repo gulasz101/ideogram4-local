@@ -82,7 +82,7 @@ Two engines share the one queue and the one worker; the default is `ideogram4`.
 
 ## References
 
-- `references/engine-pitfalls.md` — 41 numbered failure modes, appended as lessons land; read before writing or fixing any prompt.
+- `references/engine-pitfalls.md` — numbered failure modes, appended as lessons land; read before writing or fixing any prompt.
 - `references/review-loop.md` — the Paperclip calls for each loop step; open when scheduling, uploading, or handling verdicts.
 - `references/backlog-review.md` — backlog-review mode: the queue helper, the runner's queue document, Advance, the per-card checklist and its pitfalls; open on any `Backlog review` wake.
 - `references/library-records.md` — record path and exact format; open when approving an image or revising a record.
