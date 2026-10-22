@@ -21,6 +21,15 @@ Use this skill on any of these branches:
 - Wojtek asks where the backlog review stands, or where the remaining posts are. The answer is the runner's `queue` document, rebuilt from live state with `scripts/build-queue-doc.py` — not a list in a comment. See `references/backlog-review.md`.
 - Wojtek asks about an image's prompt, history, or why it looks the way it does.
 
+## Choosing the engine
+
+Two engines share the one queue and the one worker; the default is `ideogram4`.
+
+- **`ideogram4` is the main engine.** JSON prompts, readable in-image text, about 21 minutes per 1216×832 render. Use it for anything that will ship.
+- **`flux2-klein` is for fast drafts.** It renders 1216×832 in about 3 minutes (4 steps, including the model load), so use it to explore compositions before committing to 21-minute Ideogram renders, or when the request asks for speed.
+- **FLUX takes natural-language prompts, not JSON.** Keep them under about 300 words; the text encoder truncates at 512 tokens. There is no `lint` for a FLUX prompt and no JSON schema.
+- **Everything after the render is the same.** The review loop, the verdict card and the library record do not change; the record and `status` name the engine, and a FLUX record carries its seed in the `generation` block.
+
 ## The request workflow
 
 1. **Read.** Read the issue's post, section, excerpt, and the intent behind them (the "why"); read the post file in `~/wojtek.second.brain.obsidian.vault/tech_blog/`; run `hindsight_reflect("What is Wojtek's image taste for <post topic>?")`, which reads the mental model **Wojtek's image taste**. *Done when you can state the post's idea in one sentence and list the taste rules that apply.*
