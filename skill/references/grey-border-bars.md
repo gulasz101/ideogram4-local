@@ -37,10 +37,32 @@ This is visually distinct from a safety-filter grey-box (entire image grey, file
 ### Diagnostic script
 
 ```bash
-python3 scripts/check-grey-bars.py /path/to/generated/image.png
+~/image-studio/.venv-imgcheck/bin/python scripts/check-grey-bars.py /path/to/generated/image.png
 ```
 
-Returns exit code 0 if clean, 1 if grey bars detected. Reports exact bar height in pixels and percentage of canvas wasted.
+Returns exit code 0 if clean, 1 if grey bars detected. Reports exact bar height in pixels and percentage of canvas wasted. The system `python3` has no Pillow or numpy, so the script exits 2 with `ERROR: Pillow and numpy required`; create the venv once with `python3 -m venv ~/image-studio/.venv-imgcheck && ~/image-studio/.venv-imgcheck/bin/pip install Pillow numpy`.
+
+### A full-frame vision pass can misread the margin as floor
+
+`vision_analyze` on the whole PNG will happily call a bottom margin "the tiled floor, not a blank panel" and report the frame as "filled edge to edge". A full-frame pass cannot see that the floor's perspective lines stop short of the edge, so it reads the flat pale area as a receding surface.
+
+**The script is right and the full-frame vision is wrong.** Settle it with two cheap checks, not by re-asking the same question:
+
+1. Crop the bottom 150-200px and look at the crop. A real floor keeps its lines, shadows and objects in the crop; a margin is flat pale paper with the drawn objects cut off at the crop's top edge.
+2. Print per-row colour stats. A drawn region has hundreds of distinct colours and a std of tens; a margin has ~100-230 distinct colours and a std under 3, with the mean sitting near 240,240,239:
+
+```bash
+~/image-studio/.venv-imgcheck/bin/python -c "
+from PIL import Image
+import numpy as np
+im = Image.open(PATH).convert('RGB'); a = np.asarray(im).astype(int)
+for y0 in range(600, im.size[1], 20):
+    row = a[y0].reshape(-1, 3)
+    print(y0, len(np.unique(row, axis=0)), row.mean(axis=0).round(1), round(row.std(), 2))
+"
+```
+
+Report the margin's pixel height from the script's own number in the check note, not the vision pass's guess.
 
 ## Distinction from Safety-Filter Grey-Box
 

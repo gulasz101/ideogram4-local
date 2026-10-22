@@ -87,10 +87,10 @@ A `fetch` exit of 3 means still active; exit 4 means the job failed. On failure,
 Run `vision_analyze` on each PNG and check text spelling, grey box/margins, and intent. Run the margin diagnostic with the check venv, because the system `python3` is PEP 668 managed and has no Pillow or numpy (`--user` installs are refused, so a bare `python3 scripts/check-grey-bars.py` fails with `ERROR: Pillow and numpy required`):
 
 ```bash
-~/.venvs/imgcheck/bin/python ~/.hermes/profiles/matejko/skills/image-studio/scripts/check-grey-bars.py "$PNG_A"
+~/image-studio/.venv-imgcheck/bin/python ~/.hermes/profiles/matejko/skills/image-studio/scripts/check-grey-bars.py "$PNG_A"
 ```
 
-Create it once with `python3 -m venv ~/.venvs/imgcheck && ~/.venvs/imgcheck/bin/pip install Pillow numpy` if it is missing.
+Create it once with `python3 -m venv ~/image-studio/.venv-imgcheck && ~/image-studio/.venv-imgcheck/bin/pip install Pillow numpy` if it is missing. Keep the venv inside the studio workspace so there is one path to remember and no second copy that drifts out of sync with the skill.
 
 A failed variant gets one silent re-render with a corrected prompt; it does not go on the card. Your check may remove an image, never approve one.
 
