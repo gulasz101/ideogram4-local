@@ -78,7 +78,7 @@ Two engines share the one queue and the one worker; the default is `ideogram4`.
 - **Keep drafts in staging and let only approved images into the vault.** The published library then contains only work Wojtek has approved.
 - **Report any `skill_manage` patch to this skill in the issue comment.** It keeps the procedure reviewable by the person who owns it.
 - **Use `imagegen` for every render.** It is the one supported path from the Air to the M1 Max worker, with a single queue and ETA the board can monitor.
-- **Never restart Paperclip or the Hermes gateway to clear a blocker.** Diagnose it from the server log, state what you ruled out, and open a `request_confirmation` for the board owner instead (`references/paperclip-api.md` carries the recipe and the storage-relay fix). You cannot cancel such a card once it is moot, so choose it deliberately and say on the issue when it no longer applies.
+- **Never restart Paperclip or the Hermes gateway to clear a blocker.** Diagnose it from the server log, state what you ruled out, and open a `request_confirmation` for the board owner instead (`references/paperclip-api.md` carries the recipe and the storage-relay fix). Withdraw it (`POST …/interactions/<id>/withdraw` with a reason) once it is moot.
 
 ## References
 
