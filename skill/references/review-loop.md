@@ -26,6 +26,8 @@ Find the post path, section, excerpt, and the reason for the image. Then read th
 
 ## 2–3. Submit and comment the job ids
 
+**Check before you render, on any run that is not the request's very first.** `GET /interactions` together with the comments tells you whether this round already exists: a `pending` card for `round-<n>`, or a card already resolved, means those renders have been paid for once. Handle them (step 5 or 8) instead of submitting duplicates — each image is about 21 minutes of queue, so a blind re-submit costs an hour and gives Wojtek two cards for one slot.
+
 Submit locally, then post once with all job ids and prompt summaries:
 
 ```bash
@@ -54,6 +56,8 @@ curl -s -X PATCH "${AUTH[@]}" -H 'Content-Type: application/json' -d "$BODY" \
 
 Use the last job you submitted (`$JOB_LAST`), not a fixed number: with three variants queued the last ETA is about 63 minutes, and a hard-coded wait fires the monitor early.
 
+`imagegen` has three subcommands — `submit`, `status`, `fetch`. There is no queue listing: each `status` reply already carries `queue_ahead` and an `eta_minutes` that includes the queue ahead of that job, so hold the job ids and ask about them rather than looking for a list command.
+
 Keep the issue `in_progress`. Do not poll `imagegen status` in a loop; the monitor is the wake. End the run after the PATCH.
 
 **Done:** the PATCH response shows a non-null `monitorNextCheckAt`.
@@ -80,11 +84,13 @@ A `fetch` exit of 3 means still active; exit 4 means the job failed. On failure,
 
 ## 6. Self-check before showing anything
 
-Run `vision_analyze` on each PNG and check text spelling, grey box/margins, and intent. Run the margin diagnostic:
+Run `vision_analyze` on each PNG and check text spelling, grey box/margins, and intent. Run the margin diagnostic with the check venv, because the system `python3` is PEP 668 managed and has no Pillow or numpy (`--user` installs are refused, so a bare `python3 scripts/check-grey-bars.py` fails with `ERROR: Pillow and numpy required`):
 
 ```bash
-python3 scripts/check-grey-bars.py "$PNG_A"
+~/image-studio/.venv-imgcheck/bin/python ~/.hermes/profiles/matejko/skills/image-studio/scripts/check-grey-bars.py "$PNG_A"
 ```
+
+Create it once with `python3 -m venv ~/image-studio/.venv-imgcheck && ~/image-studio/.venv-imgcheck/bin/pip install Pillow numpy` if it is missing. Keep the venv inside the studio workspace so there is one path to remember and no second copy that drifts out of sync with the skill.
 
 A failed variant gets one silent re-render with a corrected prompt; it does not go on the card. Your check may remove an image, never approve one.
 

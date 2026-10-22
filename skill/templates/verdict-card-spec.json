@@ -1,0 +1,16 @@
+{
+  "issue_id": "<issue uuid>",
+  "round": 1,
+  "title": "Verdicts: <post title> - <n> images",
+  "summary": "Round 1: the <n> images already embedded in the <post> draft. Nothing rendered.",
+  "prompt": "<post title>: <n> images, one verdict each.",
+  "details_markdown": "**Approve:** it fits; keep it. **Reject** with a reason: I re-render it from your reason and bring it back on a later card. **Defer:** keep what the post has now, no re-render. Please don't comment on this issue while the card is open: a comment closes the card. Put everything into the reasons.\n\n| item id | section | library record | job |\n| --- | --- | --- | --- |\n| `<item id>` | <section> | `3-resources/image-library/<YYYY-MM>/<record>.md` | `<job id>` |",
+  "items": [
+    {
+      "id": "<item id>",
+      "label": "<item id>",
+      "attachment_id": "<attachment id>",
+      "description": "Why: <one sentence from the section and the prompt>. Check: <size, grey bars, lettering>. Caveats: <what the picture does not quite say>."
+    }
+  ]
+}

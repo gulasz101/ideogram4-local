@@ -32,10 +32,15 @@ The remaining keys keep the back-fill meanings:
 - `type: "image-record"`, `engine: "ideogram4"`, `prompt_type: "json"`.
 - `width`, `height` as integers.
 - `generation` is the prompt's wrapper-only `generation` block, or `null`.
-- `created_at` and `finished_at` come from `imagegen status`.
-- `superseded_by` is `null` unless a later job replaced this image.
+- `created_at` and `finished_at` come from `imagegen status` — and from **that job's own** status line, read fresh. They are the renderer's timestamps, not yours to compose: a record whose `created_at` and `finished_at` are copied from a neighbouring job, taken from a prompt file's mtime, or inferred from a clock is wrong in a way nothing else in the record contradicts, so it survives review. When a record's dates and the renderer's `status` line disagree, the renderer wins and the record is patched. Compare the two before writing the record and again before closing the card.
+- **`superseded_by` is `null` unless a later job replaced this image; a rejected render whose slot was later approved points at the approved job id (see **Multi-round slots**).**
+- The **approved** record's `superseded_by` stays `null` — nothing replaced it — while **every** earlier record of the slot points at that one approved job id, the back-filled one included. Write the chain in one pass over all of the slot's records, not one record at a time, or the history ends in a dead end.
 - `post_status` is the post's frontmatter `status` (for example `draft` or `published`), or `null`.
 - `asset_location` values match the back-fill: `vault` or `max-only`.
+
+## The vault is not a git repository
+
+`~/wojtek.second.brain.obsidian.vault` is a symlink to `~/vault`, and neither path holds a `.git` directory. Record edits are therefore **not** committed — do not look for a repo, and do not try to commit. Report the changed record paths in the issue comment instead; that comment is the audit trail.
 
 ## The Verdicts table
 
@@ -54,9 +59,43 @@ Append one row per round that resolves for this record:
 
 Never rewrite an earlier row. The table is the verdict history; a later rejection does not erase an earlier approval.
 
+## Approving or rejecting a back-filled record
+
+A back-filled record (`source: "backfill"`, `verdict: "unreviewed"`) is an image that has been in the vault since before anyone reviewed it, so its verdict round changes the record and nothing else. Three edits, no more:
+
+- `verdict:` becomes `"approved"` (or `"rejected"`; a defer is a rejection too, see below).
+- Append one Verdicts row. Without a reason on the card use `Approved on review.` for an approval and `keep-as-is: <reason>` for a defer that keeps the image; never invent a reason he did not give.
+- Delete the line `Back-filled from jobs.db; not reviewed yet.`
+
+**The row replaces the blank line the back-fill left under the header.** A back-filled table ends with the header, a separator, an empty line, then the marker; put the new row where that empty line was, so the marker is gone and the table has exactly one data row. Appending below the marker leaves the record still reading as unreviewed. After editing, grep the record for `Back-filled` (expect no match) and print the whole Verdicts table, not just the frontmatter, to confirm the shape.
+
+**Use `scripts/approve_record.py` for every verdict, approval and rejection alike.** `approve_record.py <record.md> --approved --issue GUL-x` and `approve_record.py <record.md> --rejected --issue GUL-x --reason "..."` do the three edits in one pass and verify the result, so a half-applied edit (row added, marker left behind) cannot pass unnoticed. The script also sanitizes the reason for a table cell — a pipe inside a cell splits the row into two columns and a newline ends it, and Wojtek's reasons are free text that can contain either, so hand-copying a reason can silently break the table. Hand-editing the same three spots across 153 posts is where a half-applied edit creeps in, so prefer the script. Verify anyway by grepping the record for the marker and reading the whole Verdicts table, not just the frontmatter.
+
+Leave `source: "backfill"`, `asset`, `asset_location`, `asset_present` and `superseded_by: null` exactly as they are: the file is already where the post points, so nothing was copied and nothing replaced it. **Do not edit the post and do not write a second record for the same job id** — `library_backfill.py` skips a job only on the exact `<stem>--<job_id>` filename, and a duplicate record splits the slot's history.
+
+**`superseded_by` is set at approval time, not at rejection time.** A rejected back-filled record keeps `superseded_by: null` while the re-render is still in flight, because the field names the job that *replaced* this image and no replacement has been accepted yet. When the re-render is approved, set `superseded_by` to the approved job id in every earlier record of the slot, the back-filled one included. Pointing it at a render that was never approved makes the slot's history read as if the work were finished.
+
+**A rejection does not set `superseded_by` — and neither does a render that is still in flight.** The temptation is to point a rejected record at the render that is now queued to replace it, so the history looks tidier. Do not: the field names an image that was *accepted*, and a render sitting in the queue has not been accepted by anyone. Leave it `null` until Wojtek approves, then set it in the same pass that writes the approved record.
+
 ## Rejected renders
 
 Write the record for a rejected render too, with `asset: null`, `asset_location: "max-only"`, `asset_present: false`, and the rejection reason in the table. The render may be deleted from staging; the record is what preserves why that prompt did not work.
+
+## Multi-round slots
+
+A slot normally takes more than one round, and every render that reached a card gets its own record — rejected ones included. Write the records so the slot's history reads correctly from either of them:
+
+- **The approved record carries the history of the slot.** Its Verdicts table has one row per round: the round-1 `rejected` row, with the reason prefixed by the rejected render's stem so the row names the image it is about, then the round-2 `approved` row.
+- **Every earlier record of the slot points at the same approved job id.** When a slot takes three rounds, that is three earlier records — the back-filled one, the rejected render, and the silent attempt that never reached a card — and all of them get `superseded_by` set to the one job Wojtek approved. The chain is a pointer to the accepted image, not a link to the next render in line: a rejected render's `superseded_by` names the render that **replaced** it, and when that replacement is itself later replaced, the pointer moves again. So a render that was superseded by a *rejected* render still ends up pointing at the approved job, not at the render that briefly followed it. Write it in one pass over every record of the slot, or the slot's history points at a dead end.
+- **The rejected record keeps its own single `rejected` row**, with `asset: null`, `asset_location: "max-only"`, `asset_present: false`, and `superseded_by` set to the job id of the render that replaced it. This applies to studio renders that never reached the vault; a back-filled rejected record keeps its `asset`, `asset_location` and `asset_present` as they are while its PNG is still in the vault.
+- **The approved record keeps `superseded_by: null`** — nothing replaced it.
+
+```markdown
+| round | date | verdict | reason | issue |
+| --- | --- | --- | --- | --- |
+| 1 | 2026-10-21 | rejected | zeroclaw-claim-a-1a2b3c4d: the star placard reads as a prize, not as a claim about the model. | [GUL-34](/GUL/issues/GUL-34) |
+| 2 | 2026-10-21 | approved | The cable from the robot to the dusty machine names the downgrade at a glance. | [GUL-34](/GUL/issues/GUL-34) |
+```
 
 ## Complete example
 

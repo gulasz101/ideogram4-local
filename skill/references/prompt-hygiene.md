@@ -51,6 +51,24 @@ The older dense shape with `canvas`/`layout`/many elements was a community exper
 | an unclothed adult human figure | a classical marble statue of a standing human figure in an art studio |
 | blood on the floor | a red hydraulic fluid spill on the datacenter floor |
 
+## The negative clause for things the prompt did not ask for
+
+The model fills a gap it is given, including gaps the prompt did not intend. A bare region of the frame — a flat wall, an unoccupied third, an empty band along an edge — is an invitation to paste something there: a logo, a poster, a promo card, a pseudo-chart. The defence is twofold and both halves are needed.
+
+**Fill the gap with described content.** Give the region a prop the prompt can describe concretely and the model can draw: a shelf of closed plain ledgers, a low bench with loose coins, a crate stack, a hanging tool board. A region with described content has no room for an invention.
+
+**Name the shapes you do not want.** Put one clause in `high_level_description` listing the specific overlay shapes that have bitten you, so the model has a target for the negative:
+
+```
+no poster, no banner, no placard, no overlay card, no advertisement,
+no charts, no graphs, no logos, no badges, no emblems
+and no readable lettering anywhere in the image
+```
+
+Naming the shape is what works; "no text" alone does not stop a chart-shaped grid of tiles, and the shape is what a reader sees. Keep the clause in `high_level_description` rather than in an element `desc`, because a negative inside one element reads as describing that element.
+
+**And do not ask for a prop the model cannot spell or chart.** A `desc` that requests numerals, a data visualisation or a labelled panel gets faked: garbled digits, aligned tiles with no axes, an empty band under the grid. Replace the prop with a physical object instead of rewording the request for the same one — a glass porthole showing gears, a plain wooden panel with three carved discs, a row of closed ledgers. `references/engine-pitfalls.md` #36 and #37 carry the mechanism.
+
 ## Tooling
 
 The repo ships `ideogram4_prompt_tools.py` and `ideogram4_local.py lint`/`rewrite` commands:
