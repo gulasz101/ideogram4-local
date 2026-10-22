@@ -66,8 +66,9 @@ def load_key():
         with open(ENV_FILE) as fh:
             for line in fh:
                 line = line.strip()
-                if line.startswith("HINDSIGHT_API_KEY="):
-                    return line.split("=", 1)[1].strip().strip('"').strip("'")
+                name, _, value = line.partition("=")
+                if name == "HINDSIGHT_API_KEY":
+                    return value.strip().strip('"').strip("'")
     except FileNotFoundError:
         pass
     die("no HINDSIGHT_API_KEY in the environment or in the profile .env")

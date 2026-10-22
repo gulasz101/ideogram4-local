@@ -10,17 +10,17 @@ Purpose:
 What it runs:
 
 ```
-/opt/homebrew/bin/python3 /Users/wojciechgula/git/ideogram4-local/ideogram4_local.py worker --queue-timeout 86400
+/opt/homebrew/bin/python3 ~/git/ideogram4-local/ideogram4_local.py worker --queue-timeout 86400
 ```
 
 Environment variables set by the plist:
 
 | Variable | Value |
 |---|---|
-| `IDEOGRAM4_MODELS_DIR` | `/Users/wojciechgula/sd.cpp-models` |
-| `IDEOGRAM4_OUTPUT_DIR` | `/Users/wojciechgula/git/ideogram4-local/output` |
-| `IDEOGRAM4_DB` | `/Users/wojciechgula/git/ideogram4-local/jobs.db` |
-| `IDEOGRAM4_LOCK_FILE` | `/Users/wojciechgula/git/ideogram4-local/.lock` |
+| `IDEOGRAM4_MODELS_DIR` | `~/sd.cpp-models` |
+| `IDEOGRAM4_OUTPUT_DIR` | `~/git/ideogram4-local/output` |
+| `IDEOGRAM4_DB` | `~/git/ideogram4-local/jobs.db` |
+| `IDEOGRAM4_LOCK_FILE` | `~/git/ideogram4-local/.lock` |
 
 Logs go to `~/git/ideogram4-local/output/worker.log`.
 

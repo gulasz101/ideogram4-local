@@ -26,8 +26,9 @@ if not API.endswith("/api"):
 def api_key():
     with open(ENV) as f:
         for line in f:
-            if line.startswith("PAPERCLIP_API_KEY="):
-                return line.split("=", 1)[1].strip()
+            name, _, value = line.strip().partition("=")
+            if name == "PAPERCLIP_API_KEY":
+                return value.strip()
     sys.exit("no PAPERCLIP_API_KEY in the profile .env")
 
 
