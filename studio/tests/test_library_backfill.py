@@ -273,6 +273,80 @@ class LibraryBackfillTest(unittest.TestCase):
         self.assertIn("generation: null", text)
         self.assertIn("```\na small happy robot", text)
 
+    def test_flux_snapshot_renders_engine_and_generation(self):
+        db = self.tmp / "flux-jobs.db"
+        connection = sqlite3.connect(db)
+        connection.execute(
+            """
+            CREATE TABLE jobs (
+                id TEXT PRIMARY KEY,
+                status TEXT NOT NULL DEFAULT 'pending',
+                prompt_type TEXT NOT NULL,
+                prompt_value TEXT NOT NULL,
+                output_path TEXT NOT NULL,
+                width INTEGER NOT NULL,
+                height INTEGER NOT NULL,
+                verbose INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                started_at TEXT,
+                finished_at TEXT,
+                pid INTEGER,
+                error TEXT,
+                engine TEXT NOT NULL DEFAULT 'ideogram4',
+                seed INTEGER
+            )
+            """
+        )
+        connection.execute(
+            """
+            INSERT INTO jobs (id, status, prompt_type, prompt_value, output_path,
+                              width, height, created_at, finished_at, engine, seed)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "jobFlux",
+                "done",
+                "text",
+                "a fox in a server room, warm monitor light",
+                f"{MAX_ROOT}/tech_blog/assets/2026-10-06/flux-fox.png",
+                1216,
+                832,
+                "2026-10-06T10:00:00.000000",
+                "2026-10-06T10:02:00.000000",
+                "flux2-klein",
+                12345,
+            ),
+        )
+        connection.commit()
+        connection.close()
+
+        counts = backfill(
+            db=db,
+            vault=self.vault,
+            max_vault_root=MAX_ROOT,
+            library_dir=self.library,
+        )
+
+        self.assertEqual(counts["created"], 1)
+        text = self._record("2026-10-06-flux-fox--jobFlux.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('engine: "flux2-klein"', text)
+        self.assertIn('prompt_type: "text"', text)
+        self.assertIn(
+            'generation: {"model": "black-forest-labs/FLUX.2-klein-4B", '
+            '"steps": 4, "seed": 12345}',
+            text,
+        )
+        self.assertIn(
+            "```\na fox in a server room, warm monitor light\n```", text
+        )
+
+    def test_old_schema_rows_stay_ideogram4(self):
+        self._run()
+        text = self._record("2026-10-05-text--jobText.md").read_text(encoding="utf-8")
+        self.assertIn('engine: "ideogram4"', text)
+
     def test_second_run_is_byte_identical(self):
         self._write_post()
         first = self._run()

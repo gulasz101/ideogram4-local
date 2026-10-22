@@ -190,14 +190,14 @@ class SubmitTests(unittest.TestCase):
         runner = FakeRunner()
 
         code, out, err = run_cli(
-            ["submit", "--prompt-json", str(self.prompt), "--engine", "flux2-klein"],
+            ["submit", "--prompt-json", str(self.prompt), "--engine", "sdxl"],
             runner,
         )
 
         self.assertEqual(code, 1)
         self.assertEqual(out, "")
-        self.assertIn("flux2-klein", err)
-        self.assertIn("ideogram4", err)
+        self.assertIn("Unsupported engine 'sdxl'", err)
+        self.assertIn("choose ideogram4 or flux2-klein", err)
         self.assertEqual(runner.calls, [])
 
     def test_submit_rejects_missing_prompt_file(self):
@@ -210,6 +210,228 @@ class SubmitTests(unittest.TestCase):
 
         self.assertEqual(code, 1)
         self.assertIn("not found", err)
+        self.assertEqual(runner.calls, [])
+
+    def test_ideogram_rejects_flux_only_flags(self):
+        for extra in (
+            ["--prompt-file", str(self.prompt)],
+            ["--seed", "7"],
+        ):
+            with self.subTest(extra=extra):
+                runner = FakeRunner()
+                code, out, err = run_cli(
+                    ["submit", "--prompt-json", str(self.prompt)] + extra, runner
+                )
+                self.assertEqual(code, 1)
+                self.assertEqual(out, "")
+                self.assertEqual(runner.calls, [])
+                self.assertTrue(err.strip())
+
+    def test_ideogram_requires_prompt_json(self):
+        runner = FakeRunner()
+
+        code, out, err = run_cli(
+            ["submit", "--prompt", "a robot with a wrench"], runner
+        )
+
+        self.assertEqual(code, 1)
+        self.assertEqual(out, "")
+        self.assertIn("--prompt-json", err)
+        self.assertEqual(runner.calls, [])
+
+
+class FluxSubmitTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.prompt_text = "a fox in a server room during a power cut"
+
+    @patch("imagegen._today_str", return_value="2026-10-20")
+    @patch("imagegen.secrets.token_hex", return_value="a1b2c3d4")
+    def test_submit_builds_exact_flux_argv(self, _token, _today):
+        uploaded = {}
+
+        def on_scp(argv):
+            uploaded["local"] = Path(argv[-2])
+            uploaded["content"] = Path(argv[-2]).read_text(encoding="utf-8")
+            uploaded["remote"] = argv[-1]
+
+        runner = FakeRunner(
+            [
+                imagegen.Result(0, "", ""),
+                imagegen.Result(0, "", ""),
+                imagegen.Result(0, "Submitting...\nabc123DEF\n", ""),
+            ],
+            on_scp=on_scp,
+        )
+
+        code, out, err = run_cli(
+            ["submit", "--engine", "flux2-klein", "--prompt", self.prompt_text],
+            runner,
+        )
+
+        self.assertEqual(code, 0, err)
+        self.assertEqual(out, "abc123DEF\n")
+        stem = "a-fox-in-a-server-room-a1b2c3d4"  # first six words, then the token
+        self.assertEqual(
+            uploaded["remote"],
+            "m1max:git/ideogram4-local/studio-incoming/{}.txt".format(stem),
+        )
+        self.assertEqual(uploaded["content"], self.prompt_text)
+        self.assertEqual(uploaded["local"].suffix, ".txt")
+        self.assertFalse(uploaded["local"].exists(), "temp prompt must be deleted")
+        self.assertEqual(
+            runner.calls[2],
+            SSH_PREFIX
+            + [
+                "cd git/ideogram4-local && python3 ideogram4_local.py submit "
+                "--engine flux2-klein --prompt-file studio-incoming/{}.txt "
+                "-o output/studio/2026-10-20/{}.png -W 1216 -H 832".format(stem, stem)
+            ],
+        )
+
+    @patch("imagegen._today_str", return_value="2026-10-20")
+    @patch("imagegen.secrets.token_hex", return_value="a1b2c3d4")
+    def test_submit_appends_seed(self, _token, _today):
+        runner = FakeRunner(
+            [
+                imagegen.Result(0, "", ""),
+                imagegen.Result(0, "", ""),
+                imagegen.Result(0, "abc123DEF\n", ""),
+            ]
+        )
+
+        code, out, err = run_cli(
+            [
+                "submit",
+                "--engine",
+                "flux2-klein",
+                "--prompt",
+                self.prompt_text,
+                "--seed",
+                "7",
+            ],
+            runner,
+        )
+
+        self.assertEqual(code, 0, err)
+        self.assertEqual(out, "abc123DEF\n")
+        self.assertTrue(runner.calls[2][-1].endswith("-W 1216 -H 832 --seed 7"))
+
+    @patch("imagegen._today_str", return_value="2026-10-20")
+    @patch("imagegen.secrets.token_hex", return_value="a1b2c3d4")
+    def test_submit_prompt_file_uses_its_stem(self, _token, _today):
+        prompt = Path(self.tmp.name) / "Forest At Dusk.txt"
+        prompt.write_text("a mossy forest at dusk\n", encoding="utf-8")
+        runner = FakeRunner(
+            [
+                imagegen.Result(0, "", ""),
+                imagegen.Result(0, "", ""),
+                imagegen.Result(0, "abc123DEF\n", ""),
+            ]
+        )
+
+        code, out, err = run_cli(
+            [
+                "submit",
+                "--engine",
+                "flux2-klein",
+                "--prompt-file",
+                str(prompt),
+            ],
+            runner,
+        )
+
+        self.assertEqual(code, 0, err)
+        self.assertEqual(out, "abc123DEF\n")
+        self.assertEqual(
+            runner.calls[1][-1],
+            "m1max:git/ideogram4-local/studio-incoming/forest-at-dusk-a1b2c3d4.txt",
+        )
+        self.assertEqual(runner.calls[1][-2], str(prompt.resolve()))
+        self.assertIn("forest-at-dusk-a1b2c3d4", runner.calls[2][-1])
+
+    def test_flux_json_reports_the_engine(self):
+        runner = FakeRunner(
+            [
+                imagegen.Result(0, "", ""),
+                imagegen.Result(0, "", ""),
+                imagegen.Result(0, "abc123DEF\n", ""),
+            ]
+        )
+
+        code, out, err = run_cli(
+            [
+                "submit",
+                "--engine",
+                "flux2-klein",
+                "--prompt",
+                self.prompt_text,
+                "--json",
+            ],
+            runner,
+        )
+
+        self.assertEqual(code, 0, err)
+        payload = json.loads(out)
+        self.assertEqual(payload["job_id"], "abc123DEF")
+        self.assertEqual(payload["engine"], "flux2-klein")
+        self.assertTrue(payload["remote_output"].endswith(".png"))
+
+    def test_flux_rejects_prompt_json(self):
+        runner = FakeRunner()
+
+        code, out, err = run_cli(
+            [
+                "submit",
+                "--engine",
+                "flux2-klein",
+                "--prompt-json",
+                str(Path(self.tmp.name) / "x.json"),
+            ],
+            runner,
+        )
+
+        self.assertEqual(code, 1)
+        self.assertEqual(out, "")
+        self.assertIn("natural-language prompt", err)
+        self.assertEqual(runner.calls, [])
+
+    def test_flux_requires_exactly_one_prompt_source(self):
+        runner = FakeRunner()
+
+        code, _out, err = run_cli(["submit", "--engine", "flux2-klein"], runner)
+        self.assertEqual(code, 1)
+        self.assertIn("exactly one", err)
+
+        prompt = Path(self.tmp.name) / "x.txt"
+        prompt.write_text("a fox", encoding="utf-8")
+        code, _out, err = run_cli(
+            [
+                "submit",
+                "--engine",
+                "flux2-klein",
+                "--prompt",
+                "a fox",
+                "--prompt-file",
+                str(prompt),
+            ],
+            runner,
+        )
+        self.assertEqual(code, 1)
+        self.assertIn("exactly one", err)
+        self.assertEqual(runner.calls, [])
+
+    def test_flux_rejects_empty_prompt(self):
+        runner = FakeRunner()
+
+        code, out, err = run_cli(
+            ["submit", "--engine", "flux2-klein", "--prompt", "   "], runner
+        )
+
+        self.assertEqual(code, 1)
+        self.assertEqual(out, "")
+        self.assertIn("empty", err)
         self.assertEqual(runner.calls, [])
 
 
@@ -268,6 +490,43 @@ class StatusTests(unittest.TestCase):
         payload = json.loads(out)
         self.assertEqual(payload["queue_ahead"], 1)
         self.assertEqual(payload["eta_minutes"], 0)
+
+    def test_mixed_queue_eta_counts_each_engine(self):
+        target = job(
+            id="target",
+            status="pending",
+            created_at="2026-10-20T10:00:00",
+            engine="flux2-klein",
+        )
+        listing = [
+            job(
+                id="ideogram-running",
+                status="running",
+                created_at="2026-10-20T08:00:00",
+                engine="ideogram4",
+            ),
+            job(
+                id="flux-pending",
+                status="pending",
+                created_at="2026-10-20T09:00:00",
+                engine="flux2-klein",
+                seed=1234,
+            ),
+            target,
+        ]
+        runner = FakeRunner(
+            [
+                imagegen.Result(0, json.dumps(target), ""),
+                imagegen.Result(0, json.dumps(listing), ""),
+            ]
+        )
+
+        code, out, err = run_cli(["status", "target"], runner)
+
+        self.assertEqual(code, 0, err)
+        payload = json.loads(out)
+        self.assertEqual(payload["queue_ahead"], 2)
+        self.assertEqual(payload["eta_minutes"], 21 + 3 + 3)
 
     def test_status_surfaces_remote_error(self):
         runner = FakeRunner([imagegen.Result(1, "", "Job not found: nope")])

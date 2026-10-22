@@ -21,6 +21,11 @@ DEFAULT_MAX_VAULT_ROOT = "/Users/wojciechgula/wojtek.second.brain.obsidian.vault
 LIBRARY_SUBDIR = "3-resources/image-library"
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 
+# FLUX.2-klein jobs carry no JSON generation block; these are the values that
+# produced the image, so they go in the record instead (phase 6, decision D2).
+FLUX_MODEL_ID = "black-forest-labs/FLUX.2-klein-4B"
+FLUX_STEPS = 4
+
 EMBED_RE = re.compile(r"!\[\[([^\]]+)\]\]|!\[([^\]]*)\]\(([^)]+)\)")
 HEADING_RE = re.compile(r"^##(?!#)\s+(.*?)\s*$")
 
@@ -182,10 +187,18 @@ def read_jobs(db: Path):
     uri = db.resolve().as_uri() + "?mode=ro"
     connection = sqlite3.connect(uri, uri=True)
     try:
+        columns = {row[1] for row in connection.execute("PRAGMA table_info(jobs)")}
+        if "engine" in columns and "seed" in columns:
+            engine_column, seed_column = "engine", "seed"
+        else:
+            # A snapshot taken before phase 6: every job was an Ideogram 4 job
+            # with no seed, so the old schema still renders the same records.
+            engine_column, seed_column = "'ideogram4' AS engine", "NULL AS seed"
         rows = connection.execute(
-            """
+            f"""
             SELECT id, status, prompt_type, prompt_value, output_path,
-                   width, height, created_at, finished_at
+                   width, height, created_at, finished_at,
+                   {engine_column}, {seed_column}
             FROM jobs
             WHERE status = 'done'
             ORDER BY created_at, id
@@ -228,13 +241,24 @@ def build_records(db: Path, vault: Path, max_vault_root: str):
         height,
         created_at,
         finished_at,
+        engine,
+        seed,
     ) in rows:
         asset, location = classify_asset(output_path, max_vault_root)
         generation, parsed_prompt = _prompt_fields(prompt_type, prompt_value)
+        if engine == "flux2-klein":
+            # Text prompts have no generation block; record what rendered.
+            generation = {
+                "model": FLUX_MODEL_ID,
+                "steps": FLUX_STEPS,
+                "seed": seed,
+            }
         stem = posixpath.splitext(posixpath.basename(output_path))[0]
         records.append(
             {
                 "job_id": job_id,
+                "engine": engine,
+                "seed": seed,
                 "prompt_type": prompt_type,
                 "prompt_value": prompt_value,
                 "parsed_prompt": parsed_prompt,
@@ -330,7 +354,7 @@ def render_record(record) -> str:
     lines = ["---"]
     lines.append(f'type: {_json("image-record")}')
     lines.append(f'job_id: {_json(record["job_id"])}')
-    lines.append(f'engine: {_json("ideogram4")}')
+    lines.append(f'engine: {_json(record["engine"])}')
     lines.append(f'prompt_type: {_json(record["prompt_type"])}')
     lines.append(f'width: {record["width"]}')
     lines.append(f'height: {record["height"]}')
