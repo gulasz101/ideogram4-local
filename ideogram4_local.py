@@ -11,6 +11,9 @@ Usage:
     # Submit a FLUX.2-klein fast draft (natural-language prompt)
     python ideogram4_local.py submit --engine flux2-klein --prompt "a fox in a server room" -o output/fox.png
 
+    # Submit a nano banana (Gemini web) image — needs the gemini-web2api proxy
+    python ideogram4_local.py submit --engine nanobanana --prompt "a fox in a server room" -o output/fox.png
+
     # Run the worker (singleton, picks up pending jobs)
     python ideogram4_local.py worker
 
@@ -25,16 +28,20 @@ Usage:
 """
 
 import argparse
+import base64
 import datetime
 import fcntl
 import json
 import os
+import re
 import secrets
 import signal
 import sqlite3
 import subprocess
 import sys
 import time
+import urllib.error
+import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
@@ -59,12 +66,24 @@ SD_CLI = SD_CPP_DIR / "build" / "bin" / "sd-cli"
 # Phase 6: one queue, two engines. Ideogram 4 stays the main engine; FLUX.2-klein
 # is the fast-draft engine and runs in its own venv as a subprocess (the worker
 # itself must stay stdlib-only on Homebrew Python, which has no torch).
-ENGINES = ("ideogram4", "flux2-klein")
+#
+# Phase 7 adds a third engine, `nanobanana`: Gemini's web image tool (nano banana)
+# reached through the gemini-web2api-go proxy that already backs ZeroClaw. No local
+# weights and no Google API key — the proxy drives a logged-in Firefox cookie, and
+# the image comes back inline as a data: URL inside the chat message.
+ENGINES = ("ideogram4", "flux2-klein", "nanobanana")
 FLUX_MODEL_ID = "black-forest-labs/FLUX.2-klein-4B"
 FLUX_STEPS = 4  # klein is distilled; 4 steps is the documented schedule
 FLUX_PYTHON = Path(
     os.environ.get("IDEOGRAM4_FLUX_PYTHON", "~/.venvs/sou-flux/bin/python")
 ).expanduser()
+
+NANOBANANA_BASE_URL = os.environ.get("IDEOGRAM4_NANOBANANA_URL", "http://127.0.0.1:8083")
+NANOBANANA_MODEL = os.environ.get("IDEOGRAM4_NANOBANANA_MODEL", "gemini-image")
+NANOBANANA_KEY_FILE = Path(
+    os.environ.get("IDEOGRAM4_NANOBANANA_KEY_FILE", "~/.config/image-studio/gemini-web.key")
+).expanduser()
+NANOBANANA_TIMEOUT = int(os.environ.get("IDEOGRAM4_NANOBANANA_TIMEOUT", "300"))
 
 DEFAULT_WIDTH = 1216
 DEFAULT_HEIGHT = 832
@@ -618,6 +637,133 @@ def generate_flux2_klein(
     return output
 
 
+def nanobanana_api_key() -> str:
+    """Resolve the proxy API key: environment first, then the 0600 key file."""
+    key = (os.environ.get("GEMINI_WEB_API_KEY") or "").strip()
+    if key:
+        return key
+    if NANOBANANA_KEY_FILE.exists():
+        key = NANOBANANA_KEY_FILE.read_text(encoding="utf-8").strip()
+    if not key:
+        raise RuntimeError(
+            "no Gemini web API key: set GEMINI_WEB_API_KEY or write the key to "
+            f"{NANOBANANA_KEY_FILE} (chmod 600)"
+        )
+    return key
+
+
+_DATA_URL_RE = re.compile(r"data:image/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=\s]+")
+
+
+def _decode_inline_image(content: str) -> Optional[bytes]:
+    """Pull the first inline image out of the proxy's markdown reply."""
+    match = _DATA_URL_RE.search(content or "")
+    if not match:
+        return None
+    _header, b64 = match.group(0).split(",", 1)
+    return base64.b64decode(re.sub(r"\s+", "", b64))
+
+
+def _image_size(blob: bytes) -> Optional[tuple]:
+    """(width, height) for a PNG or JPEG blob, without Pillow."""
+    if blob[:8] == b"\x89PNG\r\n\x1a\n" and len(blob) >= 24:
+        width = int.from_bytes(blob[16:20], "big")
+        height = int.from_bytes(blob[20:24], "big")
+        return width, height
+    if blob[:2] == b"\xff\xd8":  # JPEG: walk the segments to the first SOF marker
+        index = 2
+        while index + 9 < len(blob):
+            if blob[index] != 0xFF:
+                index += 1
+                continue
+            marker = blob[index + 1]
+            if marker in (0xC0, 0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7, 0xC9, 0xCA, 0xCB):
+                height = int.from_bytes(blob[index + 5:index + 7], "big")
+                width = int.from_bytes(blob[index + 7:index + 9], "big")
+                return width, height
+            if marker in (0xD8, 0xD9) or 0xD0 <= marker <= 0xD7:
+                index += 2
+                continue
+            length = int.from_bytes(blob[index + 2:index + 4], "big")
+            index += 2 + length
+        return None
+    return None
+
+
+def generate_nanobanana(
+    prompt: str,
+    output: Path,
+    width: int,
+    height: int,
+    verbose: bool = False,
+) -> Path:
+    """Ask the Gemini web proxy for one nano-banana image and save it."""
+    key = nanobanana_api_key()
+    ensure_dir(output.parent)
+
+    payload = {
+        "model": NANOBANANA_MODEL,
+        "messages": [{"role": "user", "content": prompt}],
+        "stream": False,
+    }
+    request = urllib.request.Request(
+        NANOBANANA_BASE_URL.rstrip("/") + "/v1/chat/completions",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {key}",
+            "User-Agent": "ideogram4-local/nanobanana",
+        },
+        method="POST",
+    )
+
+    if verbose:
+        log(f"nano banana request: {NANOBANANA_BASE_URL} model={NANOBANANA_MODEL} "
+            f"prompt={len(prompt)} chars")
+    else:
+        log(f"Requesting nano banana image (model={NANOBANANA_MODEL})...")
+
+    started = time.time()
+    try:
+        with urllib.request.urlopen(request, timeout=NANOBANANA_TIMEOUT) as response:
+            body = json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        detail = exc.read()[:400].decode("utf-8", "replace")
+        raise RuntimeError(f"nano banana proxy returned HTTP {exc.code}: {detail}") from exc
+    except urllib.error.URLError as exc:
+        raise RuntimeError(
+            f"nano banana proxy unreachable at {NANOBANANA_BASE_URL}: {exc.reason}"
+        ) from exc
+
+    choices = body.get("choices") or [{}]
+    message = choices[0].get("message") or {}
+    content = message.get("content")
+    if not isinstance(content, str):
+        content = json.dumps(content)
+
+    blob = _decode_inline_image(content)
+    if not blob:
+        spoken = re.sub(r"\s+", " ", content or "").strip()
+        raise RuntimeError(
+            "nano banana returned no image; the model said: " + (spoken[:300] or "(empty reply)")
+        )
+
+    with open(output, "wb") as handle:
+        handle.write(blob)
+
+    elapsed = time.time() - started
+    size = _image_size(blob)
+    if size:
+        log(f"Generated image: {output} ({len(blob)} bytes, {size[0]}x{size[1]}, "
+            f"{elapsed:.1f}s, model={body.get('model') or NANOBANANA_MODEL})")
+        if (width, height) != size:
+            log(f"note: the web image tool chose {size[0]}x{size[1]}; "
+                f"{width}x{height} was a request and is not enforced")
+    else:
+        log(f"Generated image: {output} ({len(blob)} bytes, {elapsed:.1f}s)")
+    return output
+
+
 def generate(
     prompt_type: str,
     prompt_value: str,
@@ -633,6 +779,9 @@ def generate(
     if engine == "flux2-klein":
         prompt = build_prompt(prompt_type, prompt_value)
         return generate_flux2_klein(prompt, output, width, height, seed, verbose)
+    if engine == "nanobanana":
+        prompt = build_prompt(prompt_type, prompt_value)
+        return generate_nanobanana(prompt, output, width, height, verbose)
     if engine != "ideogram4":
         raise RuntimeError(f"unknown engine '{engine}': choose {', '.join(ENGINES)}")
 
@@ -754,6 +903,17 @@ def _submit_error(args) -> Optional[str]:
             return "ideogram4 has no --seed; it is only used by flux2-klein"
         if not (args.prompt_json or args.prompt):
             return "ideogram4 needs --prompt-json or --prompt"
+        return None
+
+    # nanobanana: natural-language text only (the web image tool writes the
+    # picture itself), exactly one source, and no seed — the proxy exposes none.
+    if args.engine == "nanobanana":
+        if args.prompt_json:
+            return "nanobanana takes a natural-language prompt, not --prompt-json"
+        if args.seed is not None:
+            return "nanobanana has no --seed; the Gemini web tool does not take one"
+        if bool(args.prompt) == bool(args.prompt_file):
+            return "nanobanana needs exactly one of --prompt or --prompt-file"
         return None
 
     # flux2-klein: natural-language text only, exactly one source.
@@ -988,7 +1148,7 @@ def main() -> int:
     p_submit = sub.add_parser("submit", help="Submit a generation job to the queue")
     p_submit.add_argument("--engine", default="ideogram4", help=f"generation engine: {' or '.join(ENGINES)}")
     p_submit.add_argument("--prompt-json", type=Path, help="Path to structured JSON prompt file (ideogram4)")
-    p_submit.add_argument("--prompt", type=str, help="Plain text prompt (natural language for flux2-klein)")
+    p_submit.add_argument("--prompt", type=str, help="Plain text prompt (natural language for flux2-klein and nanobanana)")
     p_submit.add_argument("--prompt-file", type=Path, help="UTF-8 text prompt file (flux2-klein)")
     p_submit.add_argument("--seed", type=int, help="Integer seed (flux2-klein; default: random)")
     p_submit.add_argument("-o", "--output", type=Path, required=True)

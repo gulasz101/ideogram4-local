@@ -193,6 +193,49 @@ FLUX prompts are plain natural language (the text encoder truncates at 512 token
 `engine: "flux2-klein"` with the seed in `generation`. An older `jobs.db` is migrated in place on
 first use: existing rows become `ideogram4` jobs with a `NULL` seed.
 
+## nano banana engine (Gemini web)
+
+Phase 7 adds a third engine, `nanobanana`. It is **not** a local model and it uses **no Google API
+key**: it calls the `gemini-web2api-go` proxy that already backs ZeroClaw (`http://127.0.0.1:8083`,
+model `gemini-image`), and the proxy drives a logged-in Gemini web session with a Firefox cookie.
+The picture comes back inline as a `data:image/…;base64` URL inside a normal chat completion, and the
+worker writes the decoded bytes to the job's output path.
+
+Measured on the M1 Max, 2026-11-04: **11.5 s** for a 1376×768 JPEG. That is ~100× faster than
+Ideogram 4 and ~15× faster than FLUX, and it is the only engine here that needs no GPU time.
+
+```bash
+# On the Max: one image, natural-language prompt
+JOB_ID=$(python3 ideogram4_local.py submit --engine nanobanana \
+  --prompt "flat vector blog header: a rack server with amber LEDs, dark navy, no text" \
+  -o output/studio/2026-11-04/header.png)
+python3 ideogram4_local.py worker --one-shot     # ~15 s later the file exists
+
+# From the Air
+imagegen submit --engine nanobanana --prompt "…" --name header
+```
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `IDEOGRAM4_NANOBANANA_URL` | `http://127.0.0.1:8083` | The Gemini web proxy base URL |
+| `IDEOGRAM4_NANOBANANA_MODEL` | `gemini-image` | Proxy model id for the web image tool |
+| `IDEOGRAM4_NANOBANANA_KEY_FILE` | `~/.config/image-studio/gemini-web.key` | 0600 file holding the proxy API key |
+| `GEMINI_WEB_API_KEY` | unset | Wins over the key file when set |
+| `IDEOGRAM4_NANOBANANA_TIMEOUT` | `300` | Request timeout in seconds |
+| `IMAGEGEN_NANOBANANA_MIN_PER_JOB` | `2` | Minutes per job, used for the Air ETA |
+
+Rules that come from the upstream, not from us:
+
+- **The web image tool picks the size.** `-W`/`-H` are recorded but not enforced; the proxy returns
+  what the web app returns (1376×768 on a standard account, up to ~2× with `image_upscale` on an
+  Ultra account). The log line says which size actually arrived.
+- **No seed.** There is no seed in the web tool, so the CLI refuses `--seed` for this engine.
+- **It needs a live cookie.** A rate-limited or stale Gemini account answers with text instead of an
+  image; the job then fails with the model's own words in the error, which is the fastest way to see
+  the real cause. Cookies come from **Firefox** — see the `gemini-web2api-proxy` skill.
+- **One image per call, no editing.** Image-to-image editing exists on the proxy's native API but not
+  through this wrapper yet; keep an Ideogram or FLUX job for anything that must match a strict size.
+
 ## JSON prompt structure
 
 Ideogram 4 is trained on a specific structured JSON caption schema. The wrapper passes the JSON verbatim to `sd-cli`, but it also **auto-canonicalizes** every JSON prompt on submit: it drops unknown keys like `canvas`/`layout`, reorders fields to the trained order, and preserves the wrapper-only `"generation"` block.

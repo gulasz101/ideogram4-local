@@ -6,9 +6,11 @@ The generation stack (models, jobs.db and the launchd worker) lives in
 remote CLI over the LAN SSH key, so any Hermes agent can request an image
 without a new service, port or secret.
 
-Two engines share the one queue and worker: `ideogram4` (the main engine, JSON
-prompts) and `flux2-klein` (fast natural-language drafts, 1216x832 in about three
-minutes). Remote paths given to --prompt-json / --prompt-file / -o on the Max
+Three engines share the one queue and worker: `ideogram4` (the main engine, JSON
+prompts), `flux2-klein` (fast natural-language drafts, 1216x832 in about three
+minutes) and `nanobanana` (Gemini's web image tool through the gemini-web2api
+proxy on the Max, natural language, about a minute, output size chosen by the
+web tool). Remote paths given to --prompt-json / --prompt-file / -o on the Max
 are relative to IMAGEGEN_REMOTE_DIR; the job rows the remote CLI stores carry
 absolute paths.
 
@@ -19,6 +21,7 @@ Environment:
     IMAGEGEN_STAGING           local download root (default: ~/image-studio/staging)
     IMAGEGEN_MIN_PER_JOB       minutes per Ideogram 4 job, for ETA (default: 21)
     IMAGEGEN_FLUX_MIN_PER_JOB  minutes per FLUX.2-klein job, for ETA (default: 3)
+    IMAGEGEN_NANOBANANA_MIN_PER_JOB  minutes per nano banana job, for ETA (default: 2)
 """
 
 import argparse
@@ -40,9 +43,10 @@ DEFAULT_REMOTE_DIR = "git/ideogram4-local"
 DEFAULT_STAGING = "~/image-studio/staging"
 DEFAULT_MIN_PER_JOB = 21
 DEFAULT_FLUX_MIN_PER_JOB = 3
+DEFAULT_NANOBANANA_MIN_PER_JOB = 2
 DEFAULT_WIDTH = 1216
 DEFAULT_HEIGHT = 832
-SUPPORTED_ENGINES = ("ideogram4", "flux2-klein")
+SUPPORTED_ENGINES = ("ideogram4", "flux2-klein", "nanobanana")
 
 SSH_OPTS = ["-o", "BatchMode=yes", "-o", "ConnectTimeout=10"]
 ACTIVE_STATUSES = ("pending", "running")
@@ -68,6 +72,7 @@ class Config:
     staging: str = DEFAULT_STAGING
     min_per_job: int = DEFAULT_MIN_PER_JOB
     flux_min_per_job: int = DEFAULT_FLUX_MIN_PER_JOB
+    nanobanana_min_per_job: int = DEFAULT_NANOBANANA_MIN_PER_JOB
 
     @classmethod
     def from_env(cls, env=None):
@@ -81,6 +86,9 @@ class Config:
             ),
             flux_min_per_job=_minutes_from_env(
                 env, "IMAGEGEN_FLUX_MIN_PER_JOB", DEFAULT_FLUX_MIN_PER_JOB
+            ),
+            nanobanana_min_per_job=_minutes_from_env(
+                env, "IMAGEGEN_NANOBANANA_MIN_PER_JOB", DEFAULT_NANOBANANA_MIN_PER_JOB
             ),
         )
 
@@ -189,6 +197,15 @@ def _engine_error(args):
             return "--seed is only used by flux2-klein"
         return None
 
+    if args.engine == "nanobanana":
+        if args.prompt_json is not None:
+            return "nanobanana takes a natural-language prompt, not --prompt-json"
+        if (args.prompt is None) == (args.prompt_file is None):
+            return "nanobanana needs exactly one of --prompt or --prompt-file"
+        if args.seed is not None:
+            return "--seed is only used by flux2-klein; nanobanana takes none"
+        return None
+
     if args.prompt_json is not None:
         return "flux2-klein takes a natural-language prompt, not --prompt-json"
     if (args.prompt is None) == (args.prompt_file is None):
@@ -203,7 +220,7 @@ def _submit_reply(args, config, runner, remote_prompt, remote_output):
     if args.engine == "ideogram4":
         argv = ["submit", "--prompt-json", remote_prompt]
     else:
-        argv = ["submit", "--engine", "flux2-klein", "--prompt-file", remote_prompt]
+        argv = ["submit", "--engine", args.engine, "--prompt-file", remote_prompt]
     argv.extend(
         ["-o", remote_output, "-W", int(args.width), "-H", int(args.height)]
     )
@@ -244,8 +261,8 @@ def _submit_reply(args, config, runner, remote_prompt, remote_output):
 def cmd_submit(args, cfg, runner):
     if args.engine not in SUPPORTED_ENGINES:
         print(
-            "Unsupported engine {!r}: choose ideogram4 or flux2-klein".format(
-                args.engine
+            "Unsupported engine {!r}: choose {}".format(
+                args.engine, ", ".join(SUPPORTED_ENGINES)
             ),
             file=sys.stderr,
         )
@@ -335,8 +352,11 @@ def cmd_submit(args, cfg, runner):
 
 def _minutes_for(job, cfg):
     """Minutes a row costs the queue; a row without engine is an Ideogram job."""
-    if str(job.get("engine") or "ideogram4") == "flux2-klein":
+    engine = str(job.get("engine") or "ideogram4")
+    if engine == "flux2-klein":
         return cfg.flux_min_per_job
+    if engine == "nanobanana":
+        return cfg.nanobanana_min_per_job
     return cfg.min_per_job
 
 
@@ -448,13 +468,13 @@ def build_parser():
     p_submit.add_argument(
         "--prompt",
         default=None,
-        help="natural-language prompt, uploaded as .txt (flux2-klein)",
+        help="natural-language prompt, uploaded as .txt (flux2-klein, nanobanana)",
     )
     p_submit.add_argument(
         "--prompt-file",
         type=Path,
         default=None,
-        help="UTF-8 text prompt file (flux2-klein)",
+        help="UTF-8 text prompt file (flux2-klein, nanobanana)",
     )
     p_submit.add_argument("--seed", type=int, default=None, help="FLUX seed")
     p_submit.add_argument("--name", default=None, help="Slug (default: prompt file stem)")
@@ -463,7 +483,7 @@ def build_parser():
     p_submit.add_argument(
         "--engine",
         default="ideogram4",
-        help="ideogram4 (main) or flux2-klein (fast drafts)",
+        help="ideogram4 (main), flux2-klein (fast drafts) or nanobanana (Gemini web)",
     )
     p_submit.add_argument("--json", action="store_true")
 
