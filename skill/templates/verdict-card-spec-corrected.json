@@ -1,0 +1,17 @@
+{
+  "issue_id": "<issue uuid>",
+  "round": 2,
+  "title": "Verdicts: <post title> - <n> images (corrected)",
+  "summary": "Round 2: the re-render of the image Wojtek rejected in round 1.",
+  "prompt": "<post title>: <n> images, one verdict each.",
+  "idempotency_key": "verdicts:<issue uuid>:round-2-corrected",
+  "details_markdown": "**Approve:** this re-render replaces the old image in the draft. **Reject** with a reason: I try again (3 rounds at most). **Defer:** keep what the post has now and drop this re-render. Please don't comment while the card is open.\n\n*(This card replaces card `<id>`, which I withdrew. The note below is the corrected one; the image itself did not change.)*\n\n### The check note\n\n<the full per-prop note, naming the check each claim rests on>\n\n| item id | section | library record | job |\n| --- | --- | --- | --- |\n| `<item id>` | <section> | `<staging path or record path>` | `<job id>` |",
+  "items": [
+    {
+      "id": "<item id>",
+      "label": "<item id>",
+      "attachment_id": "<attachment id>",
+      "description": "Why: <one sentence>. Check: <size, grey bars, lettering>. Caveats: <what the picture does not quite say>."
+    }
+  ]
+}

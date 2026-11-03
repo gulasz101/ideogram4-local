@@ -64,6 +64,26 @@ for y0 in range(600, im.size[1], 20):
 
 Report the margin's pixel height from the script's own number in the check note, not the vision pass's guess.
 
+## A pale fill is not grey: measure the fill's share, not the band's colour
+
+`check-grey-bars.py` matches grey margins (flat, RGB ~243, std≈0) at the top and bottom. A render can fail the same way on a **pale cream or near-white field** — the model draws the scene into part of the canvas and leaves the rest as flat `#F8FAFA` — and the grey-bar script reports "content fills the entire frame", because near-white is outside its grey match and because it reads only the two edges.
+
+The question a blank margin answers is *how much of the frame is one flat fill, and where* — not *is the band grey*:
+
+```bash
+~/image-studio/.venv-imgcheck/bin/python ~/.hermes/profiles/matejko/skills/image-studio/scripts/check-blank-margin.py "$PNG"
+```
+
+It prints the dominant fill colour and its share of the whole frame, every run of rows and columns that is at least 80% that fill, the blank strip at each of the four edges, and the content bbox. One measured frame: fill `rgb(248,250,250)`, **49.5% of the frame**, 116 rows over 80% pale, and a **107 px right-edge strip 99.8% blank** — and the frame carried two pasted UI cards sitting on that field, which is what made the fill a defect rather than a background.
+
+Read the numbers as a share, not a verdict:
+
+- **A fill that is the wall behind a full scene is scenery.** Cel-shaded art has large flat surfaces; a 20-40% fill with props and figures crossing every edge is normal, and `check-flat-bands.py` fires on such frames by construction (engine-pitfall #66).
+- **A fill that is most of the frame with the drawing squeezed into one corner or one half is an empty margin**, whatever its colour, and it is the same defect class as a grey band.
+- **A blank vertical band is invisible to both edge scripts**, which scan rows — read the column runs too, because a strip down a side edge is the same empty margin as a band across the bottom.
+- **Put the numbers in the note.** "49.5% of the frame is one flat pale fill, 116 rows over 80% pale, the right 107 px strip 99.8% blank" is re-runnable; "half the image is empty" is not.
+- **The class vocabulary may have no rate for it.** `verdict-class-rate.py --class empty-margins` can come back `no rows` while the standing rule is well established across approved cards, so quote the rule and the measurement rather than an invented rate, and say the class has no verdict rows.
+
 ## Distinction from Safety-Filter Grey-Box
 
 | Feature | Grey Border Bars | Safety-Filter Grey-Box |

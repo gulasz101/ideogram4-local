@@ -117,6 +117,17 @@ def main():
     else:
         batch_line = "**Batch cards in flight:** none."
 
+    if q.get("ready"):
+        ready_lines = [f"post {h['n']:03d} round {h['round']}" for h in q["ready"]]
+        ready_line = (
+            "**Rounds waiting for a card:** "
+            + "; ".join(ready_lines)
+            + ". A re-render round waits here for the live slot; `batch-open-ready <count>` "
+            "can send it out as a batch card instead."
+        )
+    else:
+        ready_line = "**Rounds waiting for a card:** none."
+
     if needs_render:
         render_line = "; ".join(f"{n:03d} ({m} missing)" for n, m, _ in needs_render)
         render_line = f"**Needs a render before its card:** {render_line}."
@@ -140,6 +151,8 @@ Snapshot {now}. Counts: {count_line}.
 {slot_line}
 
 {batch_line}
+
+{ready_line}
 
 {render_line}
 

@@ -7,11 +7,16 @@ and it is the only way to get a memory *id*: hindsight_retain returns a
 receipt ("Memory queued for storage"), not an id.
 
 Usage:
-    hindsight-memory.py list [SUBSTRING] [--limit N] [--tag TAG]
+    hindsight-memory.py list [SUBSTRING] [--limit N] [--tag TAG] [--state STATE] [--all]
     hindsight-memory.py get MEMORY_ID
+    hindsight-memory.py invalidate MEMORY_ID --reason "..."
+    hindsight-memory.py edit MEMORY_ID --text "..."
 
-`list` prints one memory per line as: <id>  <tags>  <text>
+`list` prints one memory per line as: <id>  <tags>  <type/state>  <text>
 `get` prints the full JSON of one memory.
+`invalidate` retires a fact into the curation archive; `edit` rewrites a
+fact's text in place. Both accept world/experience facts only - an
+observation is derived from its sources, so curate those instead.
 
 The key and the bank id come from the profile config; the key is never
 printed. A reranker failure shows up as a 500 on the ranked path while this
@@ -74,6 +79,16 @@ def load_key():
     die("no HINDSIGHT_API_KEY in the environment or in the profile .env")
 
 
+class ApiError(Exception):
+    """A failed API call, carrying the server's own message."""
+
+    def __init__(self, code, body, url):
+        super().__init__(f"HTTP {code} from {url}\n{body}")
+        self.code = code
+        self.body = body
+        self.url = url
+
+
 def call(url, key, method="GET", payload=None):
     req = urllib.request.Request(url, method=method)
     req.add_header("Authorization", f"Bearer {key}")
@@ -86,7 +101,7 @@ def call(url, key, method="GET", payload=None):
             return json.loads(resp.read().decode() or "{}")
     except urllib.error.HTTPError as exc:
         body = exc.read().decode(errors="replace")[:400]
-        die(f"HTTP {exc.code} from {url}\n{body}")
+        raise ApiError(exc.code, body, url)
     except urllib.error.URLError as exc:
         die(f"cannot reach {url}: {exc.reason}")
 
@@ -104,7 +119,9 @@ def as_list(payload):
 def cmd_list(api, bank, key, args):
     limit = 400
     tag = None
+    state = None
     needle = None
+    fetch_all = False
     rest = []
     i = 0
     while i < len(args):
@@ -113,12 +130,31 @@ def cmd_list(api, bank, key, args):
             limit = int(args[i + 1]); i += 2; continue
         if a == "--tag" and i + 1 < len(args):
             tag = args[i + 1]; i += 2; continue
+        if a == "--state" and i + 1 < len(args):
+            state = args[i + 1]; i += 2; continue
+        if a == "--all":
+            fetch_all = True; i += 1; continue
         rest.append(a); i += 1
     if rest:
         needle = " ".join(rest).lower()
 
-    url = f"{api}/v1/default/banks/{urllib.parse.quote(bank)}/memories/list?limit={limit}&offset=0"
-    memories = as_list(call(url, key))
+    base = f"{api}/v1/default/banks/{urllib.parse.quote(bank)}/memories/list"
+    memories = []
+    offset = 0
+    while True:
+        url = f"{base}?limit={limit}&offset={offset}"
+        if state:
+            url += f"&state={urllib.parse.quote(state)}"
+        try:
+            page = call(url, key)
+        except ApiError as exc:
+            die(str(exc))
+        batch = as_list(page)
+        memories += batch
+        offset += len(batch)
+        total = page.get("total") if isinstance(page, dict) else None
+        if not fetch_all or not batch or (total is not None and offset >= total):
+            break
 
     hits = 0
     for mem in memories:
@@ -132,7 +168,10 @@ def cmd_list(api, bank, key, args):
             continue
         hits += 1
         one_line = " ".join(text.split())
-        print(f"{mem.get('id', '?')}  [{','.join(tags)}]  {one_line}")
+        print(
+            f"{mem.get('id', '?')}  [{','.join(tags)}]  "
+            f"{mem.get('fact_type', '?')}/{mem.get('state', '?')}  {one_line}"
+        )
     print(f"--- {hits} of {len(memories)} memories listed", file=sys.stderr)
     if not hits and needle:
         print(
@@ -149,8 +188,85 @@ def cmd_get(api, bank, key, args):
         die("get needs a memory id")
     mem_id = args[0]
     url = f"{api}/v1/default/banks/{urllib.parse.quote(bank)}/memories/{urllib.parse.quote(mem_id)}"
-    mem = call(url, key)
+    try:
+        mem = call(url, key)
+    except ApiError as exc:
+        if exc.code == 404:
+            die(
+                f"no live memory with id {mem_id}. A swept observation answers 404 "
+                "here too - that is how a curated observation looks, not a lost "
+                "memory.",
+            )
+        die(str(exc))
     print(json.dumps(mem, indent=2, ensure_ascii=False))
+    return 0
+
+
+def _curate(api, bank, key, mem_id, payload):
+    """PATCH one memory unit, turning the observation refusal into a route."""
+    url = f"{api}/v1/default/banks/{urllib.parse.quote(bank)}/memories/{urllib.parse.quote(mem_id)}"
+    try:
+        return call(url, key, method="PATCH", payload=payload)
+    except ApiError as exc:
+        if "observation" in exc.body:
+            die(
+                "that memory is an observation, and the API refuses to curate "
+                "those: they are derived and regenerate from their sources.\n"
+                "Curate the world/experience facts it was consolidated from - "
+                "invalidating or editing a source fact sweeps the observations "
+                "built on it. The source ids are in `get <id>` -> "
+                "source_memory_ids.",
+            )
+        die(str(exc))
+
+
+def _report(unit, verb):
+    if not isinstance(unit, dict):
+        print(f"ok ({verb})")
+        return
+    print(
+        f"{unit.get('id', '?')}  {verb}  state={unit.get('state')}  "
+        f"reason={unit.get('invalidation_reason')}"
+    )
+    if unit.get("text"):
+        print("  " + " ".join(unit["text"].split()))
+
+
+def cmd_invalidate(api, bank, key, args):
+    reason = None
+    mem_id = None
+    i = 0
+    while i < len(args):
+        a = args[i]
+        if a == "--reason" and i + 1 < len(args):
+            reason = args[i + 1]; i += 2; continue
+        if mem_id is None:
+            mem_id = a
+        i += 1
+    if not mem_id:
+        die("invalidate needs a memory id")
+    if not reason:
+        die("invalidate needs --reason: the reason is what makes the curation auditable")
+    unit = _curate(api, bank, key, mem_id, {"state": "invalidated", "reason": reason})
+    _report(unit, "invalidated")
+    return 0
+
+
+def cmd_edit(api, bank, key, args):
+    text = None
+    mem_id = None
+    i = 0
+    while i < len(args):
+        a = args[i]
+        if a == "--text" and i + 1 < len(args):
+            text = args[i + 1]; i += 2; continue
+        if mem_id is None:
+            mem_id = a
+        i += 1
+    if not mem_id or text is None:
+        die("edit needs a memory id and --text")
+    unit = _curate(api, bank, key, mem_id, {"text": text})
+    _report(unit, "edited")
     return 0
 
 
@@ -165,7 +281,11 @@ def main():
         return cmd_list(api, bank, key, args)
     if cmd == "get":
         return cmd_get(api, bank, key, args)
-    die(f"unknown command {cmd!r}; expected 'list' or 'get'")
+    if cmd == "invalidate":
+        return cmd_invalidate(api, bank, key, args)
+    if cmd == "edit":
+        return cmd_edit(api, bank, key, args)
+    die(f"unknown command {cmd!r}; expected 'list', 'get', 'invalidate' or 'edit'")
 
 
 if __name__ == "__main__":

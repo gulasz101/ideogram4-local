@@ -45,6 +45,22 @@ ls -l "$PNG"
 
 The wrapper prints only the job ID to stdout. A 1216×832 render takes about 21 minutes on the M1 Max; do not poll in the same run. Schedule a Paperclip issue monitor (`references/review-loop.md`) and end the run, or resume on a later wake.
 
+**A job ID can start with a dash, and then neither `status` nor `fetch` can take it.** The
+IDs are random tokens, so one in about sixty begins with `-`; argparse reads it as an option
+and both subcommands answer `error: the following arguments are required: job_id` — including
+with a `--` separator, because the wrapper consumes that itself before the remote CLI sees
+it. The job is fine, only the client cannot address it. Reach it over SSH instead:
+
+```bash
+ssh m1max "cd ~/git/ideogram4-local && python3 ideogram4_local.py status -- '-_ySI23odgo'"
+scp m1max:/Users/wojciechgula/git/ideogram4-local/output/studio/<job date>/<slug>-<8 hex>.png \
+    ~/image-studio/staging/<fetch date>/
+```
+
+The remote CLI does honour `--`, and its `status` JSON carries `output_path`, so the filename
+to scp is known before the render finishes. Put that path in the handoff brief, because the
+run that fetches it will hit the same wall.
+
 ## FLUX.2-klein fast drafts
 
 `imagegen submit --engine flux2-klein` queues a fast draft: about 3 minutes per 1216×832

@@ -1,0 +1,75 @@
+# Treating a vision read as a claim, not a result
+
+The self-check exists to keep broken pictures off a card. A read that is wrong in either direction costs real money: a false defect spends a render replacing a clean picture, and a false clearance puts a defect where the owner judges it. Read every answer as a claim that the picture can contradict.
+
+## A read that fails has answered nothing
+
+- **Empty, "no image attached", or a rate-limit error is a failed call, never clearance.** Retry that one read by itself. An empty answer about a picture you know exists says nothing about the picture.
+- **Issue reads a couple at a time, not as one parallel batch.** Partway through a batch of five the remaining calls are refused, and the two or three answers that did land then read as the whole set — so the slot you never actually looked at gets a note written from nothing.
+- **A failed read does not skip the mechanical checks.** Run the edge scripts regardless, and say in the note which reads failed and were retried, rather than describing a picture you did not see.
+
+## A full-frame read invents props and defects, not only counts
+
+A whole-frame pass is right for the scene-level question (does this read as the idea the section makes) and unreliable for anything countable or specific. It has reported, on clean renders:
+
+- a needle gauge with numerals on a plain steel shaft, where a 1.6x crop of the post showed a bare collar and a worn band;
+- water, spray and mist in a channel the crop shows as dry stone under pale dust;
+- a different drawing style than the file actually has (a colour cel frame read back as a black-and-white engraving), which is the tell that the pass is describing its expectation rather than the pixels.
+- **"Watercolour, not a 1990s anime still, no film grain" on a series file.** The frame-size pass has said this about a render already approved on the previous round and about the fresh slot in the same sitting, so the label is the pass's default vocabulary for a muted interior, not a measurement. Never hold a card on a technique word alone: read an approved file from the same post with the same question, and if it comes back the same way the word carries no signal. The grain script is the measurement — `check-grain.py` against an approved file from the same post (webhook 4.19 against approved 5.02 and 4.75 in one round).
+
+When a full-frame read reports a **prop the prompt bans** — a dial, a gauge, numerals, water, a panel — the prompt is not the defect and the render is not condemned. Crop the prop at 2x or more, written to disk, and ask about that prop only. Repeat it for the direction that matters most in your read: a defect you are about to re-render for.
+
+`references/verifying-image-details.md` carries the crop procedure, the limb-and-head counting rules and the lettering cases. Use it; this file is only the judgement about when to trust an answer.
+
+## A limb allegation names a place, so crop the place it names
+
+A third arm or extra hand reported at frame size is a hold-back only once a crop confirms it, and the crop has to cover the spot the read pointed at. Two per-hand crops answer "is each visible hand a hand"; they say nothing about a limb the read placed at the waist, the hip or the ledge — so clearing both hands makes a clean render look confirmed while the allegation stays unsettled.
+
+- **Trace the body from shoulder to hand on one 2x torso crop** (`crop-nearest.py <png> --box <x0,y0,x1,y1> --scale 2`) and ask where each arm goes and whether any hand or forearm sits detached. A clean frame answers "two continuous arms, no detached limb" in a single read, and that sentence is what the note quotes.
+- **Both fists resting on a prop read as a third limb at frame size**, because the far forearm is foreshortened behind the near one. A figure with both hands on a counter, ledge or rack is therefore where this false positive is likeliest, and the case least worth re-rendering on the strength of a frame-size count.
+- **Quote the crop scale beside the count**, exactly as for fingers: "2x torso crop, two arms, two fists on the ledge, 0 detached limbs" is evidence; "the model says two arms" is not.
+- **A crop of the pair cannot clear a count of limbs; the crop that excludes the pair can.** A third boot or third leg allegation is settled by two strips that contain none of the known pair — the floor left of the feet and the floor right of them — each asked one question: is there footwear here at all, or only stone and wood? An empty strip is the finding; re-reading the pair is not.
+- **A limb at a crop boundary reads as a whole extra limb.** A crop whose edge cut through the second boot of a pair came back as "a third boot at the far right". Overlap the strips rather than butting them, and treat any count that lands on a crop edge as unmeasured.
+- **An answer that contradicts itself has measured nothing.** "Two boots on the floor" and "three legs from his hips" in the same reply is the pass narrating both sides of the question; take neither count and go to the object crops.
+- **The same test clears a limb that seems to merge into a prop.** Crop the prop alone at 8x and ask "wood or hand, cloth or hand": bare wood clears the merge, and a hand-shaped mass at the end of a forearm is a hold-back.
+
+## The note you inherit is also one run's read
+
+A brief's check note and its caveats belong to the run that wrote them. Re-check every PNG, and when a caveat does not reproduce — a prop described as leaning on the wall that stands on its own bracket — put the **measured** read in the item description and record the difference with `backlog.py note <n>` so the next round does not inherit a caveat that is not there. Do not copy a caveat forward because it is written down, and do not silently drop it either: name what you measured.
+
+## A card that is already posted is proved, not rebuilt
+
+When a wake lands on an issue whose verdict card is already pending, that round is paid for and the work left is evidence rather than a new render. Two checks settle it in one run, with no second card and no re-upload:
+
+- **Re-run the judgement-free scripts on the staging files yourself.** A brief's line "all four pass `check-grey-bars` and `check-palette-strip`" is a claim about files you can measure; a small shell script looping the round's files over those scripts prints the real numbers in a minute, and the note quotes your own figures.
+- **Prove the stored object, not the upload response.** Download `/api/attachments/<id>/content` for every item on the card and compare `sha256` and byte size against the staging file — an upload response's hash only describes the file that was sent. A card whose items all read back at the staging file's hash and size is a card whose rows point at the right pictures.
+- **A count in a posted card's item text is frozen, so correct it in a comment.** The payload cannot be edited after the POST, and a clean picture is not withdrawn for a number. Re-measure the prop at 3x (`crop-nearest.py --scale 3`), and where the count does not reproduce, say so in the words you measured: "the ideogram draws two bolt heads, not four" clears a caveat that is not there, and "the five flux arcs do not reproduce at 3x" stops the next round inheriting it. Never repeat an inherited count as if you had verified it, and never let the count decide the card: he judges the picture.
+
+## A read that fails on one file is a gap in the record, not a licence to guess
+
+An approval close documents the whole slot, held-back attempts included, and a slot can carry seven attempts with no records whose only evidence is the frame on disk. Read what you can; where the service refuses a file:
+
+- **Change the strategy once, then stop.** `crop-nearest.py --scale` takes an integer, so it cannot shrink a file for a smaller upload — make a reduced copy with PIL (`Image.open(src).convert("RGB").resize((912, 624), Image.LANCZOS).save(dst)`) and read that. If two different files fail in the same minute, the service is down rather than the file being bad: stop reading, and do not repeat the identical call.
+- **Write the attempt's record anyway, quoting the round's own finding as the round's.** A held-back record with no record at all erases the slot's history, and a record whose defect you did not re-measure is honest as long as it says so: `the mark tiled into a repeating pattern instead of one bite — that is the round's finding; this close did not re-measure it because the read service was failing`. Never dress the inherited sentence up as a fresh read, and never leave the attempt undocumented.
+- **Name the gap in the closing comment in one line**, so the library's weaker evidence is visible to the owner rather than found later by someone who cannot see the pixels either.
+
+## A fist is not a fan of fingers
+
+A clenched fist reads as one more digit than it has, and the error is systematic rather than random: the knuckle ridges down the front are counted as separate fingers and the thumb is then added on top of them. On a clean header render the frame-size pass answered "five distinct knuckle/finger sections lined up side by side, plus a thumb", and a 6x crop of that same fist answered "thumb lying across the front and four distinct folded fingers, normal anatomy".
+
+The count to hold a render to is **four folded fingers plus one thumb**. Where the thumb is drawn folded into the mass of the hand instead of laid across it, the honest reading is "four folded fingers, thumb blended into the mass" — that is a style compression, not a missing digit, and it does not hold a card.
+
+- **Go in at 6x on one fist at a time**, not at frame size and not on a band across the figure. Cutting the lower third at 2x turns both fists on a bench into "an unnatural number of hands piled at the torso".
+- **Ask for the thumb and the folded fingers separately** ("describe the thumb, then each folded finger") rather than "how many fingers" — the enumeration can be checked against the picture, a total cannot.
+- **Do not re-ask the prop-zoom question.** A 4x crop that holds the whole bench answers about the bench; the fist needs its own ~160-pixel box.
+- **The magnification that condemns is the one he never uses.** A cel-drawn hand closed on a small prop reads as "one thumb plus a solid mass" or "a mitten" at 6–8x on a clean render, because at that scale the drawn line between the thumb and the folded fingers is thinner than the upscale's interpolation. Judge the hand at frame size and one 2x crop: a hand that reads as a hand there is not a hold-back, and the note quotes the 2x wording. What does hold the slot is a **count** failure visible at that same size — three hands on one body, or a hand drawn beside the real one — or a hand with no articulable digit at all.
+- **`--ink` proves a silhouette, it does not count digits.** The threshold mask merges fingers separated only by a colour edge, so a four-digit hand reads as "one digit plus a mass" on the mask and normal on the plain crop of the same box. Use the mask for "is that a hand at the end of this forearm", and count on the plain nearest-neighbour crop.
+- **Judge the shipping render and its companion at the same size.** In one round the ideogram's figure read as two fists that trace from their shoulders at 2x, while the FLUX companion read as three hands at that same size and settled at one thumb plus a mass on the ink crop. The ideogram is the card's item; the companion is named in `detailsMarkdown` by job id and the class that sank it. Neither call comes from the 8x crop, and a companion that fails is never put on a row with its defect named.
+
+## Report a caveat where he reads it
+
+A caveat is part of the card, not an aside: it goes in the item's own description in the words of the picture ("the soles are flat but no cast shadow is drawn under them"), because the card is frozen at the POST and the description is what he reads next to the image. An unmentioned deviation is a defect he finds himself.
+
+## The same rule governs the queue state you report
+
+A comment that says what a post's state is is a claim like any other, and it comes from `~/image-studio/backlog/queue.json`, where **`posts` is a list of post objects keyed by `n`, not a dict keyed by post number**. `q["posts"]["069"]` cannot be read, and a guard like `if "069" in q["posts"]` is False, so the expression silently falls through to `q["posts"][69]` — a different post, whose state, round and issue ids then get reported as this one's. Filter it: `[p for p in q["posts"] if p["n"] == 69]`. If the row you read does not carry the issue id you are working, the lookup is wrong, not the queue.

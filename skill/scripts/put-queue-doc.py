@@ -70,8 +70,21 @@ def main():
         print("HTTP", code, "RAW", raw[:500])
         return 1
     if j.get("error") or str(j.get("code", "")).startswith("conflict"):
-        print("HTTP", code, "error:", j.get("message") or j.get("code"),
-              "- fetch the document, merge, retry")
+        # The board names the cause in `error` and the holder in `details`; the
+        # fields `message`/`code` are usually absent, so printing only those
+        # says "None" and then advises the wrong fix for a run-ownership
+        # conflict (re-fetching a revision that was never the problem).
+        err = j.get("error") or j.get("code") or j.get("message") or "conflict"
+        details = j.get("details") or {}
+        holder = details.get("checkoutRunId") or details.get("executionRunId")
+        print("HTTP", code, "error:", err)
+        if holder:
+            print("held by run:", holder,
+                  "- checkout the runner, then run this script again")
+            print("If the holder does not release, post the refreshed counts as a")
+            print("comment on the runner; its own wake rebuilds the document.")
+        else:
+            print("- fetch the document, merge, retry")
         return 1
     print("HTTP", code, "| latestRevisionId", j.get("latestRevisionId"),
           "| chars", len(j.get("body") or ""))

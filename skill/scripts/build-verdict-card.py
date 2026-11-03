@@ -20,6 +20,9 @@ The spec is a JSON object:
         label         str  the slug
         attachment_id str  the uploaded attachment id
         description   str  why + check note, 500 chars at most
+    idempotency_key  str  OPTIONAL, overrides the default key. A corrected
+                            card needs one the default cannot express:
+                            "verdicts:<issueId>:round-<k>-corrected".
 
 Exits non-zero without writing anything when a description is too long or a
 required field is missing, so a bad payload never reaches the board.
@@ -70,8 +73,9 @@ def build(spec):
         "title": spec["title"],
         "summary": spec["summary"],
         "continuationPolicy": "wake_assignee",
-        "supersedeOnUserComment": True,
-        "idempotencyKey": f"verdicts:{spec['issue_id']}:round-{spec['round']}",
+        "idempotencyKey": spec.get(
+            "idempotency_key",
+            f"verdicts:{spec['issue_id']}:round-{spec['round']}"),
         "payload": {
             "version": 1,
             "prompt": spec["prompt"],
@@ -81,6 +85,12 @@ def build(spec):
             "requireReasonOn": ["reject"],
             "allowBulkApprove": True,
             "reasonLabel": "What should change?",
+            # The server reads this from payload, NOT from the interaction's
+            # top level: a top-level copy is silently dropped and the card
+            # falls back to the default false, so a board comment no longer
+            # closes the card the way the legend on it says it does. Only a
+            # board/user comment supersedes; an agent comment does not.
+            "supersedeOnUserComment": True,
         },
     }
 
@@ -102,6 +112,8 @@ def main():
         print(f"{item['label']} {len(item['description'])} chars "
               f"attach={item['attachmentId']}")
     print(f"idempotencyKey={payload['idempotencyKey']}")
+    print(f"supersedeOnUserComment="
+          f"{payload['payload']['supersedeOnUserComment']}")
     print(f"wrote {args.out}")
 
 

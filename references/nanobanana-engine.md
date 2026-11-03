@@ -55,6 +55,12 @@ the OpenAI-compatible chat route is the one to use.
 
 ## Library record
 
-A finished job stores `engine = "nanobanana"`, `seed = NULL`, and the output file is whatever
-extension the upstream MIME type implies (`.jpg` for `image/jpeg`). The library back-fill reads the
+A finished job stores `engine = "nanobanana"`, `seed = NULL`, and the output file is written to the
+`-o` path the job was given (see the format note below). The library back-fill reads the
 engine column, so a nano banana image shows up labelled by its engine, not as an Ideogram render.
+
+**Except when the caller passed an explicit `-o`:** `imagegen submit` passes
+`-o <name>-<8hex>.png`, so a JPEG reply lands in a `.png` filename — verified 2026-11-04 (GUL-895):
+`file` says `JPEG image data … 1376x768`, 208 072 bytes, and the Paperclip attachment then records
+`contentType: image/png`. Check with `file` before quoting a format; the web tool decides the
+format, the extension does not.
