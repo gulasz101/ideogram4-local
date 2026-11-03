@@ -197,7 +197,7 @@ class SubmitTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertEqual(out, "")
         self.assertIn("Unsupported engine 'sdxl'", err)
-        self.assertIn("choose ideogram4 or flux2-klein", err)
+        self.assertIn("choose ideogram4, flux2-klein, nanobanana", err)
         self.assertEqual(runner.calls, [])
 
     def test_submit_rejects_missing_prompt_file(self):
@@ -289,6 +289,58 @@ class FluxSubmitTests(unittest.TestCase):
                 "-o output/studio/2026-10-20/{}.png -W 1216 -H 832".format(stem, stem)
             ],
         )
+
+    @patch("imagegen._today_str", return_value="2026-10-20")
+    @patch("imagegen.secrets.token_hex", return_value="a1b2c3d4")
+    def test_submit_nanobanana_engine_passes_engine_through(self, _token, _today):
+        uploaded = {}
+
+        def on_scp(argv):
+            uploaded["remote"] = argv[-1]
+            uploaded["content"] = Path(argv[-2]).read_text(encoding="utf-8")
+
+        runner = FakeRunner(
+            [
+                imagegen.Result(0, "", ""),
+                imagegen.Result(0, "", ""),
+                imagegen.Result(0, "Submitting...\nabc123DEF\n", ""),
+            ],
+            on_scp=on_scp,
+        )
+
+        code, out, err = run_cli(
+            ["submit", "--engine", "nanobanana", "--prompt", self.prompt_text],
+            runner,
+        )
+
+        self.assertEqual(code, 0, err)
+        self.assertEqual(out, "abc123DEF\n")
+        stem = "a-fox-in-a-server-room-a1b2c3d4"
+        self.assertEqual(
+            uploaded["remote"],
+            "m1max:git/ideogram4-local/studio-incoming/{}.txt".format(stem),
+        )
+        self.assertEqual(
+            runner.calls[2],
+            SSH_PREFIX
+            + [
+                "cd git/ideogram4-local && python3 ideogram4_local.py submit "
+                "--engine nanobanana --prompt-file studio-incoming/{}.txt "
+                "-o output/studio/2026-10-20/{}.png -W 1216 -H 832".format(stem, stem)
+            ],
+        )
+
+    def test_submit_nanobanana_rejects_seed(self):
+        runner = FakeRunner()
+
+        code, _out, err = run_cli(
+            ["submit", "--engine", "nanobanana", "--prompt", "a fox", "--seed", "7"],
+            runner,
+        )
+
+        self.assertEqual(code, 1)
+        self.assertIn("nanobanana takes none", err)
+        self.assertEqual(runner.calls, [])
 
     @patch("imagegen._today_str", return_value="2026-10-20")
     @patch("imagegen.secrets.token_hex", return_value="a1b2c3d4")
