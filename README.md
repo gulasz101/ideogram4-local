@@ -103,6 +103,24 @@ python3 ideogram4_local.py wait <job-id>
 
 Typical output when done: a full path like `/Users/wojtek/git/ideogram4-local/output/.../homelab-toriyama-ideogram4-header.png`.
 
+## The backlog helper
+
+`studio/backlog/backlog.py` is the backlog-review queue for the Image Studio loop (GUL-27): one
+review card at a time, with re-render rounds handed out before new posts. It is tracked here so it
+can be reviewed and fixed like the rest of the pipeline. Standard library only, Python 3, POSIX
+locks (`fcntl`); run `python3 studio/backlog/backlog.py` with no argument to get the command list
+from the docstring.
+
+```bash
+BACKLOG_DIR=~/image-studio/backlog python3 studio/backlog/backlog.py status
+BACKLOG_DIR=~/image-studio/backlog python3 studio/backlog/backlog.py next
+```
+
+**Its state does not belong in git.** The script keeps everything in `queue.json` next to itself
+(`BACKLOG_DIR` overrides where), with a `.lock` beside it, so point `BACKLOG_DIR` at a work
+directory outside the checkout. `queue.json`, the review cards, the briefs and `jobs.db` are
+working state, not code; they are backed up separately.
+
 ## Submit a custom JSON prompt
 
 ```bash

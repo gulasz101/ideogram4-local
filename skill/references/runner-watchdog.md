@@ -6,7 +6,8 @@ The runner issue never holds a card. It wakes on a daily 07:00 UTC monitor, and 
 
 1. `date -u` and `~/image-studio/backlog/backlog.py status`. `/next` says `wait` whenever the slot is held — that is the normal answer, not an error. Redirect `status` to a file instead of piping it through `head`/`tail`: the table is long enough to break the pipe, `BrokenPipeError` aborts the print mid-file, and the exit code you read back belongs to the pipe, so a working read looks like a failed command.
 2. Rebuild the `queue` document with `scripts/put-queue-doc.py --issue-id <runner> --run-id <this run>`. The runner wake holds the checkout, so the PUT lands; a card run cannot do it. **Read the stored revision first and skip the PUT when it already matches live state** — its snapshot line carries the counts and the slot, so a document whose counts equal `backlog.py status` and whose live-slot line names the same card was rebuilt minutes ago (another runner run, a closeout). Writing again is revision churn on a table he scrolls: say in the comment which revision you found current instead of minting a new one.
-3. Run `scripts/scan-cards.py --runner-id <runner>` and read only the non-`ok` rows. It reads the runs and interactions of every card, so on a board with 120+ cards it runs for several minutes: wrap it as `timeout 560 python3 <scan> --runner-id <runner>` and give the `terminal` call a timeout above that, or the call dies at the default and a working scan reads as a broken script. Its last two lines are the ones to keep — the flag count, and whether every claimed round names its card issue.
+3. Run `scripts/scan-cards.py --runner-id <runner>` and read only the non-`ok` rows. It reads the runs and interactions of every card, so on a board with 120+ cards it runs for several minutes: wrap it as `timeout 560 python3 <scan> --runner-id <runner>` and give the `terminal` call a timeout above that, or the call dies at the default and a working scan reads as a broken script. Its last two lines are the ones to keep — the flag count, and whether every claimed round names its card issue. **If the scan still times out at 560s, skip it and say so in the comment** ("Scan: skipped (timed out; previous tick was N flagged of M)"). The queue-document rebuild is the essential step and must not be skipped; the scan is a cross-check that can wait for a tick with more time. A scanner that is consistently slow is not a scanner that is broken — the board has grown past the script's read budget, and skipping it is the honest answer.
+
 4. Investigate the live slot only when it is over the 24-hour line.
 5. Comment once: counts, doc revision, slot age and holder state, what you touched and what you deliberately left alone.
 6. Re-arm the monitor for +24h with the **minimal** body — a fired monitor's attempt budget is spent, so a body carrying `maxAttempts`/`timeoutAt` answers `Monitor bounds are already exhausted` and arms nothing. Schema: `references/paperclip-api.md`. **Read `monitorNextCheckAt` before you write it.** A wake can arrive as `issue_assigned` or as a repair wake hours off the daily hour, and such a runner already carries a monitor aimed at the next 07:00 UTC: re-arming it is a needless write that can only lose the field. Leave it, and say in the comment that the watchdog was still armed.
@@ -47,7 +48,7 @@ Look at the **holder issue**, never the age alone.
 | `in_review` with a **pending** verdict card | waiting on the human. Nothing is broken | Report the age and the card id. Open no second card; new posts stay blocked until he answers, and that is the rule working, not a fault |
 | `in_progress` with a **monitor armed** and renders in flight | the shared render queue is deep, so the renders are hours away | Report the job ids and the next check time. Do **not** re-render and do **not** release the slot — a duplicate render costs the whole wait again |
 | recorded but `not in_review` and no pending card and no monitor | the run died mid-card | Fix it from the runner: fetch/patch its images or re-render, then advance the queue |
-| slot held with **no issue recorded** | a run died between claiming the slot and creating the card | `backlog.py release` (guarded), then Advance |
+| slot held with **no issue recorded** | a run died between claiming the slot and creating the card | Try to re-create the card first: title from `title()` in backlog.py, description = the brief file byte for byte, `parentId` the runner, `projectId` from the runner, `assigneeAgentId` yourself, `status: todo`. Then `backlog.py opened <n> <ID>` and rebuild the queue document. Only if the card cannot be re-created from the queue document (brief missing, POST failing twice), `backlog.py release` and re-Advance. Say which path you took in the comment. |
 
 Say in the comment which shape you found. "Checked the holder: pending card, waiting on you" is the honest answer, and it is different from "nothing to do".
 
@@ -108,6 +109,12 @@ Before opening a replacement card, find out whether another live issue already o
 
 Only when nothing owns it does the runner rebuild: `backlog.py ready`/`batch-open-ready` for a fetched round, or a new round-1 card when the images themselves are broken at prompt level.
 
+## A post can be left in `rendering` when an image it embeds was approved by a campaign outside the backlog flow
+
+A campaign (the nano banana header campaign, for one) can approve and ship an image that a draft embeds, and close its own card, without ever creating the backlog review card for that post. The post then reads `rendering` with no card issue, no ready round and no handoff brief — and `next` skips a `rendering` post forever, so the runner can never reach `finished`.
+
+Repair: `backlog.py ready <n> 1 <brief>` re-queues the post from its original brief, so the next free slot pops it into a round-1 card. Then `backlog.py note <n>` telling that card's run which images are already approved and shipped (path, job id, record) so it reviews only the remaining slots and does not put an approved image in front of the human again. Do not re-render, do not create the card yourself, and do not edit the post.
+
 ## Stall shapes the scan already knows, and the false positives it must not report
 
 Real stalls: an answered verdict card with **no live run and no monitor** (the approvals exist nowhere but Paperclip); a `blocked` card with an empty `blockedBy` (its monitor is dead); a handoff brief whose staging paths are still `<token>` placeholders (the round was never queued).
@@ -123,6 +130,22 @@ Not stalls, and reporting them buries the real ones:
 - a **pending** verdict card on an `in_progress` issue — status convention drift, not a stall: the card is answerable where it stands. Leave it to its own run when a monitor is armed, and say in the comment that its wake is what will move it.
 
 When a flag fires on something that is working, fix `scripts/scan-cards.py` in the same run and say so in the comment. A scanner that cries wolf gets skipped, and the stale-approval case it exists for then runs for days.
+
+## A post stuck in `rendering` with no open card is invisible to the scan
+
+`scan-cards.py` reads card issues, so a post whose queue row still says `rendering` while every card on it has closed is in none of its flags: the row is stale, the board is right, and nothing in the queue will ever count that post `done`. Only a `card-done <n>` moves a post to `done`, and the run that closed the round's last card owed that call and skipped it.
+
+Find the shape by comparing the two readings rather than trusting either: list every post whose `state` is `rendering` and check each one's `issues` list against the board — every card `done`, the newest card's closing comment recording the vault copy and a clean `verify-slot`, no monitor left on any of them. That settled state is a finished post, not a waiting one.
+
+Close it with the plain call: `backlog.py card-done <n>` answers `closed_without_slot: true` when the post is `rendering` with no batch entry and the slot on another post, which is exactly this case — it rewrites the row to `done` and touches neither the slot nor any other post. Do not add `--rendering`, which keeps the row where it already is and buys nothing, do not release, and do not reopen the card to "finish" work that already shipped.
+
+Tell it from the live shape before writing anything: a `rendering` post whose round-2 job is still out, or whose card is open under a monitor, is a render in flight and belongs to its own run. The tell is that **every** card is `done` and the last one's comment names the file it put in the vault.
+
+## Read `queue.json` once per decision, because a sibling run closes cards mid-tick
+
+A card close writes the queue — `card-done` drops the batch entry, then the post flips to `done` — so two reads a few seconds apart can disagree. One post came back `card` with a live batch entry in the tick's first read and `done` with the batch empty in the next, because a sibling run finished those verdicts inside the window. Repairing from the older snapshot reopens a finished post or re-registers a batch entry for a card that has already closed, and both are writes nobody asked for.
+
+So take the reading once, after the trigger for the tick (the wake, the card close), and act only on that one: `status`, `next` and a direct `queue.json` read belong in the same call. When other work separates the reading from a repair or a comment, re-read `queue.json` immediately before the repair and skip it if the shape has moved. If the two readings disagree, the later one is the board's — name the close that landed mid-tick in the comment instead of claiming a repair you did not make.
 
 ## The card's render-collect hop is not the watchdog
 

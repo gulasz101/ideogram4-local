@@ -58,6 +58,15 @@ Element count is the budget. A countable row promoted to its own element can pus
 - **A wrong count is a beat failure, not a caveat, when the beat is the number.** If the section's sentence is "six archives of six different sizes", five does not carry it and the slot re-renders; the number goes on the card as a caveat only when it is dressing.
 - **But a live card carrying a short count is not withdrawn over the count alone, and `wrong-count`'s rate does not say it should be.** That class's rejection rows are almost all *figure* counts — a second character where the slot is one man — so 0 approved there is evidence about the cast, not about a row of parcels. When the slot's re-render came back worse than the render already on the card, the card stays pending with the shortfall disclosed in the item's description, and the record carries the measured number: a picture that carries the beat without the literal total can be approved, where the miss is named in the words beside it. Withdraw only for a replacement that passed every check the first one did.
 
+## A detail that is missing is not a count that is wrong
+
+A prompt names a small feature (two antennae on the android's head, a hook on a hasp, a knob on a door) and the render may simply not carry it. That is a different question from a miscount, and the answer decides whether the note says *deviation* or *defect*:
+
+- **Crop the region with bare air above the feature.** A crop that starts at the object's crown cuts off exactly the thing being looked for, and every reader then answers "none". Three crops of one android's head said zero antennae while the full frame said two, and the top of the head was flush under a bench edge: the readers were answering about occlusion, not absence.
+- **Ask "is anything thin sticking up from the head, and what is above it" rather than "how many antennae".** The second form presupposes both the feature and the count, and a reader that sees a smooth dome just says zero to the question it was handed.
+- **Say "not visible" when the crown is flush to another surface.** "The head reads smooth; the bench edge sits at its crown, so the prompt's two antennae are not in view" is true and checkable. "No antennae" is a claim the file does not support, and "the antennae are missing" is a defect nobody measured.
+- **An absent dressing detail on a file already approved is a named observation, not a re-render.** It goes in the note beside the picture's other measurements; only a missing feature that carries the beat (the only key, the one lit stove) makes a slot fail.
+
 ## What not to do
 
 - **Never name the suspected defect in the question.** A reader asked "is the shape

@@ -24,9 +24,15 @@ runner wake is where the queue is reconciled.
 `queue.json` holds three kinds of claim, and only the first one is visible as a card:
 
 - **`slot`** — the post the runner is currently carding. A slot that names a post and no
-  issue has lost its card: run `backlog.py release` so the round can be claimed again.
-  A slot whose issue exists but is not `in_review` and has no pending card is being
-  worked, unless it has no monitor and no live run.
+  issue has lost its card only if it is **over 24 h old**: run `backlog.py release`
+  (guarded) so the round can be claimed again. Under 24 h — which is the common case on
+  an `issue_children_completed` wake, where a prior close's Advance claimed the slot but
+  died before `opened <n> <ID>` — do **not** release and do **not** create a second
+  card: a sibling run may still finish the create, and a second card duplicates the
+  round. Rebuild the queue document, re-arm the monitor, and report the age and holder
+  state; the daily watchdog releases it once it crosses 24 h. A slot whose issue exists
+  but is not `in_review` and has no pending card is being worked, unless it has no
+  monitor and no live run.
 - **`batch`** — rounds claimed by `batch-open` / `batch-open-ready` so several cards can
   be in flight. Each entry must carry an issue id. `batch-open` claims the round first
   and the card issue is created afterwards, so a failed create leaves an entry with

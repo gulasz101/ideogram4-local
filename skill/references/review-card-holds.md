@@ -91,6 +91,30 @@ lists and the run then declines to show.
   brief stays in the issue as the plan a later reader compares the result against, so a
   silent deviation reads as a missed step.
 
+## A slot he has already approved is a legend line, not an item
+
+A brief's item table is written from the post's embeds, so it lists every image in the
+draft, including one the owner approved on an earlier card. Check each row before it goes
+on the card. A closed slot shows all four tells at once: its record reads `verdict:
+"approved"`, the approved job's `superseded_by` is `null`, its `asset:` names a file that
+is in the vault, and the post's embed already points at that file. That slot needs no
+second verdict — re-judging it asks him to rule twice on one picture and puts a settled
+approval back in play.
+
+- Keep it out of `items` and name it in `detailsMarkdown`: the item id, the job id, the
+  record path, and the card his verdict was taken on. Put the same sentence in the
+  closing comment, so the trail reads "three slots, one already approved, two on this
+  card" rather than looking like a row that went missing.
+- Say that the brief listed it and it was deliberately not re-shown. The item count on the
+  card then differs from the brief's, which is the same deviation the show-bar rule allows
+  and has to be disclosed the same way.
+- **A held-back replacement on a card that has not been posted goes on that same card.**
+  Submit it, put it on this card under the brief's item id with the held-back attempt named
+  on the row, and write no `<nnn>-round-<k>.md` handoff: the handoff brief exists for a
+  round that is closed, and a round whose images are still in the queue has not closed. A
+  card draft carrying the item rows, the why lines and the held-back notes is what that run
+  leaves on disk instead.
+
 ## A replacement submitted while the card is already pending
 
 A companion that fails the beat on its own — a prop drawn as a different object, a state
@@ -158,6 +182,11 @@ card with a verdict row beside it. This is the order that works:
 - If a script answers `Permission denied`, run it as `python3 <script> ...`, and run the
   PIL/numpy checks with the check venv's python (`~/image-studio/.venv-imgcheck/bin/python`).
   Do not chmod the skill directory to work around it.
+- **Pass `--run-id` to `paperclip-write.py` on every call.** The script reads the run id from
+  its flag or from `PAPERCLIP_RUN_ID`; the wake's run id is not in the tool environment, and
+  a variable set in the same command's prologue (`PC_RUN_ID=... python3 ...`) is not read —
+  it answers `no run id: pass --run-id or set PAPERCLIP_RUN_ID` and writes nothing. Take the
+  id from the wake payload and put it on the command line.
 - **Name the shell prologue per issue, never `pc-env.sh`.** Sibling runs of yours share the
   profile scratch directory and the prologue exports `PAPERCLIP_RUN_ID` and the issue id, so
   a shared filename is either refused as a stale write by a run that has not read the other

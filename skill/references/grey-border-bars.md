@@ -84,12 +84,35 @@ Read the numbers as a share, not a verdict:
 - **Put the numbers in the note.** "49.5% of the frame is one flat pale fill, 116 rows over 80% pale, the right 107 px strip 99.8% blank" is re-runnable; "half the image is empty" is not.
 - **The class vocabulary may have no rate for it.** `verdict-class-rate.py --class empty-margins` can come back `no rows` while the standing rule is well established across approved cards, so quote the rule and the measurement rather than an invented rate, and say the class has no verdict rows.
 
+## A band that carries the frame's grain was painted, not left empty
+
+The row/column stats above separate an unpainted digital margin (std under 3, ~100-230 distinct colours) from drawn content (std of tens, many hundreds of colours). There is a third case in the middle, and it decides a note rather than a defect: **a flat band whose noise is the frame's own grain**. One nano banana header carried a cream border about 16 px deep on all four edges: colour `#FEF7DD`, std 14-15 per row, and only 18-26 distinct colours per row. The low unique count says one colour; the std of 14 says that colour is textured, so the band was painted paper and not an empty canvas.
+
+- **Compare the band's std against a large flat surface elsewhere in the same frame.** A wall or bench panel in the same picture carries the same std, because it is the same grain over a different colour. A band at std 0 beside surfaces at std 15 is empty canvas.
+- **Check all four edges before naming the shape.** A print border wraps the frame; an empty margin usually sits on one or two edges and cuts the drawing off at its own boundary. `check-blank-margin.py` reporting band rows and band cols of the same colour on opposite edges is a border; one long band with the content bbox pressed against it is a margin.
+- **Name the measurement, not a verdict.** "Cream `#FEF7DD` paper margin, about 16 px on every edge, flat with the frame's grain" is re-runnable; "has a border" invites a re-render of a file he has already accepted. A border that the scene's own drawing continues into costs nothing.
+
 ## Distinction from Safety-Filter Grey-Box
 
 | Feature | Grey Border Bars | Safety-Filter Grey-Box |
 |---|---|---|
 | File size | >1 MB (image rendered) | <300 KB (blocked) |
 | Affected area | Top/bottom margins only | Entire image |
+## FLUX renders can carry empty margins despite full-frame bbox guidance
+
+A prompt that passes `check-bboxes.py` clean and carries \"fills the entire canvas edge to edge, no empty space\" in its background still comes back with a near-white frame on FLUX.2-klein, where the same prompt on ideogram4 fills the frame. The flux model is less spatially compliant than ideogram4: full-frame bboxes and a single fill sentence are not enough to force content to every edge.
+
+Fix: name the contact on each edge explicitly, in the same sentence as the fill demand — \"the couch touches the bottom edge, the wall lamp touches the left edge, the doorway frame touches the top and right edges\" — and add a hard negative (\"no empty margin, no border, no frame, no whitespace, no bare wall band anywhere\"). If the margin persists after that, the slot's passing engine (the one that filled the frame) is the render that ships; do not spend another flux attempt on the same composition. Record the held-back flux render with a `rejected` row naming the empty margin and its pixel height from `check-blank-margin.py`, and let the brief name the passing render as the one that ships.
+
 | Color | Near-white RGB ~243 | Grey RGB ~128 |
 | Cause | Missing bboxes, no full-frame fill instruction | Prompt vocabulary triggered safety filter |
 | Fix | Add bboxes, demand full-frame fill | Prompt hygiene, remove text elements, encoder swap |
+
+## Swatch strips and duplicate props that survive the edge clause on ideogram4
+
+A render can come back with a **thin multi-colour calibration bar** on the top and bottom edges — a rainbow or greyscale swatch strip — plus a **baked-in transparency checkerboard** (grey-and-white squares at the border). Check the PNG mode before calling the checkerboard a viewer artefact: an `RGB` file is painted, so it is a render defect; only `RGBA` with a real alpha channel makes it a display mask.
+
+- **The model treats a "no colour bar" clause as a palette hint, not a prohibition.** A slot that keeps producing the strip on ideogram4 across two attempts (the same shot, not the same prompt) is not fixed by another wording pass — the prompt already said no bars on any edge. Switch the slot to `flux2-klein` with the 1990s-anime register written into the prompt; on post 141 flux cleared the bar on the first flux attempt after ideogram4 had produced strips and a checkerboard on three.
+- **A prompt naming one cloud/shield symbol can draw two.** Describe a single prop and place it with its own bbox; when a duplicate still appears, the flux render is the one that keeps one.
+- **Measure the strip with `check-blank-margin.py` and the grain with `measure-grain.py`** and put the numbers in the check note, because the strip is often the only thing separating a modern flat render from a 1990s one.
+- **Do not answer an edge strip with another ideogram attempt on the same slot.** The standing fix is the ideogram + flux pair, and the pair only needs one pass: if the ideogram fails on edges, the flux is the render that ships.

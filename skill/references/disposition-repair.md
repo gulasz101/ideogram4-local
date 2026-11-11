@@ -26,6 +26,10 @@ Returns `{ active, actions }`. The `active` object carries `id`, `cause`/`kind`,
 
 Read `nextAction` first — it is the board saying what it wants — and `maxAttempts`, because a bounded repair wake is spent: once the attempts are gone the issue needs a human or a different route.
 
+## When the wait is already over
+
+A recovery wake on a card whose render is in flight does not always mean the render is still in flight. The render queue keeps moving while a run is dead, so a summary written at the kill can report a job as having no output when it has since finished. Before re-arming the monitor, run `imagegen status` on every job the card owns. If all are `done`, the wait is over and the recovery is the closeout, not a re-arm: fetch the renders, self-check them, write the handoff brief, queue the round, open the next card, and close the original card. Re-arming a monitor for a job that has finished only buys a wake that finds nothing to collect.
+
 ## What the board accepts
 
 Its own words, from `nextAction`: **terminal, live, blocked, monitored, or typed waiting**. Concretely:

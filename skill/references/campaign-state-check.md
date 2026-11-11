@@ -48,8 +48,29 @@ The remainder — flagged images on posts with no card — is the campaign's
 remaining work in one number. Report it as a count of posts and a count of
 images, not as one figure, because the two answer different questions.
 
+## Before you take the next post, check who already owns its slots
+
+More than one workspace works this backlog at once — the repair campaign, an engine batch, the
+backlog-review runner — and the queue records state **per post**, not per slot. A post can read
+`todo` with `issues: []` while another issue has already shipped and had approved one of its images.
+So audit the post's prompts, then subtract the slots somebody else already covered, and render only
+the rest. Two reads make that cheap:
+
+1. **The board.** `GET /api/companies/<companyId>/issues?status=in_progress&limit=60` and look for
+   image issues that are not this one (an engine batch, a sibling campaign run). A sibling's comment
+   lists the posts it just shipped.
+2. **The newest library records for that post.** `ls -t 3-resources/image-library/2026-11/ | head -20`
+   and read the ones naming the post: a record with an `asset` in the vault, a verdict, and the old
+   file renamed `.superseded-<job>.png` is an approved, paid-for slot. Rendering it again re-does the
+   work and can overwrite a file the owner already ruled on.
+
+When the audit finds a shipped header and two stale slots, say so in the comment in that shape —
+"this post's header is already done by <issue>, so the remaining work is slots X and Y" — because the
+next runner reads the queue, not the vault, and will otherwise assume three slots are open.
+
 ## Pitfalls
 
+- **A backlog card's slot list is a snapshot, not the live embed.** The nano-banana campaign (GUL-894) can replace a post's header while a GUL-64 card still names the August ideogram, so a card that lists an old job id is stale, not wrong. Before quoting a card's slots or building a verdict card, check the record's `superseded_by` and the post's current `![…](…)` embed, and put the file the draft actually embeds on the card. A card that names a superseded job id is a reporting defect, not a render defect.
 - **The queue's draft path key is `post`.** A script written against
   `draft`/`path`/`file` resolves nothing and reports zero live posts, which reads
   like a finished campaign.
