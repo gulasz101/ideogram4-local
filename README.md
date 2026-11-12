@@ -343,6 +343,7 @@ Plan accordingly. A small queue of 3 images will keep the machine busy for over 
 | `IDEOGRAM4_MODELS_DIR` | `~/sd.cpp-models` | Model download/lookup directory |
 | `IDEOGRAM4_OUTPUT_DIR` | `./output` | Default output directory |
 | `IDEOGRAM4_LOCK_FILE` | `./.lock` | Worker lock file path |
+| `IDEOGRAM4_GPU_SLOT_HOOK` | `~/.local/bin/gpu-slot.sh` | GPU slot hook (GUL-1431). Before a local job (ideogram4, flux2-klein) the worker runs `begin <engine>`, which unloads Saluki in LM Studio; after the job it runs `end`, which loads it again. Missing or failing hook = the job runs anyway. Script: homelab-2nd `host/m1max/bin/gpu-slot.sh` |
 | `IDEOGRAM4_DB` | `./jobs.db` | SQLite queue database path |
 | `IDEOGRAM4_SAFETY_BYPASS` | unset | Set to `1` to enable the safety-filter backend workaround on every generation |
 

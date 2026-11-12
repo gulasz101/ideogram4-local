@@ -1002,6 +1002,56 @@ def cmd_wait(args) -> int:
         time.sleep(args.poll_interval)
 
 
+# GUL-1431: the M1 Max has one GPU slot, shared with Saluki 27B in LM Studio.
+# A local engine (ideogram4, flux2-klein) needs ~17 GB, Saluki ~13 GB, and
+# both at once pushes the 32 GB box past its GPU limit. Before a local job the
+# worker calls `gpu-slot.sh begin <engine>` (Saluki unloads, LiteLLM falls back
+# to the cloud) and `gpu-slot.sh end` afterwards (Saluki loads again). The
+# script lives in homelab-2nd: host/m1max/bin/gpu-slot.sh. nanobanana is remote
+# and skips this. A missing or failing hook never blocks the image job: the
+# owner ruled that images win.
+GPU_SLOT_HOOK = Path(os.environ.get(
+    "IDEOGRAM4_GPU_SLOT_HOOK", str(Path.home() / ".local" / "bin" / "gpu-slot.sh")
+)).expanduser()
+LOCAL_ENGINES = ("ideogram4", "flux2-klein")
+GPU_SLOT_TIMEOUT = 600
+
+
+def _gpu_slot_call(*args: str) -> None:
+    if not GPU_SLOT_HOOK.exists():
+        return
+    try:
+        result = subprocess.run(
+            ["/bin/bash", str(GPU_SLOT_HOOK), *args],
+            env={**os.environ, "GPU_SLOT_OWNER_PID": str(os.getpid())},
+            timeout=GPU_SLOT_TIMEOUT,
+        )
+        if result.returncode != 0:
+            log(f"gpu-slot {' '.join(args)} exited {result.returncode}; continuing")
+    except Exception as e:  # never let the guard kill an image job
+        log(f"gpu-slot {' '.join(args)} failed: {e}; continuing")
+
+
+class gpu_slot:
+    """Hold the M1 Max GPU slot for one local image job (see GPU_SLOT_HOOK)."""
+
+    def __init__(self, engine: str):
+        self.engine = engine
+        self.active = engine in LOCAL_ENGINES
+
+    def __enter__(self):
+        if self.active:
+            log(f"Taking the GPU slot for {self.engine} (unloading the LLM)")
+            _gpu_slot_call("begin", self.engine)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.active:
+            log("Releasing the GPU slot (loading the LLM again)")
+            _gpu_slot_call("end")
+        return False
+
+
 def _mark_failed_on_signal(signum: int, frame, job_id: str, queue: QueueBackend) -> None:
     queue.update_status(job_id, "failed", pid=os.getpid(), error=f"killed by signal {signum}")
     log(f"Job {job_id} killed by signal {signum}")
@@ -1023,16 +1073,18 @@ def _run_one_job(queue: QueueBackend, lock: QueueLock) -> bool:
 
     try:
         output = Path(job["output_path"])
-        generate(
-            prompt_type=job["prompt_type"],
-            prompt_value=job["prompt_value"],
-            output=output,
-            width=job["width"],
-            height=job["height"],
-            verbose=bool(job["verbose"]),
-            engine=job.get("engine") or "ideogram4",
-            seed=job.get("seed"),
-        )
+        engine = job.get("engine") or "ideogram4"
+        with gpu_slot(engine):
+            generate(
+                prompt_type=job["prompt_type"],
+                prompt_value=job["prompt_value"],
+                output=output,
+                width=job["width"],
+                height=job["height"],
+                verbose=bool(job["verbose"]),
+                engine=engine,
+                seed=job.get("seed"),
+            )
         queue.update_status(job_id, "done", pid=os.getpid())
         log(f"Job {job_id} completed: {output}")
     except Exception as e:
