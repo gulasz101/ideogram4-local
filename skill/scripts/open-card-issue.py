@@ -21,6 +21,14 @@ Usage:
         --link-body scratch/card-link-comment.md \
         --out scratch/card-ids.json
 
+A backlog card issue usually already exists — `backlog.py ready` creates it and the
+assignment wakes you on it — so upload onto it with `--issue`. Creating another
+issue there is a second card for one round. `--brief` and `--title` are then omitted:
+
+    python3 open-card-issue.py --issue <issue-id> \
+        --item <item-id>=<staging.png> \
+        --link-body scratch/card-link-comment.md --out scratch/card-ids.json
+
 Why a script and not curl: the uploads are four to six files, and a shell loop of
 uploads is refused by the unattended approval gate, so the whole set has to be one
 `python3 <path>` call. Each 201 carries id, sha256 and byteSize, which is the only
@@ -99,8 +107,9 @@ def upload(call, company, issue_id, path, name):
 
 
 p = argparse.ArgumentParser()
-p.add_argument("--brief", required=True, help="markdown file used verbatim as the issue description")
-p.add_argument("--title", required=True)
+p.add_argument("--brief", help="markdown file used verbatim as the issue description (needed unless --issue)")
+p.add_argument("--title", help="needed unless --issue")
+p.add_argument("--issue", help="upload onto this EXISTING issue; a runner-created card issue already exists")
 p.add_argument("--item", action="append", required=True, metavar="ID=PATH")
 p.add_argument("--link-body", help="comment body posted with the attachment ids (optional)")
 p.add_argument("--out", required=True, help="json file receiving {issue, ids}")
@@ -131,21 +140,32 @@ for spec in args.item:
         sys.exit("no such file: %s" % path)
     items.append((item, path))
 
-brief = open(args.brief).read()
-st, issue = call("POST", "/companies/%s/issues" % args.company, {
-    "title": args.title,
-    "description": brief,
-    "status": "in_progress",
-    "priority": args.priority,
-    "projectId": args.project,
-    "assigneeAgentId": AGENT_ID,
-})
-if st not in (200, 201):
-    sys.exit("create failed (%s): %s" % (st, str(issue)[:300]))
-issue_id = issue["id"].__str__() if "id" not in issue else issue["id"]
-print("create:", st, issue.get("identifier"), issue_id, "descr", len(issue.get("description") or ""))
-if (issue.get("description") or "") != brief:
-    print("WARN description is not byte-identical to the brief")
+if args.issue:
+    if args.brief or args.title:
+        sys.exit("--issue means upload only; drop --brief/--title")
+    issue_id, issue = args.issue, {}
+    st, _ = call("GET", "/issues/%s" % issue_id)
+    if st != 200:
+        sys.exit("no such issue (%s): %s" % (st, issue_id))
+    print("existing issue", issue_id)
+else:
+    if not (args.brief and args.title):
+        sys.exit("--brief and --title are required when --issue is not given")
+    brief = open(args.brief).read()
+    st, issue = call("POST", "/companies/%s/issues" % args.company, {
+        "title": args.title,
+        "description": brief,
+        "status": "in_progress",
+        "priority": args.priority,
+        "projectId": args.project,
+        "assigneeAgentId": AGENT_ID,
+    })
+    if st not in (200, 201):
+        sys.exit("create failed (%s): %s" % (st, str(issue)[:300]))
+    issue_id = issue["id"]
+    print("create:", st, issue.get("identifier"), issue_id, "descr", len(issue.get("description") or ""))
+    if (issue.get("description") or "") != brief:
+        print("WARN description is not byte-identical to the brief")
 
 ids = {}
 for item, path in items:

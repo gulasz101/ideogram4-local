@@ -33,6 +33,14 @@ Both failures recur, on ideogram and flux alike:
 - **Repeated objects.** Panels, crates, doors, locks and tiles come back off by one or two, in
   either direction, and a second full-frame read can land on a different number again. The same
   wall read as five panels, then four.
+- **A seating or compression state.** "The bolt head stands proud on a collar", "the spring is an
+  open coil", "the door is not latched back" are conclusions drawn from 3-D shading at frame
+  scale, and they read as exactly the defect a repaired prompt was written to remove. Cut one
+  crop on the assembly at 2-3x and ask the two closed questions separately (bare shaft between
+  head and plate? daylight between any two coils?) before the full-frame verdict touches anything.
+  The same frame that read "proud and loose" answered "flush on its washer, coils tight" on the
+  crop. A verification wake is where this costs most: nothing is re-rendering, so a full-frame
+  disagreement with a card already posted is a reason to crop, never to hold the slot.
 - **An absence in a pair.** A read that says one of two twins lacks a feature its sibling has is
   usually describing the neighbour: a pipe carries a valve and, at its end, a flanged collar where
   it enters the wall, so "the right arch has no valve, only a coupling" was a card caveat written
@@ -69,6 +77,28 @@ outer edge of the fist on the side the missing digit would sit, and the count th
 hold-back is the one taken on that wider box. Cut hands at 5-6x with margin rather than at 10x
 against the knuckles: the extra scale adds no countable edge, only a slower read. A count that
 changes when the box grows is a count of the box.
+
+## A beat that hinges on a pair
+
+When the beat is a contrast — the original and its copy, the sealed box and the key still out —
+count the instances the beat compares, not the objects that happen to be in the frame. A single
+bright duplicate over a tray of filings can read as the exact opposite of a copy still at large:
+cutting a copy and destroying the only key share the same visual shorthand, so a reader can see
+"the key was ground down" where the frame means "the copy is still hanging there". Both halves
+have to be visible (the same key pattern in the new lock, a blank in the vice) before duplication
+reads as duplication. Fix the composition, not the prose — no caveat on the card turns one object
+into two.
+
+## A read's label is a hypothesis
+
+"Pasted panel", "sticker", "badge" and "painted on" are the reader's conclusion, not what the
+pixels are. Crop the suspect area at native size before that label holds a render back. A pale
+wedge under a door, a highlight along a rim and a hard contact shadow all read as flat pasted
+shapes at full-frame scale, and the cropped frame shows the same wedge grading into the floor and
+shading the stone. The test: uniform colour with hard straight edges that ignore what they meet is
+an artefact; falloff, reflection and a cast shadow are the painting. Settle which one it is on the
+crop, because the two labels send the slot in opposite directions — one re-renders a good frame,
+the other ships a pasted panel.
 
 ## Procedure
 

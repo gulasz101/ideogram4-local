@@ -41,7 +41,17 @@ echo "Fetched: $PNG"
 ls -l "$PNG"
 ```
 
-`fetch` prints the local path on stdout, under `~/image-studio/staging/<date>/`; the filename is `<slug>-<8 hex>.png`. Use that path for the size check and the upload rather than guessing a `<slug>.png` name.
+`fetch` prints the local path on stdout, under `~/image-studio/staging/<date>/`; the filename is `<slug>-<8 hex>.png`. Use that path for the size check and the upload rather than guessing a `<slug>.png` name. `fetch` takes `--dest <directory>` and nothing else: `--out <file>` is rejected with `unrecognized arguments`, because the wrapper always derives the filename from the job's slug and hex. Pass the date directory you want and capture the printed path.
+
+**`status`'s `output_path` is a path on the Max, and on the Air it resolves into a local tree that does not hold the file.** `/Users/wojciechgula` is a symlink to `/Users/paperclip`, so `…/git/ideogram4-local/output/studio/<date>/<slug>.png` looks like a local path and `ls` or `cp` on it answers `No such file or directory` for a directory that plainly exists — which reads as a lost render. It is not lost; the render never left the Max. Do not open that path, do not search for the PNG on disk (a `find` for it is a denied wide search and a wasted call), and do not inspect the local `output/` directory, which stays empty because the worker writes on the Max. Run `imagegen fetch <job-id>` and take the path it prints.
+
+## The queue is one FIFO, whatever the engine
+
+Every engine shares a single worker queue, run one job at a time in creation order, so a fast nano banana job submitted after two ideogram jobs waits behind both of them. `queue_ahead` and `eta_minutes` on a pending job are a **static estimate frozen at submit**: they do not tick down, so a job that has not moved in 40 minutes looks identical to one that is about to run.
+
+- **Read the real queue over SSH, not only `imagegen status`.** `ssh m1max "cd ~/git/ideogram4-local && python3 ideogram4_local.py list"` prints every recent job newest-first with `status`, `engine`, `started_at` and `finished_at`; the FIFO order is by `created_at` ascending, which is the reverse of the listing.
+- **A render can run far past its nominal ETA.** An ideogram4 job at ~21 minutes normally can sit at `running` for 45+ minutes: `ssh m1max "tail -25 ~/git/ideogram4-local/output/worker.log"` shows the live sampling progress (`2/20 - 101.48s/it`), which tells a slow job from a hung one. A job on someone else's card is not yours to kill — report it, do not repair it.
+- **A probe is a queued job, not an out-of-band ping.** A fifteen-word probe on a flaky engine joins the same FIFO as everything else, so behind two ideogram jobs it answers 45 minutes late and the hop that waits on it alone buys nothing. What to do with that wait is the probe policy in `references/nanobanana-engine.md`.
 
 The wrapper prints only the job ID to stdout. A 1216×832 render takes about 21 minutes on the M1 Max; do not poll in the same run. Schedule a Paperclip issue monitor (`references/review-loop.md`) and end the run, or resume on a later wake.
 
@@ -82,21 +92,10 @@ checkout predates phase 6; the FLUX path needs the phase-6 CLI and the
 `~/.venvs/sou-flux` venv on the Max. The library record and the review loop are the same
 for both engines (`references/library-records.md`).
 
-## Pause the dead Mattermost watchdog (legacy)
-
-After moving Hermes to the Air, the old `ideogram4-progress-watchdog` cron becomes a silent no-op because `jobs.db` lives on the Max. Pause it, do not delete it:
-
-```bash
-hermes -p andrzej cron pause 4641a45c3dbe
-hermes -p andrzej cron list   # verify ideogram4-progress-watchdog shows [paused]
-```
-
-The Mattermost delivery path is retired; Matejko reviews in Paperclip.
-
 ## Acceptance criteria for Air wrapper rollout
 
 - `which imagegen` resolves to the symlink into `~/.local/share/ideogram4-local`.
 - The Max checkout is on the merged `main` commit.
 - Smoke job ID, `status` output, and final `fetch` path are recorded in the issue comment.
 - The fetched PNG is over 1 MB and attached to the issue.
-- `hermes cron list` shows `ideogram4-progress-watchdog` paused.
+- `hermes cron list` shows no `ideogram4-progress-watchdog` job (retired in phase 7; Matejko reports progress in Paperclip).

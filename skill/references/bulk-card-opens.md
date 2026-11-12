@@ -2,6 +2,17 @@
 
 Wojtek asks for batches of review cards so he has work waiting on the board ("prepare another set of 25 tasks for review so tomorrow I have something to look at"). Batch mode is his exception to the one-card rule and the size is the number he names: open exactly that many, and never widen it on your own. The per-card procedure is unchanged — this file covers the mechanics of opening many at once, where the failure modes are about scale rather than about images.
 
+## The other batch shape: one card across several posts
+
+When the work is **you rendering new images** for a paced list of posts on one campaign issue, and not handing posts out to their own review runs, do not open one issue per post. Put a single `request_item_verdicts` card on the campaign issue with **one item per post**: `label` = `<post number>-<slug>`, `description` = why + check + caveat in roughly 270 to 340 characters, and the usual `verdicts:<issueId>:round-<k>` key. He answers the whole list in one place, each item separately, and the round costs one thread instead of eight.
+
+The per-wake cap stays on **renders** (5 to 8 posts, one image a minute, a full minute between submits): that cap exists because the web backend rate-limits per exit IP, not because of how many items a card may carry.
+
+Close each post with `backlog.py note <n>` naming the job id, the staging file and the card id. These posts sit in `todo` and are never claimed by `batch-open`, so no `card-done` branch applies; the note is the only record that the header exists and must not be re-rendered, and it travels in the runner's table where a later run reads it.
+
+- **A card item id is the slot, never the attempt.** When a slot's second attempt is the one that ships, keep the item id at `<post number>-<slug>` and put the attempt in the render filename and in the description ("attempt two; the first had the android looking past the shield instead of through the window"). The vault copy and the library record both follow the item id, so an id carrying `-r2` embeds the post to a file named after an attempt and leaves the shipped render's provenance with nothing to hang on. The item description is where the reader learns which attempt they are judging.
+- **A batch card is often answered before your next wake, and the wake may still list it as unresolved.** `unresolvedInteractionIds` in the wake payload is a hint, not a query: read `GET /issues/<id>/interactions` and the card's own `status` at the top of every hop. An `answered` card with `resolvedByUserId` set means the close belongs to that hop — two approved batches shipped without ever seeing a verdict wake, because the answer landed within a minute of the card going up and the next hop's payload still showed the card pending.
+
 ## 1. Claim the posts
 
 ```bash

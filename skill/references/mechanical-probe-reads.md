@@ -20,6 +20,8 @@ python3 check-blank-margin.py "$IMG"; python3 check-green-share.py "$IMG"; pytho
 
 `check-flat-bands.py` prints `PALETTE-STYLE BAND FOUND: flat colour blocks mid-frame` for ordinary painted scene texture: one or two rows at the very top edge carrying the wall's own warm cream, or a near-black run of blocks that is the deep-indigo shadow side of the palette. A swatch strip is a row of hard-edged, textureless chips in palette order that ignores the scene's light.
 
+A concrete instance that looked like a defect and was not: rows 129-139 of a cel-shaded workshop frame flagged `PALETTE-STYLE BAND FOUND`, and the rows were the deep-indigo shadow side of the pegboard/wall junction — scene texture, not a pasted strip. The crop read settled it as painted wall, and the strip probe printed `no palette strip on either edge`. The flag alone never reaches a note; the rows get cropped and read first.
+
 **Arbitrate with `check-palette-strip.py` and `check-blank-margin.py`; one probe's flag alone never becomes a defect note.** The strip probe is the authoritative one because it measures the edge band's flatness against a control band inside the same scene and counts hue groups. If it prints `no palette strip on either edge`, say so in the note and move on — do not spend a render on a flag from the weaker probe. The reverse holds too: a strip the eye argues both ways on is settled by the strip probe's numbers, not by a read of the edge.
 
 ## Locate the prop before you crop it
@@ -35,6 +37,12 @@ mask = (S > 140) & (V > 110) & (H > 14) & (H < 42)   # saturated brass-gold
 ```
 
 Then crop that block at 4-6x. A mask that is too loose (thresholds that let the whole warm palette through) prints a full frame of `#` and tells you nothing — tighten saturation before believing it.
+
+## A prose read is a claim; the probe is the measurement
+
+A read that reports a blank margin, a grey bar or a colour strip has made a *claim*, and the probe for that claim is one call. On a batch of flux renders the read answered "a flat pasted panel with a stark white margin" on every frame while `check-blank-margin.py` measured no blank rows on any of them: the pasted panel was real and the margin was invented. Write only the half the number supports, and never hold a render back on the strength of the unmeasured half.
+
+The same read can be wrong about the scene itself — a basement workshop came back as "an artist's studio" twice in one hop — and a wrong scene description reads exactly like a render defect. Before a hold-back, re-read once with the second reader (`references/vision-route-fallbacks.md`) and ask a narrow question instead of "describe this": the misread is the model's, but the hold-back and the card note are yours.
 
 ## Two reads that agree on the crops outrank one full-frame read
 

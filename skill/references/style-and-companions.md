@@ -14,6 +14,8 @@ The accepted look is a **1990s anime cel still** — in the Akira Toriyama / Dra
 
 **"Clean blog illustration" and "vector-like clean coloring" are the wrong register and read as the flat digital look he rejects for having no grain.** They come from the older templates in this skill, so a prompt started from one carries them by default — delete both phrases and put the grain sentence in instead. His reason for that rejection is literal: *photo graining is not here*.
 
+**A character described by a bright jumpsuit, spiky hair and glasses can anchor the render in a Western cartoon register even when the style block asks for 1990s anime.** The style keys do not override a silhouette the model reads as a named cartoon, so check the figure's outline and colour against the register on a full-frame read, not only the style keys; if the silhouette wins, change the costume or the hair before re-rendering.
+
 ## The cast: one main character, androids are helpers
 
 He states the series' cast in his own words: *"all the stories on the blog are about main character Wojtek and some small androids helping him managing his fleet of old 'junkyard PCs'"*, and a picture that reads as *"like two main characters"* is a defect. So each frame carries **one human figure — Wojtek — stated as "one man only in the picture"**, and a second human or a second character-shaped figure (a robot with a face and antennae, a prominent android) is what triggers that clause. An android as a small helper holding a lamp or a lid is canon and allowed; a second figure with its own agency is not. Old junkyard machines as objects (a squat server case, spent shoebox-sized devices with cracked dark glass) are props, not cast — drawing them without faces, arms or antennae keeps them out of the cast.
@@ -100,6 +102,8 @@ When he asks for companion FLUX images to compare against, every slot of that ro
 **A residual that survives both engines is the prompt's, not the render's.** If the companion carries the same scratch marks, the same invented label or the same count, the composition is asking for it, so the next round changes the prop rather than the wording (see the prop-substitution table above).
 
 **Expect the companion to lose the register more often than the Ideogram does, and do not hold it back for that.** On the same brief the flux2-klein render reads as a modern digital cartoon carrying a grain filter while the Ideogram one reads as a 1990s cel. That is the comparison's own finding about the engines — name it in the companion's item and let him judge it, rather than re-rendering the companion or spending the pair's read on a style fight the Ideogram side already won.
+
+**A flux companion can frame the whole illustration as a photograph of a physical print** — a white border, a desk surface, a slightly lit sheet — even though the prompt described a scene. That framing is a photo+vector montage under the show bar, so check the frame edges and the background on a full-frame read of every companion; if the scene has become a photo of a drawing, the companion is held back and the slot ships its Ideogram.
 
 ## Pre-submit checklist for a re-render after a style rejection
 

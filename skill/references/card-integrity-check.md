@@ -1,5 +1,25 @@
 # Verifying a live verdict card before you trust it
 
+## Half-built card (no interactions yet)
+
+If the issue has **zero interactions** but a non-empty thread (especially a comment
+claiming renders are "ready to upload"), the card is **unbuilt, not pending**. A
+"ready to upload" comment is a handoff note from a run that stopped mid-card, not
+an upload, and not a card. Do not run this verification checklist on it, and do
+not treat the missing interaction as "card already pending."
+
+The repair is the full build, done now:
+
+1. Upload every staging PNG named in the comment (verify sha256 + byteSize match).
+2. Build the `request_item_verdicts` payload from a spec (build-verdict-card.py).
+3. POST the interaction.
+4. PATCH the issue to `in_review` (no `reviewInteractionId` for `request_item_verdicts`).
+
+Then stop: the card is pending and `wake_assignee` will resume this issue. This
+file applies to the *next* wake, once the interaction exists.
+
+## Verified card (the rest of this file)
+
 Use this when a wake (`issue_assigned`, a resume, a monitor) lands on an issue that is
 already `in_review` with a pending `request_item_verdicts` card. The renders are done and
 the card is up. The work of that run is proof that the card shows the exact files you
