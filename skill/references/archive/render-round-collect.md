@@ -1,6 +1,6 @@
 # Collecting a render round
 
-The wake that turns finished renders into a review card: who owns it, what the card may carry, what happens to a render nobody ships. `references/review-loop.md` §4 holds the submit side and `references/backlog-review.md` the queue rules; both are at the file cap, so the collect-side rules live here.
+The wake that turns finished renders into a review card: who owns it, what the card may carry, what happens to a render nobody ships. `references/archive/review-loop.md` §4 holds the submit side and `references/archive/backlog-review.md` the queue rules; both are at the file cap, so the collect-side rules live here.
 
 ## One collector, and it is usually an issue that already exists
 

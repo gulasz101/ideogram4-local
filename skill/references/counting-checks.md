@@ -117,7 +117,7 @@ the other ships a pasted panel.
    than converging (see above) — and never a count a scale-dependent read happened to give. If it
    disagrees with prose already on the card while that card is still `pending`, the correction goes
    into the post's queue note (`backlog.py note <n> …`) and nowhere else — a comment beside a live
-   card is the chatter `review-card-api.md` bans, and a board comment supersedes a target-bound
+   card is the chatter `references/archive/review-card-api.md` bans, and a board comment supersedes a target-bound
    card; the issue comment naming both numbers is for a card already answered. Do **not** withdraw
    and rebuild the card to fix a number — the
    pictures are unchanged, and a withdrawal pulls the card out from under him mid-read.

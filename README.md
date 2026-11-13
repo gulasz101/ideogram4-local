@@ -177,6 +177,14 @@ Configuration lives in the environment:
 
 Tests: `python3 -m unittest discover -s studio/tests -v` (no network, SSH runner is faked).
 
+### The `image-studio` skill
+
+The skill Matejko loads lives in `skill/`, and this repo is its only source of truth: change the
+skill by PR, and after the merge run `skill/sync.sh --apply` on the Air to push it to
+`/Users/paperclip/.hermes/profiles/matejko/skills/image-studio`. `skill/sync.sh --check` exits `1`
+and lists every file that has drifted; `skill/references/archive/` holds the retired backlog-runner
+material and is not part of the working set.
+
 ## FLUX.2-klein engine (fast drafts)
 
 Phase 6 of the Image Studio plan (decision **D2**) keeps Ideogram 4 as the main

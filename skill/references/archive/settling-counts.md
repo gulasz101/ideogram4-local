@@ -1,6 +1,6 @@
 # Settling a count when the readers disagree
 
-Companion to the crop-and-count rules in `references/review-loop.md` section 6 and the
+Companion to the crop-and-count rules in `references/archive/review-loop.md` section 6 and the
 longer procedure in `references/verifying-image-details.md`. Read this one when two
 reads of one render return opposite answers about a *countable* fact — hands, arms,
 digits, figures, props — because that is the shape where a wrong call costs a render

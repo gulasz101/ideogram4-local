@@ -2,7 +2,7 @@
 
 `queue.json` is a claim about the board, not a copy of it. Card runs close issues, ship renders and flip rows while the watchdog sleeps, and not every one of them records its close. The daily wake is therefore not "read the slot" — it is **row ↔ issue reconciliation**, then Advance, then the document.
 
-Read `references/backlog-review.md` for the card-side procedure (batch mode, re-render rounds, stall shapes). This file is the runner-side checklist.
+Read `references/archive/backlog-review.md` for the card-side procedure (batch mode, re-render rounds, stall shapes). This file is the runner-side checklist.
 
 ## Order of operations
 

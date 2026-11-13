@@ -156,7 +156,7 @@ wheel more carefully.
 **Removing the grip lowers the risk; it does not clear it, so the hand still gets its crop.**
 The no-grip versions of two slots came back one with six fingers on a flat palm pressed to
 glass, the other with one hand drawn as a rounded block at the hip and the other forearm
-running off the frame edge. Decide what that crop means with `references/hold-back-or-ship.md`
+running off the frame edge. Decide what that crop means with `references/archive/hold-back-or-ship.md`
 rather than here: a hand fused or over-counted on the beat prop is a hold-back, while a hand
 that is merely indistinct or clipped by the frame ships with the sentence named in its item
 description. When the residual is nothing but hand detail and every other clause of his

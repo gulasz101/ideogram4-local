@@ -94,7 +94,7 @@ and useless for settling a countable fact.
 - `--tol` — summed absolute colour tolerance; raise it when a subject is textured.
 
 The venv is `~/image-studio/.venv-imgcheck` — the system `python3` has no Pillow or
-numpy. `references/review-loop.md` step 6 carries the one-time setup.
+numpy. `references/archive/review-loop.md` step 6 carries the one-time setup.
 
 **Use this script; do not hand-roll a cropper in a scratch directory.** Writing a
 throwaway PIL script to do the same job costs a write and a run, and it drifts from
