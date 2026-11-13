@@ -62,7 +62,7 @@ The harness claims a freshly created card for its own run almost at once — the
 - Comment a state line on the runner. A card run must not check the runner out and must not PUT its `queue` document, so the document is one batch behind until the runner's own wake rebuilds it; the comment carries the rows it needs.
 - **Do not call `next` from a batch card.** It never holds the live slot, so the call either answers `wait` or claims a post the runner's wake also intends to create. The slot moves only from the card that holds it.
 - Expect the batch cards to be worked by their own runs over the following hours. Do not work another card's issue and do not re-post its card.
-- A batch card is released with `card-done <n>`, which takes the batch branch while an entry for that post sits in `q["batch"]` and never touches the live slot. The three branches, the `--rendering` flag and the queue state to read first are in `references/backlog-queue-release.md`.
+- A batch card is released with `card-done <n>`, which takes the batch branch while an entry for that post sits in `q["batch"]` and never touches the live slot. The three branches, the `--rendering` flag and the queue state to read first are in `references/archive/backlog-queue-release.md`.
 
 ## Pitfalls
 

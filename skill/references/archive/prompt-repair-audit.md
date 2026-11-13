@@ -2,7 +2,7 @@
 
 How to work a whole backlog of drafts whose images were made from an older prompt template, when the owner says *only show me the ones that are already correct*.
 
-This is the batch counterpart to the per-slot re-render rules in `references/re-render-defect-persistence.md`. The per-slot rules answer "this image was rejected, now what" — this file answers "there are a hundred of these, where do I start and what do I show".
+This is the batch counterpart to the per-slot re-render rules in `references/archive/re-render-defect-persistence.md`. The per-slot rules answer "this image was rejected, now what" — this file answers "there are a hundred of these, where do I start and what do I show".
 
 ## The standing gate: a broken image never reaches a card
 
@@ -190,7 +190,7 @@ Record the card in the same run that creates it. A post with an issue on the boa
 
 ## Pitfalls
 
-- **A card whose images you have audited and proved broken is retired, even when another run holds it — but only those cards.** The standing instruction is that no card carries an image that fails the bar, so a card showing an audited-broken picture goes: withdraw its pending interaction, then `PATCH` it to `cancelled` with a comment naming the defect and the job ids that replace it. That is not the same as emptying the board: retire the cards whose pictures you have actually audited and whose replacement is queued or scheduled, in batch order, and leave every other card to its own run. What makes this read as forbidden is a refused write — a `403` or `interaction_run_attribution_required` here is the wrong principal, not a boundary, and the retry with your own key succeeds (`references/verdict-and-round-mechanics.md`).
+- **A card whose images you have audited and proved broken is retired, even when another run holds it — but only those cards.** The standing instruction is that no card carries an image that fails the bar, so a card showing an audited-broken picture goes: withdraw its pending interaction, then `PATCH` it to `cancelled` with a comment naming the defect and the job ids that replace it. That is not the same as emptying the board: retire the cards whose pictures you have actually audited and whose replacement is queued or scheduled, in batch order, and leave every other card to its own run. What makes this read as forbidden is a refused write — a `403` or `interaction_run_attribution_required` here is the wrong principal, not a boundary, and the retry with your own key succeeds (`references/archive/verdict-and-round-mechanics.md`).
 - **An approved image can carry a trigger.** A sibling with the same `color_palette` may be the clean one; measure the strip instead of inferring it (see `references/prompt-hygiene.md`).
 - **A picture can be photographic.** If the base layer has depth-of-field blur and real specular light with vector stickers on top, it is not the series at all — engine-pitfall #73.
 - **The old prompt is evidence, not a draft.** Its composition may be worth keeping and its wording never is; rebuild the scene from the audit's replacement line plus the section, not by editing the file that produced the defect.

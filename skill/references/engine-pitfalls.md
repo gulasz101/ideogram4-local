@@ -2,7 +2,7 @@
 
 Every lesson the Ideogram 4 local stack has taught us, deduplicated and numbered. Read this before writing a prompt; when a render fails, find the matching symptom here before changing anything else.
 
-**This file is shared, and two agents can write it in the same minute.** Re-read it immediately before patching, append at the end rather than renumbering, and if your `old_string` no longer matches, re-read and find the number your lesson actually landed on — a concurrent run may have taken it. Read the file back after writing, and report the number you used on the issue so a reader can find the lesson. Never renumber the existing entries to make room: the numbers are cited from `SKILL.md` and from issue comments. A retired entry is deleted outright, which leaves a gap — that is intended, not a typo.
+**This file is shared, and two agents can write it in the same minute.** Re-read it immediately before patching, append at the end rather than renumbering, and if your `old_string` no longer matches, re-read and find the number your lesson actually landed on — a concurrent run may have taken it. Read the file back after writing, and report the number you used on the issue so a reader can find the lesson. Never renumber the existing entries to make room: the numbers are cited from `SKILL.md` and from issue comments.
 
 1. **Always set `IDEOGRAM4_MODELS_DIR=~/sd.cpp-models`.** The old default `./models` made the worker re-download 10.6 GB of diffusion weights into the repo. The default is now `~/sd.cpp-models`, but always export it explicitly in scripts.
 
@@ -16,9 +16,15 @@ Every lesson the Ideogram 4 local stack has taught us, deduplicated and numbered
 
 6. **Load the LaunchAgent after the current generation finishes.** Loading launchd while a manual worker is mid-generation can create lock confusion. Let the manual worker finish, kill it, remove the stale lock, mark the finished job `done` in SQLite if needed, then load the plist.
 
-9. **Job IDs can start with a leading dash, which breaks naive `grep`.** The done-job deduplication check must use `grep -qxF -- "$job_id"`. Without `--`, `grep` treats `-MuwvZtmc74` as an option and returns an error, so the check believes the job was never announced and reports it every tick — which filled the old notification channel with ~50 duplicate posts on 2026-07-05.
+7. **Cron `MEDIA:` lines do not reliably attach images, and `hermes send` falls back to the home channel.** For a dedicated channel target, use a direct Mattermost API script (`post_status.sh`) that sources `~/.hermes/profiles/andrzej/.env` for `MATTERMOST_TOKEN`/`MATTERMOST_URL`. The file upload endpoint requires `channel_id` as a form field (`-F channel_id=...`), not just the file. (Legacy: Matejko reviews in Paperclip, not Mattermost.)
+
+8. **Keep notification state outside the repo.** Put `.notified_done_jobs` under `~/.ideogram4-local/`, not inside the git repo, so it survives repo resets. (Legacy with the Mattermost watchdog.)
+
+9. **Job IDs can start with a leading dash, which breaks naive `grep`.** The done-job deduplication check must use `grep -qxF -- "$job_id"`. Without `--`, `grep` treats `-MuwvZtmc74` as an option and returns an error, making the watchdog think the job was never announced and repost it every tick. This filled the ideogram4-local channel with ~50 duplicate posts on 2026-07-05.
 
 10. **Clean up test jobs before handing the queue to Florian.** Remove any accidental test submissions with `DELETE FROM jobs WHERE id='...';` so the first real job starts immediately.
+
+11. **Verify the target channel is visible to the Mattermost bot account before relying on it.** `hermes send --list mattermost` shows the channels the gateway currently knows; if the new channel is absent, either have the bot user added to the channel or post a test message there so the gateway learns it. (Legacy with the Mattermost watchdog.)
 
 12. **Safety bypass is built in, not bolted on.** Set `IDEOGRAM4_SAFETY_BYPASS=1` or add `"generation": {"safety_bypass": true}` to the JSON prompt. No agent CLI changes are needed. Use `two_pass` for persistent grey-outs; it costs roughly 2× generation time on the M1 Max. Use `single_pass` as a cheap desensitizer for borderline false positives.
 

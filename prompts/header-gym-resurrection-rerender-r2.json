@@ -1,0 +1,48 @@
+{
+  "high_level_description": "A wide cinematic 1216x832 anime illustration in Akira Toriyama style for a tech blog header. A chibi Wojtek stands next to a stone server pedestal on which a sturdy chrome dumbbell sits, holding up a large golden house key with both hands like a trophy. Green checkmark badges are arranged around the dumbbell. Behind them, on the floor, a dark cracked monitor lies with its cable unplugged and screen black. Represents resurrecting an offline agent session and deploying a self-hosted gym tracker protected by passkeys. The illustration fills the entire frame from top edge to bottom edge with no banner, no watermark, no logo, no text, no UI element, no badge strip at the bottom edge or anywhere else. Nothing is pasted over the scene.",
+  "style_description": {
+    "aesthetics": "Akira Toriyama anime style, Dragon Ball cel-shaded cartoon, bold black outlines, triumphant workshop scene, clean blog illustration",
+    "lighting": "warm workshop lamps from above, golden light bouncing off the big key, cool dim corner behind the dark monitor",
+    "medium": "digital anime illustration, flat cel colors with subtle gradients, bold ink outlines, technology blog art",
+    "art_style": "cel-shaded anime illustration in the style of Akira Toriyama, rounded exaggerated proportions, clean flat coloring, bold ink outlines",
+    "color_palette": [
+      "#F59E0B",
+      "#22C55E",
+      "#1E293B",
+      "#3B82F6",
+      "#F8FAFC",
+      "#EF4444"
+    ]
+  },
+  "compositional_deconstruction": {
+    "background": "A cozy homelab workshop interior filling the entire canvas edge to edge with content from the very top edge to the very bottom edge, no empty space, no banner, no text strip. Wooden workbench along the back wall with tools, hanging lamp cones above, a striped wallpaper pattern, warm brown floorboards continuing all the way to the bottom edge.",
+    "elements": [
+      {
+        "type": "obj",
+        "bbox": [0, 0, 1000, 1000],
+        "desc": "Full-frame homelab workshop interior: workbench with tools along the back wall, hanging lamps above, warm floorboards, a square rack of small green indicator lights built into the left wall, filling the frame from top edge to bottom edge with no banner, no text, no pasted overlay."
+      },
+      {
+        "type": "obj",
+        "bbox": [280, 340, 880, 620],
+        "desc": "A friendly adult man named Wojtek drawn in Toriyama chibi style, long straight medium-brown hair reaching below his shoulders parted near the center, a full dark-brown beard and mustache, clear rectangular eyeglasses, warm light skin, broad friendly smile. He wears an oversized casual dark t-shirt and dark wide-leg trousers. He stands upright holding a large ornate golden key with both hands raised in front of his chest."
+      },
+      {
+        "type": "obj",
+        "bbox": [300, 560, 900, 880],
+        "desc": "A short stone pedestal to the right on which sits a sturdy chrome dumbbell with red weight plates, three round green checkmark badges stacked neatly beside its base."
+      },
+      {
+        "type": "obj",
+        "bbox": [620, 60, 960, 340],
+        "desc": "In the lower left corner a dark old computer monitor tipped over on the floor, screen black with one visible crack line, its power cable lying loose and unplugged beside it, a small dust puff drawn on its frame."
+      }
+    ]
+  },
+  "generation": {
+    "llm_model": "aggressive",
+    "safety_bypass": true,
+    "safety_bypass_mode": "single_pass",
+    "steps": 20
+  }
+}

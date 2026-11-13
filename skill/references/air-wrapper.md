@@ -53,7 +53,7 @@ Every engine shares a single worker queue, run one job at a time in creation ord
 - **A render can run far past its nominal ETA.** An ideogram4 job at ~21 minutes normally can sit at `running` for 45+ minutes: `ssh m1max "tail -25 ~/git/ideogram4-local/output/worker.log"` shows the live sampling progress (`2/20 - 101.48s/it`), which tells a slow job from a hung one. A job on someone else's card is not yours to kill — report it, do not repair it.
 - **A probe is a queued job, not an out-of-band ping.** A fifteen-word probe on a flaky engine joins the same FIFO as everything else, so behind two ideogram jobs it answers 45 minutes late and the hop that waits on it alone buys nothing. What to do with that wait is the probe policy in `references/nanobanana-engine.md`.
 
-The wrapper prints only the job ID to stdout. A 1216×832 render takes about 21 minutes on the M1 Max; do not poll in the same run. Schedule a Paperclip issue monitor (`references/review-loop.md`) and end the run, or resume on a later wake.
+The wrapper prints only the job ID to stdout. A 1216×832 render takes about 21 minutes on the M1 Max; do not poll in the same run. Schedule a Paperclip issue monitor (`references/archive/review-loop.md`) and end the run, or resume on a later wake.
 
 **A job ID can start with a dash, and then neither `status` nor `fetch` can take it.** The
 IDs are random tokens, so one in about sixty begins with `-`; argparse reads it as an option
@@ -92,10 +92,21 @@ checkout predates phase 6; the FLUX path needs the phase-6 CLI and the
 `~/.venvs/sou-flux` venv on the Max. The library record and the review loop are the same
 for both engines (`references/library-records.md`).
 
+## Pause the dead Mattermost watchdog (legacy)
+
+After moving Hermes to the Air, the old `ideogram4-progress-watchdog` cron becomes a silent no-op because `jobs.db` lives on the Max. Pause it, do not delete it:
+
+```bash
+hermes -p andrzej cron pause 4641a45c3dbe
+hermes -p andrzej cron list   # verify ideogram4-progress-watchdog shows [paused]
+```
+
+The Mattermost delivery path is retired; Matejko reviews in Paperclip.
+
 ## Acceptance criteria for Air wrapper rollout
 
 - `which imagegen` resolves to the symlink into `~/.local/share/ideogram4-local`.
 - The Max checkout is on the merged `main` commit.
 - Smoke job ID, `status` output, and final `fetch` path are recorded in the issue comment.
 - The fetched PNG is over 1 MB and attached to the issue.
-- `hermes cron list` shows no `ideogram4-progress-watchdog` job (retired in phase 7; Matejko reports progress in Paperclip).
+- `hermes cron list` shows `ideogram4-progress-watchdog` paused.

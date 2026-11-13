@@ -67,6 +67,6 @@ safe; do not write `queue.json`, staging files or the card while that run is act
 The verdict wake (an `issue_commented` wake whose `interactionOutcomes` names the card, or the
 item-verdicts wake) is the start of the close, not the end of the run. Check `status: answered` with
 `result.complete: true` before touching the queue, then follow `review-loop.md` §8–9 for the order and
-`references/closing-pass.md` for the decisions that order assumes: which name the vault copy takes,
+`references/archive/closing-pass.md` for the decisions that order assumes: which name the vault copy takes,
 which engine suffix means what, what the replaced file and its earlier record get patched to, what a
 record says when no fresh read was possible, and which `card-done` branch a partly filled post takes.

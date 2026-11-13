@@ -35,7 +35,7 @@ So on a cel frame that carries the register:
 - `2 band rows / 2 band cols` with a 5–7 % fill share is not a blank margin;
 - `card-embed-coverage.py` runs the same check, so its `UNCOVERED` line on an already-approved header of this series is the same false positive. Confirm the card carries the slot's item and let the flag go.
 
-The flag that *is* real: a pale or dark region with no ink, settled by a column profile (`scripts/check-pale-band.py <png> --columns …`) rather than by a second vision read, and a band the render left because the prompt named a shadow by location. Both cases are in `hold-back-or-ship.md` under the pale-band section.
+The flag that *is* real: a pale or dark region with no ink, settled by a column profile (`scripts/check-pale-band.py <png> --columns …`) rather than by a second vision read, and a band the render left because the prompt named a shadow by location. Both cases are in `references/archive/hold-back-or-ship.md` under the pale-band section.
 
 ## `check-grey-bars` is a byte heuristic, not a read
 

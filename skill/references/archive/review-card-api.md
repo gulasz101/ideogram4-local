@@ -97,7 +97,7 @@ card goes up: `check-grey-bars.py`, `check-palette-strip.py` and `check-green-sh
 staging file, plus **one** frame-level read for a figure, a hand, lettering, a panel or a strip.
 That costs seconds, and it is the only thing standing between a broken picture and a frozen card,
 which is the one mistake the loop cannot take back. If the frame read disagrees with the brief,
-classify the finding before acting: a defect class from `references/hold-back-or-ship.md` (an
+classify the finding before acting: a defect class from `references/archive/hold-back-or-ship.md` (an
 extra hand, unreadable lettering, a pasted panel covering the frame) holds the slot and the thread
 says what failed, while a **small factual correction — a hand count, one prop drawn flatter than
 the scene around it — ships on the card with the correction in that item's row and in
