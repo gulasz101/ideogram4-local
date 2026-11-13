@@ -21,7 +21,6 @@ and useless for settling a countable fact.
 
 1. **Locate the subject by pixel signature, not by eye.** Find it by colour mask and
    print the bounding box — a cream dial, a gold clock body, a red question mark. A
-   A crop of the wrong region reads confidently and wrongly, so the box must come from the pixels. **A read that says the crop holds none of the subject is a claim about the crop, not about the render.** The model answers the region it was handed, so a box a few hundred pixels off comes back described as a hinge, a doorknob or a bare wall — sometimes with a cast from a completely different film — and the tempting conclusion is a missing prop that is right there in the frame. Re-locate on the mask and crop again before any note says a prop is absent; the give-away is a read whose subject list has nothing in common with the prompt.
    the pixels.
    - **Some subjects have no colour signature — a wall of openings does not.** Then
      crop a *band* wide enough to contain the subject and its neighbours, read the
@@ -81,7 +80,6 @@ and useless for settling a countable fact.
 ## The tool
 
 ```bash
-~/image-studio/.venv-imgcheck/bin/python ~/.hermes/profiles/matejko/skills/image-studio/scripts/crop-probe.py \
   "$PNG" --box 210,250,410,450 --scale 4 --out /tmp/prop.png
 ```
 
@@ -176,7 +174,6 @@ So when the claim is about a prop only a few pixels across, **print the pixels i
 of asking the model about them**:
 
 ```bash
-~/image-studio/.venv-imgcheck/bin/python ~/.hermes/profiles/matejko/skills/image-studio/scripts/ascii-render.py \
   "$PNG" --box 1105,595,1135,630 --mode ink
 ```
 
@@ -220,7 +217,6 @@ was handed.
 So the structural claim is settled by counting the bodies and measuring how they touch:
 
 ```bash
-~/image-studio/.venv-imgcheck/bin/python ~/.hermes/profiles/matejko/skills/image-studio/scripts/measure-bodies.py \
   "$PNG" --box 100,380,1216,560 --preset pale --min-px 300
 ```
 
@@ -275,7 +271,6 @@ segments — left flank, the part, right flank — and compare mean luminance an
 Use `scripts/gap-profile.py` rather than writing this again:
 
 ```bash
-~/image-studio/.venv-imgcheck/bin/python ~/.hermes/profiles/matejko/skills/image-studio/scripts/gap-profile.py \
   "$PNG" --box 660,480,1020,680
 ```
 
@@ -385,7 +380,6 @@ the rejection named is colour *off the scene's own hue axis*, so measure hue, an
 measure it comparatively:
 
 ```bash
-~/image-studio/.venv-imgcheck/bin/python ~/.hermes/profiles/matejko/skills/image-studio/scripts/check-off-scene-colour.py \
   rejected.png candidate.png approved.png
 ```
 
@@ -459,13 +453,10 @@ reported "no marks below the word" that a tight crop and a blob sweep both found
 
 A card must never quote lettering it cannot confirm, and on a small label it usually cannot: two reads of the same prop — a full-frame pass and a 3-5x crop written to disk — routinely return different strings for the same pixels (`WOTCK` on one pass and `WOLTEX` on the next, `Volt` on one and `MARMITEK` on the next). Neither is a transcription, and a quoted string is a spelling claim that a later crop can contradict on a card that is already frozen.
 
-That disagreement **is** the measurement: invented pseudo-text reads as *different plausible words on different passes*, where a spelled word reads the same way twice. So the note states the finding without picking a side —
 
-> a flat logo sits in the top-left corner with invented lettering under it; two reads give different strings for the same pixels, so it is pseudo-text rather than a word
 
 **A disagreement where one string is a substring of the other is a crop cut, not a second reading.** A crop whose `--box` starts inside a word returns that word minus its leading characters — the full frame reads `ALLOW-LISTSEK` and a crop beginning 180 px in reads `LOW-LISTSEK` — and that is the box edge, not the model wavering. Two reads of pseudo-text give *different plausible words* (`WOTCK` / `WOLTEX`); a read that returns a **prefix or suffix of the other string** is the same lettering cut short, so move the box past the start of the line and re-read instead of writing the disagreement up as pseudo-text evidence. **And quote one string on the card:** `items[].description` and `detailsMarkdown` are separate fields written at different moments, so the same lettering appearing as `ALLOW-LISTSEK` on the card face and `LOW-LISTSEK` in the long note reads as a contradiction in an artifact he judges from and cannot be corrected. If the line runs to the frame edge and no wider box exists, the claim is "invented lettering on the page" with no quotation.
 
-Two cases where a single reading does stand: **a word read at the size the picture ships** (a legible brand wordmark, a large sign), and **a string the prompt specified exactly**, because there the picture is meant to carry that text and the model has a word to be faithful to. Pseudo-text is by definition text nobody specified.
 
 ## A stylized letterform is not a misspelling
 
@@ -473,10 +464,7 @@ In-image lettering is drawn by a model, not typeset, and a drawn glyph can carry
 
 The claim to settle is therefore the word, at the size the picture ships:
 
-- **Read the word, not the glyph.** A crop of the whole line of text at 3-4x settles the spelling; a crop of one character only tells you what that character looks like.
-- **Read at the published size, then at magnification.** A word that is unambiguous at 1x and ambiguous at 16x is legible text with a fussy letterform, not a typo. The published size is the size Wojtek reads it at, so that is the size the claim is made at.
 - **Say so in the note when the zoom disagrees.** `"the second line reads per-session; zoomed 16x the first s is drawn as a long-s, so it can be misread as f, but at published size it reads per-session"` is a claim he can check and a defect he can judge. `"the second line reads per-fession"` is a misspelling claim resting on a magnification the picture never shows.
-- **The same rule governs a single ambiguous digit.** A number drawn in a hand-lettered style can carry a stroke that reads as another digit at high zoom; read the whole numeral in the run of numerals, and settle the digit by how the sequence reads, not by its isolated shape.
 
 ## Sweeping a colour to prove an accent sits on one prop
 
@@ -488,7 +476,6 @@ safe, the stool and the robot also carry gold.
 The measurement is a colour sweep over the whole frame, with the same script:
 
 ```bash
-~/image-studio/.venv-imgcheck/bin/python ~/.hermes/profiles/matejko/skills/image-studio/scripts/crop-probe.py \
   "$PNG" --find 245,158,11 --tol 90 --min-px 40
 ```
 
@@ -527,23 +514,15 @@ The measurement is a colour sweep over the whole frame, with the same script:
 
 ## A flat block and a painted prop look the same in a read, and a guessed box measures the wrong pixels
 
-Three reads of one blue rectangle disagreed: a whole-frame pass called it a pasted browser window, two 4x disk crops called it a textured poster board standing in the room. The statistic meant to settle it did not, because the boxes it was computed over were picked by eye — a box that overruns the block includes the wall, floor and figure around it, and the variance of *those* pixels is exactly what makes a flat panel read as "textured, so painted". On one frame the suspect panels measured a channel std of 40-80 in hand-picked boxes, which is the same range the genuinely painted furniture gave.
 
-**The measurement is only meaningful inside the blob's own bounding box, and that box comes from a sweep**, never from your estimate of where the block sits:
 
 ```bash
-~/image-studio/.venv-imgcheck/bin/python ~/.hermes/profiles/matejko/skills/image-studio/scripts/check-blank-margin.py "$PNG"   # frame-level fills first
-~/image-studio/.venv-imgcheck/bin/python ~/.hermes/profiles/matejko/skills/image-studio/scripts/crop-probe.py \
   "$PNG" --find 53,125,211 --tol 45 --min-px 3000   # the block's own bbox
 ```
 
 Then read three things off that bbox and nothing else:
 
-- **Fill ratio.** A blob whose pixels fill most of its own bounding box is one flat graphic — 100,277 px inside a 363x284 box is 97% fill. A prop with grain, shading or an ink rim fills less and varies more inside the same box.
-- **Edge contact and perspective.** A block flush to two frame edges and drawn straight-on, with no convergence against the room's own lines, is pasted on the frame. Concluding that from the read is what the two crop reads disagreed about; concluding it from the bbox is not a read.
-- **The prompt.** A prompt-named prop may be flat and straight-on and still be the picture's own content, so name the prop the prompt asked for and treat the extra block as the deviation. On one header the prompt asked for one small browser window: the window at the lower left was the prompt's (title bar, three window dots, a padlock glyph, no lettering) and the second flat board at the lower right was the object no prompt element accounted for.
 
-When the read and the numbers still disagree after that, put the numbers on the card with the read's own word for it — "a 4x crop reads it as a textured board; 97% fill of a 363x284 box flush to two edges and straight-on is the pasted-block geometry" — and let Wojtek judge. A frozen card that carries the measurement and the disagreement is honest; one that carries only the more confident of the two reads is not.
 
 ## An empty pale margin reports as a palette strip, and the fill share is the number
 
@@ -565,7 +544,6 @@ bottom one.
 Locate the side panels by sweeping the block colours:
 
 ```bash
-~/image-studio/.venv-imgcheck/bin/python ~/.hermes/profiles/matejko/skills/image-studio/scripts/crop-probe.py \
   "$PNG" --find 47,157,46 --tol 40 --min-px 3000
 ```
 
@@ -691,7 +669,6 @@ The band probes and the margin probe all look at the frame's edges, so an overla
 
 Settle it in three calls:
 
-1. **Whole-frame read**, asking outright whether a flat UI panel, banner, button or swatch strip is pasted over the drawing, and whether the frame is full-bleed. A read that is never asked about overlays describes them as part of the room.
 2. **Crop the region to disk** (`crop-probe.py --box … --out …`) and ask the same question of the crop, naming what is painted around it. Two reads of different regions agreeing is the evidence.
 3. **Sweep the overlay's own fill colour** for its extent: `crop-probe.py --find <r,g,b> --tol 40 --min-px 3000` prints each blob's bbox and pixel count. `bbox=(194,578,857,770)` at 38,324 px plus `bbox=(525,733,910,806)` at 16,343 px for the container, and `bbox=(378,615,782,732)` at 40,664 px for the card, is the claim; "a banner across the bottom" is not.
 
@@ -709,27 +686,20 @@ Settle it in three calls:
 
 A picture whose prompt names one figure can come back with two, and that is a real defect class (`wrong-count`). Count the characters off a crop that holds **every** one of them, at figure scale (4x), and say in the question what to leave out: a pasted UI panel sitting over the figures' legs invites the read to count a shape in the panel as a person, and a whole-frame read can split one figure into two just as easily.
 
-Ask "how many painted characters are in this crop, ignoring the flat overlay" and have the answer name each one — shirt colour, hair, and what each hand is doing — because two men with different shirts and different hands on the props is a count a later reader can check. A bare number is not. On that header the middle man gripped the robot's raised claw and carried a rolled map at his hip while a second man held the open map in both hands; the prompt had placed one man pointing at the shelf.
 
-**A limb count that comes out right says nothing about the hands themselves, so ask the hand question separately on a whole-figure crop.** A render can carry exactly two arms and two hands and still fail the owner's eye, because the engine's worst hand case is a grip on a thin vertical handle: the handle becomes a column and the fingers become five segments stacked down it, and the far hand opened near a prop fans out into too many elongated fingers. Both read as "more than one hand" at a glance — the class that gets rejected — and neither shows up in a count. So after the limbs check, crop the man at about 1.5x and ask how noticeable any hand oddity is; "obvious once you look" on a blog header is a hold-back, not a note. **But settle the threshold against an approved frame before the hold, not after it:** run the identical crop and question on an image of the same series the owner already approved, because this engine's cel-shaded fist reads as "stacked finger segments, clearly wrong" to a vision model even in pictures he accepted. When the approved frame rates the same, the hands are house style and the hold costs a render for nothing (post 035 spent one that way); the real fixes are compositional — a bigger prop so the grip is drawable, a closed fist with the thumb across the top, and the idle hand in a pocket. **The prompt remedy is composition, not more finger words:** enlarge the held prop so the grip is drawable at scale (a big brass rim rather than a thin stick), make the gripping hand a simple closed fist with the thumb lying across the top and the rest of the fingers curled out of sight behind the handle, and give the idle hand a trouser pocket so no fingers are drawn at all. Naming fingers positively is what produces fingers; removing them from the picture is what removes the artefact.
 
-**The prompt is what grows the spare limb, so fix the wording and not only the check.** A prompt that gives the figure two hand jobs on the same side — "one hand holding the magnifier up to the slip, his other hand steadying the board's lower edge" — comes back with a third hand, because the model satisfies both descriptions instead of deriving them from one pair of shoulders. Write the count into the prompt: name the total ("exactly two arms and two hands"), give each arm its own shoulder in the element description, give the idle hand a resting position rather than a task, and add the negatives by shape ("no third arm, no extra hand, no open palm pressed on the wall, no hand emerging from his shoulder, no hand without an arm"). On the render after that, the limb count still runs on the body crop — the clause raises the odds, it does not replace the count.
 
-**And when the hand is the thing gripping a small prop, re-wording the grip does not fix it — the fix is to take the hand out of the picture.** A hand pinching a peg, a coin or any thumb-sized object is where the model's limb drawing fails hardest, and an explicit clause does not rescue it: a second attempt carrying "exactly two arms and two hands, five fingers each, each drawn once, no separated fingers" and a closed-fist grip instead of a pinch came back with **three hands on two arms** (one resting on his own forearm, one empty fist, one on the prop), a **second identical peg floating in mid-air** beside the first, the peg flanged like a cartridge, and an invented pipe crossing the very gap the picture existed to show. The clause buys very little on a small object and not much on a large one either: a prompt that gave the man only one task — his open hand resting on a large twine-tied bundle in a scale pan — came back with a spare arm reaching that pan **and** an arm-less four-finger hand gripping the far side of the same bundle, so the effort so far has cost full renders rather than one.
 
 So the third attempt changes the composition, not the sentence: **no figure at all, no hands anywhere**, the prop standing on its own flat base on the bench beside its target, the mismatch carried by the prop's size against the opening's (`a slot three times longer than the peg is wide and half as tall as it is thick`) with the gap stated as its own element. An object-only frame is a real composition for a beat that reads "this does not fit", and it deletes the failure surface instead of out-arguing it. Say on the card — and to the post's author when he wrote the composition — that the figure left the frame and why, because the alt text and the brief's own composition both assumed a person was in it.
 
 **Count heads, torsos and arms as three separate claims.** They can disagree, and the disagreement is the defect: a full-frame read of one draft image reported "two men side by side", and a 4x crop of the figure region answered "two heads on one shared torso, two arms". Two figures is a `wrong-count` of the cast; one body carrying two heads is a malformed character, and they send the next prompt in different directions. Ask the crop for all three counts, write the numbers into the note ("two heads, one torso, two arms"), and name the reading that the tighter crop produced — a read that says "two people" is answering a different question from one that says "one person with two heads".
 
-**Count repeated units over the prop's whole extent, and name the crop the number came from.** A long prop that carries a run of identical units — a rail of hanging cable tails, a row of sockets, a shelf of jars — is only countable on a crop that holds all of it. On one re-render of the DHCP route wall the same picture produced three different answers: the full-frame read found the six tails but got the split wrong ("four cut, two live green", where the true split was three and three), and a crop aimed by guesswork at x 300-900 found only three units (two cut, one live) because the rail ran wider than the box. The full-width 2x crop of the whole rail returned six tails, three cut to bare copper and three unbroken green, which is what the brief said. So: find the prop's full extent first, crop all of it at one scale, count left to right, and put the unit in the note ("six tails left to right on a 2x crop of the whole rail, three cut, three green"). A split that disagrees with the brief is worth this second crop before it goes on a card — the low-res full-frame read is the one that hallucinated the ratio, not the brief.
 
 ## A grid of cards is a prop the model draws as a UI layer
 
-A prompt that asks for "a large grid of cards, most with green check marks, three with red X" hands the model a prop built to be inventoried, and the render comes back as a **layer** rather than a scene: dense rows of flat rounded tiles, uniform fills, no ink outline, no cast shadow, sitting in front of the figure. It looks tidy and it is the pasted-overlay class.
 
 Two questions settle it, and neither is "does the grid look plausible":
 
-- **Does the grid obey the room's perspective?** A grid lying on a desk, a wall board or a rack of slots converges, foreshortens, or sits at an angle to the room's own lines. Rows perfectly horizontal and columns perfectly vertical in screen space, against a scene with any perspective at all, are drawn on the frame rather than in the room.
 - **Does it cover part of a body?** Crop the figure and read it: a prop that occludes a forearm, a shoulder or a hand — the limb vanishing behind a tile and reappearing on its far side — was composited over the picture, whatever the prompt called it. `frame-map.py` at a coarse cell shows the block sitting on the figure before a crop is spent.
 
 Then quantify it for the card. `check-off-scene-colour.py` prints the share of the frame in vivid off-scene colour and the **largest contiguous off-scene region**, and a pasted layer is one big contiguous shape rather than scattered prop detail: 30.264% of the frame off its own hue axis, with the largest contiguous shape at 26.462%, is the number the note carries — and it says "a region", not "scattered detail".
@@ -743,7 +713,6 @@ Then quantify it for the card. `check-off-scene-colour.py` prints the share of t
 The cheap locator is the colour map, aimed at a quadrant rather than the whole frame:
 
 ```bash
-~/.hermes/profiles/matejko/skills/image-studio/scripts/frame-map.py "$PNG" --box 0,240,760,760 --cell 40
 ```
 
 - **Read the run of letters, not the picture.** A monitor or UI screen shows as a block of `.` (near-white) or `B` cells at a consistent row and column band — on one header a `.` block occupied columns 7-14 and rows 280-400, which is where the screen actually was. `--cell 40` over a half-frame is fine enough to aim a crop; `--cell 60` over the whole frame is not.
@@ -751,262 +720,8 @@ The cheap locator is the colour map, aimed at a quadrant rather than the whole f
 - **A read that returns bare fragments is a clipped box, not a broken label.** A crop starting 40 px inside a whiteboard's label column came back `AY / ND / TAI / EL / S / N`; widening the box to `x=0` returned `DERIAY / ODEIND / OIY / ENNTAI / CKKEL / ONYS / PRIN`. Fragments mean the box edge cut the words, so move the box past the start of the line and re-read before calling the marks pseudo-text. **The reverse case confirms instead of contradicting:** fragments that are the identifiable tails of the words a full-frame read gave (`IAN`/`AULT` under `OBSIDIAN`/`VAULT`) are agreement — the crop clipped the same label, it did not invent one, so the two reads together settle the pasted-panel claim.
 - **Do not narrow a vision read's output with `| tail -n`.** A `vread.py` answer piped through `tail -20` came back as a fragment of the question, which reads like a failed call and costs a second one. Run the reader bare, or keep the tail long enough to hold the whole answer.
 
-**A full-frame read's coordinates for a FIGURE are the least reliable part of it, and a crop that misses the figure proves nothing.** One read placed a man and a small robot in front of a gate; two crops over exactly those coordinates showed gate, wall and fence and no figure, and a third at the far edge returned a "partly visible second person" that a 4x crop settled as the vertical slats of a fence under a pasted panel's shadow. The man was in the picture the whole time — he turned up in a crop of the **top strip**, because a standing figure's head and shoulders sit above a mid-frame overlay. So when a crop holds no figure the read promised, do not conclude the figure is missing and do not go looking for a broken picture: tile the frame (a top strip plus a mid strip at 2x is usually enough), let the tile that contains it define its position, then crop that tile at 3-4x for the question you actually have.
 
 **And a "partially visible extra figure" at a frame edge is unproven until a 3-4x crop shows a head or a torso.** Vertical slats, a striped surface, or a dark mass beside an overlay's rounded corner and its shadow all read as hair at low magnification, and putting that on a card is a `wrong-count` claim about a picture that holds one person. Name the crop that settled it, and say what the shape actually was — a card that drops the false figure without saying why invites the next run to find it again.
 
 ## A multi-fill card has no single fill to sweep, and an invented one has no pixels at all
 
-The counting recipes above start from a fill colour: sample one pixel of a panel, then `--find` it. That works on a card that is one flat fill and fails on the shape this library keeps getting, a card assembled from several — a mustard header band, a bright blue body, and a red rounded backing offset behind them. No single `--find` returns it, and there is no fill to sample until you already know the card is there.
-
-So an overlay that sits on an **edge**, clipped by the frame, is found by tiling rather than sweeping. Cut the edge band to a file at 2-3x, read the tile, and take the card's shape and its fills from the tile — then each fill is separately quoteable with `--find <sampled r,g,b> --tol 40`. On a left-edge card the tile read a mustard header over a blue body with a red backing and a dark rounded corner above it, and the pseudo-text on it read `Stale / config / key ne= / ing longer`; the sweep on the blue returns the body's bbox and the sweep on the yellow the header's, and those two boxes together are the claim, where "a UI card on the left" is not.
-
-**Existence is the one thing the tile settles outright, and it is also the thing a read invents.** A figure's position in a read is unreliable and has to be hunted; a pasted card's is not, because a pasted card fills its region and a crop of that region either holds flat blocks or holds painted scene. One read placed a white rounded callout carrying a name and a green check over the foreground book of a library scene; three crops of that book and the desk beside it, one of them wider than the read's own box, held an open book, a desk top and a shoe, and no white card anywhere. Nothing about it went on the card. Hunt a card only when a crop of the place the read puts it in holds a flat block; when the crop holds the drawing, the callout was the read's own assembly — often a prop from the picture printed beside it on the same card, so check the card's other images before looking a second time.
-
-**Neither one fill nor several fills settle the count.** Do not read "one card" off a single fill, and do not read "several cards" off several fills: a header band, a body and an offset backing are three fills of **one** card, while two panels of the same hue a few hundred pixels apart are two. The tiles decide the count; the fills decide the wording.
-
-## Locating an overlay, counting limbs and reading a dial are crop-scale claims
-
-Three claims look like whole-frame questions and are not. Each one was answered wrongly by a full-frame read and correctly by a crop of the thing itself, on the same PNGs.
-
-**A blue count is a signature, not a location.** `check-defect-signature.py` on one header measured 52,382 blue pixels against 0 on an approved sibling from the same series — a real finding about the frame, and a useless pointer: the blue blobs sat in the top-left night window and the two monitor glows, while the pasted cluster was in the lower right. A series lit cool on purpose inflates that number by construction, so the count goes on the card as the comparison and the *region* comes from a sweep of the overlay's own fill colour. On that frame two red rounded buttons, each 88x85 px, came back at `bbox=(668,616,756,701)` and `bbox=(778,617,866,701)`, and a near-white blob of 1053 px at `x804-841 y629-670` sat inside the right-hand button — the pseudo-text surface. Those four numbers name the cluster; "a UI panel is pasted over the picture" does not.
-
-**A limb count comes from a body crop, at figure scale.** A full-frame read of one figure reported **six** arms; a 2x crop of the same figure reported **four** — two at the shoulders, one on each of the props, and two grafted at the waist under the shirt hem. Full-frame reads add limbs, because a hand near a prop body and a hand at the far side of a paper stack both get counted. So crop the figure head to feet at 2x, ask for the count with each arm's attachment point and what it holds, and write that number into the note. **The full-frame read errs in both directions, so the crop is not a tie-breaker — it is the count.** It has added arms that were not there, and it has passed a figure carrying a spare one: a header whose man raised a padlock in one hand and had two more hanging at his sides went onto a card because the full-frame pass counted the raised hand and said nothing about the pair, and the rejection opened with the count. Run the limb count on every render of a visible figure, before the card, not only when something looks wrong — an extra arm costs a whole round while the crop costs one call. Extra arms are also a defect worth naming rather than smoothing over: an anatomically impossible pair is the same family as a figure whose arms are missing, which he has rejected as "looks broken".
-
-**A still-counted spare hand is usually the gripping thumb, and it is settled at 8x on the grip.** When the figure crop keeps reporting one hand too many, the shape it counts is normally the thumb of the fist wrapped round a handle: on a Toriyama-series figure gripping a magnifier, a 2x figure crop said three hands and the 8x crop of the grip said one fist plus a rounded thumb protruding beside the shaft — while the approved header and delegate of the same post come back "clearly wrong hands" from the same reader, so the extra hand is the reading, not the render. Crop the grip and the pocket at 8x and 4x, count the **discrete skin-coloured shapes**, and ask of each whether a forearm reaches it; two shapes with two forearms is two hands, and the note names the thumb's shape honestly ("a rounded blob beside the handle rather than lying across the fist") instead of holding a clean render back over the reader's count.
-
-**A figure-scale crop that reports an impossible count is settled one hand at a time, and the tight crop wins.** The body crop is right about the number of arms and unreliable about the number of hands: on one flux render a 2.5x crop of the figure returned "three hands at his waist" and a 6x crop of each hand's own box found two — one hand at the end of each arm, the third shape being a trouser pocket and the folded shirt hem reading as digits. So when the count comes back impossible, crop each hand separately at 6x, count the **discrete skin-coloured shapes**, and ask of each whether a forearm reaches it: two shapes with two forearms and nothing else is two hands, whatever the wider crop said. Write which crop settled it into the note, because "the 6x crops show one hand per arm" is checkable and "there are two hands" repeats the earlier claim.
-
-**House style covers how a fist is drawn, never how many digits it carries.** A fist that reads as one fused rounded shape is this series drawing hands and ships — the approved-sibling comparison above is what keeps a hold off it. A fist that carries a thumb and three fingers, with the little finger simply absent and the hand fully inside the frame, is a **counted** missing digit and a hold-back however tidy it looks, because the count is the claim and it is true. The prompt remedy is to describe the fist itself — four knuckles in a row across the outside, the thumb folded along the front, the little finger drawn as clearly as the others — since "the man has exactly two hands" never makes a model draw a fifth digit.
-
-**When the same hand clause fails twice on one slot, the sentence is not the problem — the contact is.** Drop the hand-to-prop contact from the composition (both arms hanging empty, well clear of the bench and the prop, nothing touching it) or crop the figure so the hands sit below the frame's bottom edge; another round of finger words on the same grip spends a render and comes back with the same spare arm.
-
-**A pointer's endpoint is settled at 3x on the pointer, not on the dial.** A gauge read at full frame put the needle "on the border between the yellow and red zones"; a 3x crop of the upper arc put the tip plainly inside the red band. The tip's position relative to a band edge is a few pixels of geometry, and a downscaled read cannot see it — while the picture's whole beat can rest on it (a gauge pegged in red is the section's argument, a gauge at the border is not). Crop the pointer's far end at 3x and say which band it ends in.
-
-**The off-scene colour axis is a property of the scene, so it can only be compared with a frame lit the same way.** `check-off-scene-colour.py` scored three frames of a cool-blue-lit post at 45-51% off-axis against 3.3% on an approved sibling — and the sibling was lit warm, so the axis was its own lighting and the number said nothing about artifacts. Before the comparison goes on a card, check that the sibling shares the candidate's lighting; when it does not, quote the class rate from `verdict-class-rate.py` instead of a percentage that the scene's own glow produces.
-
-## A thin flat line is neither a banner nor a painted edge
-
-This file covers broad bands and side panels. A **thin** hard-edged line across the
-frame is a third shape, and it reads both ways: a rule of rows that is near-uniform
-white, a near-black line under it, then another near-uniform white line — eleven rows
-in all — was read by a full-frame pass as "the picture is split into two panels with a
-white divider" and by a crop of those same rows as "a painted shelf lip". Both
-descriptions are plausible and neither is a measurement.
-
-The measurement is per-row flatness, and the shipped probe prints it:
-
-```bash
-~/image-studio/.venv-imgcheck/bin/python ~/.hermes/profiles/matejko/skills/image-studio/scripts/check-flat-lines.py "$PNG"
-```
-
-- **Flatness is a number per row.** Rows that read near-uniform white at luminance
-  std 1.0-5.5, and the near-black rows between them at std 4.3-9.8, are drawn rules:
-  painted texture does not hold a std in single digits across 1216 px. Quote the std
-  range with the row span.
-- **Width coverage is the second number.** A painted edge is interrupted by whatever
-  stands in front of it; a graphic rule runs the full width. Write the coverage out
-  (`1213 of 1216 px`) instead of saying "across the frame".
-- **The column scan is what separates one rule from a page frame.** A comic-page
-  gutter comes with a vertical border, a single drawn line does not, and `no flat
-  columns` is the reason not to report a two-panel split on a frame with no vertical
-  border anywhere.
-- **A line that leaves the section's beat intact is a named deviation, not a hard
-  defect.** On a review card it ships with the numbers in the long note and one clause
-  in the item description; a re-render is for a defect class the library rejects.
-
-## No approved sibling? The frame's own neighbouring region is the baseline
-
-`check-defect-signature.py` and `check-off-scene-colour.py` both want an approved
-frame of the same series, and a draft's back-filled image usually has none. The
-substitute is inside the same picture: crop a region you know is painted, crop the
-suspect region, both at the same scale, and read each on its own written file.
-
-That settled a 644x287 px dark rectangle in the lower right of one header. The
-suspect crop read as straight edges, a uniform navy fill with no cast shadow, three
-flat circular icons and invented pseudo-text; the control crop of the same bottom
-band, same scale, read as a server rack, a desk with three monitors, cables and
-painted shadows. One scene, one region in a different idiom — the pasted card — and
-the comparison needed nothing from the library.
-
-Two rules keep it honest:
-
-- **Crop the control region at the same scale as the suspect and read each file
-  separately.** A montage of the two invites a read of the difference between the
-  panels rather than the idiom inside each.
-- **Name both regions in the note** — "bottom left: rack, desk, three monitors,
-  cables; bottom right: a flat navy card with three icon circles and invented
-  lettering, its edges straight and its fill uniform" — and put the suspect's bbox and
-  pixel count from a `--find` sweep beside the comparison, so it is auditable and not
-  two adjectives.
-
-## An annotation layer is a pasted graphic with lines, and it is measured the same way
-
-A tag or a label plate carrying leader lines and an arrowhead is a shape a painted room never contains: an arrow that points at a prop, drawn flat with no texture and no cast shadow, is an annotation **on** the picture rather than an object in it. At low magnification it reads as diegetic — a name tag taped to a bench edge is plausible — so settle it on the geometry:
-
-- **Sweep the tag's fill colour and quote its box.** A near-white flat rectangle filling most of its own bbox, sitting on a wooden bench with no shadow under it, is a graphic; the same sweep on the frame's painted near-white surfaces returns several textured blobs rather than one clean rectangle.
-- **Follow the lines, because they are the discriminator.** A leader line, or a callout that changes colour partway (an orange upper segment joining a blue lower one) and ends in an arrowhead, has no diegetic counterpart. The shapes it points at are props the picture already has, which is exactly what an annotation would point at.
-- **The words are a second claim, settled the usual way.** Lettering on such a tag that two crops read consistently is readable lettering the prompt never asked for, and that is the `pasted-overlay` class even when every letter is spelled right; lettering that changes between reads is pseudo-text. Quote neither string until a crop has settled which case it is.
-- **Report it with its numbers and let him judge — this class is small in frame and he may approve it.** A header carrying a name tag, a label plate with a two-colour callout arrow and a flat bar inside a dark frame was approved on a round-1 card where the whole finding was written up, while another image on that same card was rejected for flat green and blue blocks. So the class rate is a **prior, not a prediction**, and a cleanly drawn annotation in a corner does not decide a picture the way a full-width band does. Write the measurement, name the geometry, and do not upgrade your own flag into a certainty on the card.
-
-**What separates a prior from a rejection is dominance, and the question is "how much of this frame is the defect", never "how big is my flag".** A single flat card in a corner, one caption strip along the bottom and an annotation tag with leader lines have all come back approved on cards that named them plainly. The frames rejected for the same class carried it across the picture, or put it where the section's own beat lives: five flat panels with invented words over the back wall of an office, lettering that misspells the man's own name, panels wide enough to read as a layer rather than a prop. Measure it — `check-off-scene-colour.py`'s largest contiguous off-scene region, or a fill sweep's count of separate panels — and let that number decide the sentence: small and isolated ships to him named, dominant does not.
-
-## When the note turns out wrong after the card is live
-
-Withdraw and re-post. `POST /api/issues/<id>/interactions/<id>/withdraw` with a
-reason naming what was wrong settles the card as `cancelled`; a new card under a new
-idempotency key (`verdicts:<issueId>:round-<k>-corrected`) carries the corrected text.
-The cancelled card is not a pending card, so exactly one card stays open for the
-round — verify with `GET /interactions` that one is `pending` and the other
-`cancelled`.
-
-Post an issue comment saying what was wrong and what the correction is: the
-withdrawn card's wording stays in the thread, and a wrong note that vanishes without
-explanation looks like a quiet mistake rather than a correction.
-
-**Verify every deviation clause the brief hands you, not only the defects it clears.**
-A round-2/3 brief's "deviations named on the card" block is an earlier run's read, and
-the card re-states it as fact. Copying it blind ships someone else's wrong sentence: on
-one card the brief said the flat envelope was "closed and intact" and a 3x crop of that
-envelope showed a torn top edge with a dark gap but nothing protruding, so the beat that
-failed was the spilled slips, not the seam. Crop the prop, read it at 3x-5x, and write
-the sentence the crop supports.
-
-**An absence is a claim about a region, so it is verified by scanning that region —
-counting what is present never settles it.** A brief described a plate whose socket row
-held three slugs with the fourth socket empty and a fifth opening lower on the face,
-also empty. Counting the row (four sockets, all four seated) confirmed the brief's true
-half and said nothing whatever about the lower opening, which was the clause the card
-was about to repeat. A 3x crop of the whole plate face showed it solid below the row: no
-empty socket anywhere, and the loose slug standing outside the plate rather than above a
-gap. So ask separately *where the absence is supposed to be and what is drawn there*,
-and crop that region — a count of the present instances and a scan for the missing one
-are two different checks, and only the second can falsify an absence.
-
-**When the brief is wrong about a structural fact, the card carries the measured version
-and says it is correcting the brief.** The correction usually rewrites the deviation
-itself rather than just its wording: here the beat moved from "three seated round one
-gap" to "four fitted plus one waiting outside the plate", which is a different question
-for the owner about whether the picture still carries the section — so state both what
-the brief claimed and what the crops show, and let him judge the concept. Then record it
-in the queue (`backlog.py note <n> "<what the brief claims, what the crops show>"`),
-because the brief is what the next run reads and an uncorrected clause comes back as
-fact on the following round.
-
-**A corrected card is a new card, and it says so on its face.** Put the withdrawn
-card's id and what the correction is at the top of the new card's `detailsMarkdown`,
-so the reader of the new card alone can tell that there was an earlier one and why it
-went away — the thread is not the only place he looks. Build it from
-`templates/verdict-card-spec-corrected.json`, which carries the `idempotency_key`
-field the default spec shape cannot express (`verdicts:<issueId>:round-<k>-corrected`).
-
-The one-card-at-a-time rule counts **pending** cards, not cards already retracted.
-
-**One re-post is the limit.** If the second card's item text is right and only the
-withdrawn card's id is missing from its `detailsMarkdown`, do not withdraw again: a
-third card and two cancelled ones read worse than one plain comment. Name the
-withdrawn id and the correction in a thread comment, verify the live card is still
-`pending` after that comment (your own agent comment does not supersede it), and leave
-the round on the one open card.
-
-## A large off-scene blob inside the figure is the figure
-
-`check-off-scene-colour.py` reports the largest contiguous region whose hue falls off the scene's own axis, and on a warm-paletted series the biggest such region is routinely **the character**: navy trousers, dark hair and a grey shoe sit off-axis by construction while the room is amber and brown. A blob of 6001 px spanning a man's head and shoulder, with 4.2% of the frame off-axis overall, was the man himself and not a panel.
-
-So before a side panel goes into a note, compare the blob's bbox with the figure's own span and read a crop of exactly that region:
-
-- **Wholly inside the figure's span is clothing, hair or a shoe.** A pasted panel does not sit entirely within the silhouette of a person.
-- **Flat, unoutlined and touching a frame edge or a bare region is a panel.** Clothing carries folds, an ink rim and cel shading, and a 2x crop of that region shows all three.
-- **Say which it was.** "Largest off-scene blob 6001 px; a crop of that edge shows the man's own head and shoulder, no side panel" is a claim a later reader can re-run. Leaving the number unexplained on the card invites the next run to hunt a panel the picture does not have.
-
-## A read that says every unit is marked is a class claim, not a count
-
-A board, a shelf or a wall of repeated small units invites a crop read to report that **all** of them carry marks: one 2x crop of a board returned "77 slips, every one marked with dashes, 0 blank". That describes the prop, not a count of defects — at that magnification ruled lines, pin dots, paper texture and shadow edges all collapse into "text".
-
-Spot-check one unit before the claim becomes a class:
-
-```bash
-~/.hermes/profiles/matejko/skills/image-studio/scripts/ascii-render.py "$PNG" --box 300,170,380,215 --mode ink
-```
-
-`--mode ink` prints only the drawn strokes at 1:1, so a face carrying handwriting shows horizontal bars and a blank face shows its edges alone. Then write what the pixels support — "the slip faces carry fine dash marks that read as texture at full size; no letters" — rather than "every slip has pseudo-text".
-
-**Weigh it against the version he has already judged.** When the image of that same slot he ruled on carried the same marks and his reason did not name them, and the marks leave the section's beat intact, the render ships with the observation named in the item description instead of spending a 21-minute render on a detail his eye did not flag. Put the alternative composition in one line beside it ("the next version drops paper for small wooden blocks on a rail, which cannot hold written lines") so a rejection costs him nothing to answer. **That is the residual path, not a licence:** a class with no approvals is still a re-render when the mark is what the picture is about, and the class rate from `verdict-class-rate.py` is what decides which case this is.
-
-**The discriminator inside that class is the face, not the pixel count.** A mark on a surface the picture itself presents as a label — a plate, a sticker, a sign face, a ticket, a nameband — is pseudo-text and belongs in the hold/ship decision above. A mark on a surface that is not a label is not the class at all: scratch hatching on painted steel, wood grain, tool scuffs and cable wear are how this series draws used metal, and putting them in a note as "stroke marks" invents a defect. Decide which one you are looking at before measuring anything, because the two look identical in a 4x crop and only the surface tells them apart.
-
-**A small label on background storage is the third case, and it ships with the pixel size named.** A blank plate carrying two or three dash strokes, 20x8 px, on a filing box or a crate at the back of the room cannot be read as text at the size the picture is published, and holding it back trades a whole round for something his eye cannot reach without a loupe. Name it in the item description with the size and the count ("a couple of the filing boxes on the back shelves carry two faint dash strokes where a label would be, about 20x8 px") and let him judge. The line between this and the hold is legibility at published size, not the share of the frame — a 1-2% jar sticker at the front of a shelf reads as a label at 1x and held back a render; two strokes on a back-row box do not.
-
-**Two slots carrying the same defect in one round get the same verdict, and the queue depth is part of the calculation.** Read `imagegen status`'s `eta_minutes` and `queue_ahead` before choosing to spend another attempt: on a busy shared worker a hold costs the queue depth times ~21 minutes, not one render, and that number is what the decision is actually buying. Applying the legibility test above to both files in the same pass is what keeps a round from shipping one mark and holding its twin, which is a card whose two item descriptions contradict each other about the same class.
-
-## An alt text is a claim about the picture, whoever wrote it
-
-A post's alt text can be written by the post's author from the composition document
-rather than from the file, so it describes the composition and not the render. On post
-033 the author wrote a correct caption for the two slots being re-rendered and a wrong
-one for the approved image: it said the figure points **up at the phone**, that the
-arrow turns **away** from it, and that the marker is a **pin**. Crops of the file showed
-he points at the **monitor's green tick** with the other arm at his side, the arrowhead
-points **toward** the phone with the dashed line continuing past it, and the marker is a
-round **speech bubble** with its tail pointing down.
-
-So read every caption against the PNG before it ships, and settle each detail the way
-any other claim is settled: find the object by pixel signature (`crop-probe.py --find
-<r,g,b>`, which returned the DNS bubble as a single 11,835 px blob at x 46-174, y
-375-536), write a 3-4x crop of exactly it, and read that. A caption's claim about
-direction is the one that fails most often, because a direction is cheap to assume from
-the prompt and expensive to see. The correction is the author's to make - a review card
-may not edit the post - so it goes back through the same hand-off issue that produced
-the composition, with the measurements named, and that comment reopens the author's
-issue, which is the intended route.
-
-## A leading question manufactures the defect it asks about
-
-On post 031's round-2 header, three reads of one render at increasing zoom all answered
-"a floating left hand with no arm and extra finger clusters" and the third added "should
-not ship". Every one of them was answering a question that named the defect: *is any hand
-detached, is the arm continuous*. Asked the neutral version on the same file - "starting
-at his left shoulder, describe what you see moving down along his left side" - the model
-described a sleeve, a bare upper arm, an elbow bend, a forearm, a wrist and the hand
-curled under the block, which is what the picture shows. The defect was in the question.
-
-So a limb-continuity claim is settled in two steps:
-
-1. **Crop the whole figure first.** The crop that produced "detached" cut the shoulder
-   out of frame (`250,250,950,720` on a 1216x832 render whose figure starts around y 60),
-   so the arm literally was not in the file. A crop that amputates the limb will always
-   report a floating hand.
-2. **Ask for a description, not a verdict.** Never put the suspected defect in the
-   question ("is this broken", "does the arm connect", "is any hand floating"). Ask what
-   is drawn along that side, then judge the answer yourself.
-
-A confirming read is worth nothing when the question already contained the finding; two
-agreeing reads that both carried the same leading clause are one read. This cuts the
-other way too - a real defect survives the neutral question, so ask it first and hold
-back only what a description, not a suggestion, produced.
-
-**Check the prompt before you count a reported arm as spare, because the prompt may have put that arm across his chest.** A limb the prompt itself places in front of the body — a hand held up at chest height, a forearm folded across the shirt — is drawn *over* the torso, so a crop that holds the torso but not the shoulder reads it as an arm emerging from the centre of the chest with no joint, and a whole-figure read on the same file counts it as a third arm. Both readings are of a picture that has two. So before a limb count goes into a note, read the prompt's own arm placement and ask which reported limb is the one it asked for: the element description that says where each hand is held is the reference for how many arms the picture should have, and a count above that number is a claim to settle on a crop holding **both** shoulders. On one render a whole-figure read reported three arms and a torso crop reported one arm "growing from the middle of his chest"; the prompt put his left hand at chest height, and that forearm was both findings.
-
-**Locate a hand on a mid-scale crop before magnifying it, or a guessed 6x box lands on the
-face.** A grip held above the head sits higher in the frame than instinct says: a box at
-`930,330-1130,500` of a 1216x832 render came back as the beard and the glasses, and its
-reader answered "no fingers visible" about a fist that was there, one crop higher up.
-Crop the quadrant at 2-4x first, read where the grip sits, then take the 8x box of the
-fist alone. Expect two scales to disagree by design - the 4x crop of the grip sees three
-fingers plus a thumb, the 8x box sees two bars and calls the stack a jumble - so take
-the count from a crop where the **whole hand fills the frame** (4-5x, with the arm and
-the room cropped out of it) and name the scale at which the drawing starts to read as
-stacked segments rather than one fist. **A crop wide enough to keep the arm and the
-room in frame under-counts the digits**, because the reader falls back on the cartoon
-prior ("three fingers plus a thumb is how this style draws a hand") instead of tracing
-the contour: one raised fist read three-plus-thumb on a 3.2x crop that held the arm and
-the pegboard, and four fingers plus a thumb on a 5x crop of the hand alone, which is
-the crop that saw each curled finger's own outline. So when two crops disagree on the
-digit count, do not file the lower one as a missing digit: re-read at hand scale first,
-because a hold-back taken from the loose crop spends a render on a hand that carries
-five.
-
-**A read asked "is there a signature here, spell it" answers with a name.** Asked about
-the right edge of a flux frame, the reader returned a confident vertical "Enki Bilal";
-`ascii-render.py --mode ink` on the same strip showed halftone dots with no glyph
-structure and tesseract found nothing. Never file a mark from the question alone.
