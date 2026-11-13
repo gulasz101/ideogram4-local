@@ -5,9 +5,10 @@ One record per rendered image, in the Obsidian vault. The format is the one `stu
 ## Where records live
 
 ```
+~/wojtek.second.brain.obsidian.vault/3-resources/image-library/<YYYY-MM>/<YYYY-MM-DD>-<stem>--<job_id>.md
 ```
 
-- `<YYYY-MM>` and `<YYYY-MM-DD>` come from the job's `created_at`. **A brief's record path is a hint, not the authority: the date prefix is computed from the renderer's own `created_at`, so read it fresh and check it against the brief's path.** On 2026-10-26 the `csrf-scissors-cap-r2` brief named `2026-10-26-csrf-scissors-cap-r2-aca3850f--zl7GqP1m5UM.md` while the job's `created_at` was `2026-10-25T22:18:56` — the brief's date was the round's date, not the render's. Writing the brief's path would have left the backfill's `record_relative_path()` pointing at a file that does not exist, so the next backfill would have written a second `verdict: unreviewed` record for the same job id. Across the library, 590 of 591 records carry the job's `created_at` date as their filename prefix, so the rule is settled; the one exception was a hand-named record. **A round brief's bookkeeping block writes `2026-10/<YYYY-MM-DD>-<fetched PNG stem>--<job id>`, and that `<YYYY-MM-DD>` reads like the day the close runs — copy it and a whole pass of records fails `filename starts with the job's created_at date` and `heading is the stem` together, one pair per file, while every other field is right.** Build the prefix inside the same script that writes the records, from each job's `imagegen status` `created_at`, and repair a set written that way with `mv`, not a rewrite.
+- `<YYYY-MM>` and `<YYYY-MM-DD>` come from the job's `created_at`. **A brief's record path is a hint, not the authority: the date prefix is computed from the renderer's own `created_at`, so read it fresh and check it against the brief's path.** On 2026-10-26 the `csrf-scissors-cap-r2` brief named `2026-10-26-csrf-scissors-cap-r2-aca3850f--zl7GqP1m5UM.md` while the job's `created_at` was `2026-10-25T22:18:56` — the brief's date was the round's date, not the render's. Writing the brief's path would have left the backfill's `record_relative_path()` pointing at a file that does not exist, so the next backfill would have written a second `verdict: unreviewed` record for the same job id. **A round brief's bookkeeping block writes `2026-10/<YYYY-MM-DD>-<fetched PNG stem>--<job id>`, and that `<YYYY-MM-DD>` reads like the day the close runs — copy it and a whole pass of records fails `filename starts with the job's created_at date` and `heading is the stem` together, one pair per file, while every other field is right.** Build the prefix inside the same script that writes the records, from each job's `imagegen status` `created_at`, and repair a set written that way with `mv`, not a rewrite.
 - `<stem>` is the **fetched PNG stem**, i.e. the `label` slug plus the wrapper's 8-hex token: `<slug>-<token>`. `imagegen fetch` prints that path, so use its basename. **A render that was never fetched — an attempt held back at the self-check — has no `fetch` line to copy: take the stem from `imagegen status <job>` `.output_path`, whose basename is the same `<slug>-<token>.png`.** Build it from the slot label alone and the token is gone, so two attempts of one slot land on one record filename and the backfill writes a third.
 
 **The studio's prompt and staging directories are shared by every post, so a slot-generic name collides.** A prompt file named after the slot alone (`header-r2.json`) is often already on disk from another post's round, so the write is refused and the natural next move — a slightly different filename beside it — leaves two prompts for two different pictures whose names differ by a character. Prefix the prompt file with the post number (`<nnn>-<item id>.json`) and keep the render name at the card's item id, so the file is findable from the brief while the render still joins the slot. **The same collision reaches staging:** two posts rendering a `header-r2` leave `<slug>-<token>.png` files whose slugs agree and whose tokens differ, so take the absolute path `imagegen fetch` printed and never glob the staging folder for the slot name — a glob silently picks the other post's render, and every check, record and card after it then documents a picture nobody reviewed. `library_backfill.py`'s `record_relative_path()` builds the same filename and skips a job only if that exact path exists; using the label alone would make the next backfill write a duplicate `verdict: unreviewed` record. **A slot's second attempt keeps the slot's id and only the attempt suffix changes** (`<item id>-r2b-<token>`), so the stem names the attempt that shipped, and the earlier attempt's record keeps its own stem. **The date prefix follows the job, not the brief**: a render that finishes after midnight in the worker's local time carries the next day's date, and the brief's folder is the round's date rather than the render's.
@@ -159,25 +160,85 @@ Always keep the header exactly:
 | --- | --- | --- | --- | --- |
 ```
 
-Append one row per round that resolves for this record:
+Append one row per round that resolves for this record. Never rewrite an earlier row. Every row's reason cell non-empty, approval included; without a reason use `Approved on review.` or `keep-as-is: <reason>`.
+
+Owning record's row is itself a copy: verify against card before copying forward (`GET /api/issues/<card>/interactions`, `result.items[].reason`), and check earlier records' post paths in same pass. Earlier round's row copied from owning record, never retyped; prefix is an edit to reason cell alone, keeping `: ` and spaces at both ends. A row records who decided it; a held-back render is not a verdict Wojtek made, so its reason must say `held back at the self-check, never shown to Wojtek`.
+
+Enumerate slot's earlier records from library (`grep -rl '<post path>' 3-resources/image-library/`), not brief's count; never follow a record's own `superseded_by` outward. An earlier round can have no record; chain those that exist and say so in closing comment. Write held-back record in run that holds render back. Reconstruct missing held-back records from renderer; keep two-value `asset_location` enum (`vault`/`max-only`), never `staging`. Audit by verdict: rejected records with no embed must read `asset: null`, `asset_location: "max-only"`, `asset_present: false`.
+
+A candidate record written at card time is `verdict: "unreviewed"` with empty Verdicts table; promoting at approval adds embed as well as frontmatter. `verify-slot.py` does not assert that embed line, so check by hand (`grep -c '<asset path>'`).
+
+## Rejected renders
+
+Write record for rejected render too, with `asset: null`, `asset_location: "max-only"`, `asset_present: false`, rejection reason in table. Render may be deleted from staging; record preserves why prompt did not work.
+
+A close that finds no records for slot's held-back attempts reconstructs them same pass; issue column from campaign issue that decided hold-back. Resolve each attempt from renderer (`jobs.db`, by stem's 8-hex token when note only names file); find round by grepping campaign issue comments for post number. Commands in `references/paperclip-api.md`.
+
+A studio record for render that never reached vault carries no image embed. A candidate record written at card time is `verdict: "unreviewed"` with empty Verdicts table; promoting at approval adds embed as well as frontmatter.
+
+## Multi-round slots
+
+Slot normally takes more than one round; every render that reached card gets own record, rejected included. Run `verify-slot.py` with new record as `--record`, shipped job as `--job`, every earlier record in `--earlier`, quote counts, before card issue marked done.
+
+- Approved record carries history of slot. Verdicts table one row per round: round-1 `rejected` row reason prefixed by rejected render's stem, then round-2 `approved` row.
+  - A round can hold two verdicts; attempt's row carries same round number as approval that followed it. A slot with two held-back attempts has two attempt rows.
+  - Two attempts of one slot can BOTH reach card, he can approve both, and one still does not ship — not a hold-back. Non-shipping attempt is render he saw and approved; row must not say `held back at the self-check` and must not state rejection in his voice. Write: `approved on the card as well, but the other render ships because <the rule>, so this is the attempt that did not`. Record still `verdict: "rejected"` with `asset: null` no embed.
+  - A second ENGINE approved for same slot is not that case: keeps `verdict: "approved"`, vault asset, no post embed. Comparison copy goes into `tech_blog/assets/<date>/<item id>.png` with `asset_location: "vault"`, `asset_present: true`, own `![[…]]` line; post's embed stays on other engine's asset.
+  - Brief's bookkeeping block can contradict that shape; library rule wins — state departure in closing comment.
+  - An attempt's issue column names card where hold-back happened, not always card approval lands on.
+  - Prefix row with something naming exactly one render; stem alone enough when carries token. Back-filled record's stem carries no 8-hex token, so prefix with full `<stem>--<job id>`; when stem already ends in fetched 8-hex token, prefix with stem and leave job id out.
+- Every earlier record of slot points at same approved job id. Chain is pointer to accepted image, not link to next render. Write in one pass over every record of slot.
+  - Chain's job id is one shipped render submitted under; hold-back can change it from id brief names. Take id from render that actually shipped.
+- Rejected record keeps own single `rejected` row, `asset: null`, `asset_location: "max-only"`, `asset_present: false`, `superseded_by` set to job id of render that replaced it.
+- Approved record keeps `superseded_by: null`.
 
 ```markdown
+| round | date | verdict | reason | issue |
+| --- | --- | --- | --- | --- |
+| 1 | 2026-10-21 | rejected | zeroclaw-claim-a-1a2b3c4d: the star placard reads as a prize, not as a claim about the model. | [GUL-34](/GUL/issues/GUL-34) |
+| 2 | 2026-10-21 | approved | The cable from the robot to the dusty machine names the downgrade at a glance. | [GUL-34](/GUL/issues/GUL-34) |
 ```
 
+## FLUX.2-klein record
 
-**Every row's reason cell is non-empty, the approval included.** `verify-slot.py` asserts it on each row, so a blank cell fails a close whose other checks all pass — the failure lands at the very end of a long pass and reads like something else. An approval he gave with no reason still needs a cell, and the library carries two shapes for it: `Approved on review.`, or one line naming what the picture carries written as the record's own note. Write one of those two. Do not leave it blank, and do not write him a reason he did not give — an invented sentence in that cell becomes his words the moment a later record copies the row forward.
+A `flux2-klein` job is a natural-language draft. Same shape, three differences: `engine` names engine, `prompt_type` is `"text"`, and `generation` records what actually rendered: model, four distilled steps, job's seed.
 
-**The owning record's row is itself a copy, so verify it against the card before copying it forward, and check the earlier records' post paths in the same pass.** A back-filled row carries the reason as the review run typed it, and one 260-character reason came back with the word "any" missing ("generally does not make sense" for his "generally does not make any sense") - invisible in the rendered table and reproduced as a "verbatim" quote by every record that copies it forward. At a close, `GET /api/issues/<the card that owns the row>/interactions`, take `result.items[].reason` for the slot, and assert the whitespace-collapsed string appears in the owning record; repair the owner's cell when it does not and say in the closing comment which word was restored. **The same pass reads each earlier record's `posts:` field and its `From [[...]]` wikilink and checks the file resolves under `tech_blog/`** - two attempt records of one post named `teaching-my-server-agent-...md` where the real file is `teaching-my-media-server-...md`, so the record pointed at nothing. Repair both places.
+```markdown
+---
+type: "image-record"
+job_id: "K3n8Qw7tY2d"
+engine: "flux2-klein"
+prompt_type: "text"
+width: 1216
+height: 832
+generation: {"model": "black-forest-labs/FLUX.2-klein-4B", "steps": 4, "seed": 1938475623}
+created_at: "2026-10-21T10:02:11"
+finished_at: "2026-10-21T10:04:03"
+asset: "tech_blog/assets/2026-10-21/flux-fox.png"
+asset_location: "vault"
+asset_present: true
+superseded_by: null
+posts: ["tech_blog/2026-10-15-my-homelab-agent-lied-about-its-own-model.md"]
+post_status: "draft"
+verdict: "approved"
+source: "studio"
+---
 
-**An earlier round's row is copied from the record that owns it, never retyped.** When a new approved record reproduces the rounds before it, each row's reason is a durable quote — his words for a round he judged, the attempt's own note for a render held back at the self-check — and a hand-retyped copy silently corrupts it. A reason retyped into a freshly written record came out with one letter tripled inside a nonsense word, which converts a verbatim quote into a fabricated one that nothing else in the record contradicts, so it survives review. Copy the row out of the earlier record with a text tool or a script, then compare it with that record's row character for character before the record is written. The rows are the only place a reader can check the slot's history against the report that was actually given. **Prefixing is an edit to the reason cell alone: the cell keeps its `: ` after the prefix and its own spaces at both ends.** Splitting the row on `|` and rebuilding the reason cell with a stripped remainder yields `<stem>:the reason`, one malformed token, where the convention is `<stem>: the reason` as in the example rows above. **The mirror-image bug is on the other end of the cell**: a `.rstrip()` on the copied cell eats the space before the following pipe and the row comes out `…not fitting the picture| [GUL-…](…)`, which still parses as a table, renders correctly enough that no eye catches it, and is no longer the row that was copied. So build the cell as `" " + prefix` followed by the cell **exactly as it came out of the split**, and assert both ends before writing: the prefix and his first word separated by exactly `: `, and the reason still ending ` |`. Print the finished table and read it before the record is written.
+# flux-fox-2b4c6d8e
 
-**A row records who decided it, and a render you held back is not a verdict Wojtek made.** The table is read later as the library's account of the slot's history, so a row whose reason is his words must be a row he decided. A render that never reached him because your own self-check held it back still gets a record and a `rejected` row — that is the render's status and it keeps the chain whole — but its reason has to say so (`held back at the self-check, never shown to Wojtek`). Never write a rejection reason in his voice for a render he never saw; a misattributed reason reads back later as a rule about his taste, and the misattribution is invisible in the note itself.
+![[tech_blog/assets/2026-10-21/flux-fox.png]]
 
-**Enumerate the slot's earlier records from the library, not from the brief's count.** A brief's bookkeeping block can miscount them — post 036's said "three earlier records" and listed two, while the third name it warned about belonged to a different post whose header shares the item id — so `grep -rl '<post path>' 3-resources/image-library/` is the list, and each hit's `posts:` field confirms which post it belongs to before it joins the `superseded_by` chain. A record that names the same item id but a different post stays untouched, and the closing comment states the corrected count so the next reader does not go looking for the missing one. **Never follow a record's own `superseded_by` outward to build the chain.** A same-slug record from another post can point at yet another post's approved job, so a chain assembled by walking the pointers gathers files from three posts and then reads as one slot's history. The chain is exactly the records whose own `posts:` field names this post, and every member of it gets the one approved job id this close accepted; the pointers those records already carry are history, not instructions.
+## Why
 
-**An earlier round of the slot can have no record at all, and the brief will still name one to chain.** A rejected attempt that never got a record leaves a gap nothing in the brief can see: the enumeration above returns only the surviving records, the job id in the brief's `superseded_by` instruction matches no file, and there is nothing to set. The close is not the place to reconstruct that record — its render and its prompt may not exist any more, so anything written now is invented history for a picture nobody can look at. Chain the records that do exist, take that round's reason from the card that answered it (`GET /api/issues/<card>/interactions`, `result.items[].reason`, the same authority used for verifying any copied row) instead of from a record that is not there, and say in the closing comment that the round has no record — so the next reader neither hunts for the file nor reads the shorter chain as a broken slot.
+…written exactly as for an Ideogram record…
 
-**Write the held-back record in the run that holds the render back, not in a later approval pass.** The run that fetched the render and read the crops is the only one that knows what the defect was; a later run rebuilds it from a comment, and the row is what the slot's history reads long after. Write it at the moment of the hold-back: `asset: null`, no embed, `superseded_by: null`, the row prefixed `<stem>--<job id>` and numbered for the round the attempt was made in even when that round's card does not exist yet, and its issue column the card that was open when you decided it. The `## Why` names the attempt, says which clause of the owner's reason it did clear, names the defect that held it back with the crops that showed it, and names the job submitted to replace it — a replacement still in flight is named as submitted, never as shipped.
+## Prompt
 
-**A held-back render that never got a record is reconstructed later from the renderer, and it keeps the two-value `asset_location` enum.** When a round's attempts went unrecorded, the whole slot's history reads as if three renders never happened — so write them after the fact, in one pass over every attempt, rather than leaving the gap: a reader of the approved record's chain otherwise cannot tell a clean single-render slot from one that spent five. `asset: null`, `asset_location: "max-only"`, `asset_present: false`, no `![[…]]` embed, `superseded_by` set to the job that actually shipped, and a row whose reason is `held back at the self-check, never shown to Wojtek`. **Do not invent a third enum value for a render that is still sitting in staging** — `asset_location` describes the vault (`vault`) or the absence of a vault copy (`max-only`), so `staging` plus `asset_present: true` claims a vault file that does not exist and breaks any reader that switches on those two values. The staging path and the byte size belong in the `## Why` prose, where they are prose rather than schema. **Check it with one grep over the month folder — `grep -l 'asset_location: "staging"' 3-resources/image-library/<YYYY-MM>/*.md` must print nothing** — because the value looks like schema, passes every reader that does not switch on it, and a batch of records written from one script carries it into every attempt of the round. The same pass asserts `asset_present: false` on each reconstructed held-back record, since `true` beside `asset: null` is the other half of the same false claim.
+```
+a fox in a server room, warm monitor light
+```
 
+The `## Why` section and the Verdicts table are written exactly as for an Ideogram record.
+
+**The `generation` block above is prescribed, and nothing in the close checks it.** `verify-slot.py` asserts filename, heading, prompt block, chain, asset, embed and Why provenance — not `generation` — so a flux record written from Ideogram template with `generation: null` passes a full 44-check close while dropping model, step count and seed. Read this section before writing a flux record, and put the seed in the field, not in `## Why` prose.
+```

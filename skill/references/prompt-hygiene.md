@@ -4,6 +4,7 @@ Session: 2026-07-02 safety-filter investigation.
 
 ## Finding
 
+The Ideogram 4 local GGUF grey box ("Image blocked by safety filter") is primarily a prompt-vocabulary and JSON-structure filter baked into the model weights, not a pixel-level classifier.
 
 ## Fix hierarchy
 
@@ -38,21 +39,15 @@ The exact schema is documented in `references/ideogram4-oss-schema.md`. The key 
 - `compositional_deconstruction` must contain exactly `background` and `elements`.
 - `canvas` and `layout` are **not** in the schema and should be removed.
 
-The older dense shape with `canvas`/`layout`/many elements was a community experiment, but the official verifier rejects those keys.
 
 ## A flux comparison must carry the ideogram's linework, not just its composition
 
-
-
-
 `references/archive/hold-back-or-ship.md` carries the same clause and the case behind it. It costs about fifty words, which puts a 300-word flux prompt at 320–360; the encoder holds it, but the negative tail is the first thing at risk, so trim scene description rather than the tail and read the first render for a pasted panel before trusting it. **Approved flux prompts have run to 374 words, and about 400 is where the tail starts coming back cut** — a rewrite that overshoots is not a reason to wait or to delete the clause: there is no cancel, so send the trimmed version as a second job behind it, check both against the same bar, and keep whichever passes. **Check the twin's length with `wc -w` before the submit, and write it as its own compact prose — never by pasting the element descriptions in sequence.** A twin assembled from the JSON's `desc` strings inherits every clause twice (the room once in the background and again as an element) and comes out at 600-plus words, where the negative tail is the first thing the encoder drops; the version that fits is hand-written at 400–430, keeping the ink clause, the palette line, the room in one sentence, the beat, the figure, and the tail. Trim the scene description to make the number, not the clause. The long one is the one that loses its tail, so the trimmed prompt is usually the frame that ships, and the two jobs cost one fetch each rather than a lost round.
 
-**And the hand still beats the clause.** A prop held up above shoulder height in flux came back as a closed fist with the little finger merged away on five successive attempts, and that slot shipped ideogram-only rather than with a broken comparison beside it. Carry the same pose rules in flux as in ideogram (`references/figure-and-prop-prompts.md`) and settle the hands on a crop either way.
 
 ## An audit's suggested replacement can carry the defect it is meant to fix
 
 A pixel audit's `replacement` column names the scene a fixed prompt should ask for, and it is written by a reader looking at the picture, not at the prompt rules — so it can hand back the same defect family in a new costume. One post's column asked for two monitors showing a stopwatch and a lightning bolt (screens holding pictures of other things: the flat-UI family), a box holding up a blank red warning triangle (a literal mark), and a dial with its needle in the red zone (a face that invites invented numerals — the rejected render had a name stamped across it).
-
 
 ## Reframing examples
 
@@ -65,7 +60,6 @@ A pixel audit's `replacement` column names the scene a fixed prompt should ask f
 
 `lint` scans for the term, not for the intent wrapped around it. A prohibition that names a flagged noun is still the term appearing in the prompt, and it counts: `no other human figure` trips the `human_shape` flag, while the same prohibition phrased around the count — `one person only in the picture, no second person, no crowd` — does not. The picture can be entirely safe and the prompt still be rejected over a word used to forbid something, and a shape the model never drew has already cost you a lint cycle.
 
-
 **The flag fires on plain description too, not only on bans.** `with his whole body facing it` trips `human_shape` in an element `desc` that forbids nothing at all, while `facing the wall` scores 0. The linter cannot tell a description from a prohibition, so the same rule covers prose about the figure: describe his stance by what he faces and what he does — `he stands in front of the wall, one hand raised toward it` — and keep the mass words (`whole body`, `full body`, `limbs`, `anatomy`) out of the prompt entirely. **`full body` fires as readily as `whole body`, and a sentence written to prove the figure is ALONE still scores**: `he is the only figure in the picture and the only full body anywhere in the frame` trips `human_shape`, while `he is the only figure in the picture; the rest of the floor is bare flags with nobody on it` says the same thing for nothing. So the rule covers prose about isolation and not only prose about anatomy. The rewrite is the cheap fix, because the flagged word is the term appearing whatever the sentence meant by it. **But do not read that as "no body words at all": the flag is per word, not per family, and the geometry words a coherent figure needs score 0.** A prompt that states head-to-body ratio, a narrowing waist, level hip points, square shoulders, a pelvis on the seat, level knees and vertical shins lints at risk 0, so the body can be specified in its own vocabulary. The word that does fire is `thigh`: `both thighs run forward at knee height` scores +2 per occurrence (4 for the plural and the singular in one prompt), and `both legs run forward below the pelvis at knee height` scores 0 with the same geometry. Same for the arm: `his left hand lies on his left thigh` becomes `on his left leg just above the knee`. So when a pose has to be pinned down, lint the draft once, read the flagged term off the output, and swap that one word for its plain synonym rather than deleting the sentence the render depends on.
 
 **The flagged noun need not belong to the body family.** A ban clause written for overlays still trips whatever flag an ordinary word in it happens to match: `no paper sheet` scores on the garment flag for *sheet*, while the same ban as `no paper page`, or dropped, costs nothing. **A verb phrase fires it too:** `the key wrapped in a folded cloth` scores on the garment flag for *wrapped in*, while `the key held inside a folded cloth` scores 0 — so when a legitimate prop is enclosed in fabric, describe what holds it rather than the wrapping action, and re-lint rather than assuming the flag came from a noun. Any ban list is prose and passes through the same scanner, so after a non-zero score read the flagged term and not only the score — the word to replace is usually a plain noun sitting in the harmless half of the clause.
@@ -73,8 +67,6 @@ A pixel audit's `replacement` column names the scene a fixed prompt should ask f
 **A plain scene word can trip the violence flag on a machine.** `the machine is dead and quiet, no light on it anywhere` scored +2 on `violence` for *dead*, inside an element `desc` that describes nothing violent at all, and `the machine sits quiet and dark, no light on it anywhere` scores 0. The state is what the picture needs and the word is what the scanner reads, so describe the state — dark, unlit, silent, still — and keep the diagnosis out of the prompt. **The flag does not care whether the word is a diagnosis or a measurement:** `both cut pipe ends are dead flat at the break` costs the same +2 for *dead* on a joint that is not alive in any sense, while `sawn flush` scores 0 — a word that reads as emphasis to a person still reads as the term to the scanner, so lint the draft and swap the one word rather than dropping the measurement the render depends on. Read the flagged term off the lint output every time: the score says a word is wrong, only the term says which one. **And a blade in a still life is that flag on an object:** a plain cook's knife lying beside a cut onion — no violence in the picture at all — scored on `violence` for *knife*, and the fix is to replace the prop rather than soften the word, because the object was never carrying the beat. A shallow bowl of the peel curls beside the cut onion says the same thing at risk 0. Lint the prompt before deciding which props the scene needs; a prop that trips a flag and earns nothing in the frame is deleted, not reworded.
 
 ## The negative clause for things the prompt did not ask for
-
-
 
 **The most dangerous gap is the one behind a figure.** A paste in an empty corner is read as an overlay; the same paste where it touches the character's back or shoulder is read as something growing out of his body, which fails the character rather than the background and gets a harsher verdict. So describe the space behind and beside the figure in its own words — `the bare concrete floor behind him, nothing standing on it` — move any prop that was sitting there clear of him and say so in the prose, and drop the `color_palette` array, because the shape's saturated hue usually came from that array rather than from the scene. A repair that redraws the region but keeps the palette gets the shape back in a new outline.
 
@@ -87,7 +79,6 @@ and no readable lettering anywhere in the image
 ```
 
 Naming the shape is what works; "no text" alone does not stop a chart-shaped grid of tiles, and the shape is what a reader sees. Keep the clause in `high_level_description` rather than in an element `desc`, because a negative inside one element reads as describing that element.
-
 
 **But a negative clause does not fix lettering the model invented on its own.** The clause stops a shape the prompt put a gap for; it does not undo an invention the composition invited. A prop standing alone on empty ground is a product in an advert, and the model gives an advert a name — the word appears in the render even though the prompt asked for no lettering anywhere, and adding "no readable lettering" to a prompt that already said it changes nothing. The fix is to change the **composition**: give the prop neighbours and a setting so it reads as part of a scene rather than as an item on a backdrop. Say the negative too, but treat it as the belt to the composition's braces — the braces are what carried the fix. `references/engine-pitfalls.md` #42 carries the case.
 
@@ -112,7 +103,6 @@ Naming the shape is what works; "no text" alone does not stop a chart-shaped gri
 **A speech balloon, sign or callout is the one prop whose whole job is a sentence, so it gets exact words or it does not go in the scene.** A blank balloon reads as an unfinished placeholder however well it is drawn, and a balloon tinted with a `color_palette` accent reads as a graphic pasted onto the wall — plain white with a clean ink outline is what reads as drawn. Letter it by putting the exact phrase inside that element's own `desc` and stating in `high_level_description` that this phrase is the only writing in the picture; when the section needs no words, drop the balloon and carry the beat on a prop that does not need lettering. `no random letters, no pseudo-text` cannot rescue a blank one, because it leaves the hole where the sentence should be. **And check the lettering on a crop**: a balloon's words are small relative to the frame, so a full-frame read reports `no lettering` and a single wrong character is invisible at that scale — read the balloon at 2x or more, character by character, before the render goes on a card.
 
 **`check-bboxes.py` reads spatial words, so a correct box can be flagged by the sentence beside it.** Its rules fire on `the left`, `top edge`, `at the bottom`, `in the lower`, `full width` and similar, and a full-width shelf plank or a prop described as "hanging head down" will trip them while the box is exactly right. The fix is the wording, never the box: describe the position without the trigger phrase ("at the end of the plank that the picture cuts off" instead of "at the far left end", "hangs from its own nail with bare wall above it" instead of "head down at the bottom"). Rewriting the sentence keeps the layout the author gave you; moving the box to satisfy a keyword deletes it.
-
 
 ## Editing a prompt: the prose and the element list must name the same props
 
@@ -185,21 +175,16 @@ See `references/ideogram4-safety-filter.md` for backend details.
 
 ## The pre-submit lettering gate (Wojtek's standing instruction, 2026-10-27)
 
-
 The gate is a read of the prompt file, run before `imagegen submit`, not a feeling about the picture:
 
 1. List every element whose `desc` names lettering, print, a label, a badge, a sign, a caption, a wordmark, a chip, a panel readout or a number display.
 3. If a prop survives with characters nobody wrote down, the prompt is refused — do not send it.
 
-
-
 Cost: one file edit before the submit, against 21 minutes and one round of his attention after it. The library agrees — `unreadable-text` is 8 rejected / 0 approved and `pasted-overlay` 9 rejected / 0 approved (run `scripts/verdict-class-rate.py` bare for the live counts).
-
 
 **The gate governs the prompts you write; it is not a forecast of his verdict on a picture that is already in a draft.** On one review card he approved two images carrying exactly the surfaces the gate forbids — a flat dark UI card pasted over the corner of the room, and a plain white caption across the bottom misspelling the section's own subject — both of them named on the card face as hard defects with the class rate quoted. He kept them because the scene still read. **That reading is retired: the owner has since said he does not want to review pictures that are already broken, so a draft image failing the gate is repaired and re-rendered instead of shown (the one exception is a slot that cannot be re-rendered at all, which goes up with its defect and class rate named on the card face), and the gate is now a filter on what reaches a card — `references/archive/prompt-repair-audit.md` carries the gate and the method.** What survives from that card is the other half: the gate is never proof he will reject a picture, and the size and dominance of a defect in the frame is what decides a rejection from an approval. The gate is a filter on what you submit, and the class rate is a prior that decides whether a defect is worth *naming* — the size and dominance of the defect in the frame is what decided his two rejections from his two approvals on that same card.
 
 ## The pose rule: a held object above the shoulder buys an extra arm
-
 
 What fixes it is the composition, not the count:
 
@@ -208,13 +193,11 @@ What fixes it is the composition, not the count:
 
 **Count limbs on a crop before a figure goes on a card.** A whole-frame read reported one raised hand and missed the pair hanging at the sides; the defect was settled on a 3x `crop-probe.py` crop of the figure, where three arms are unmistakable. An extra arm costs a round and it is the cheapest thing on the frame to check. **And when the full-frame read and the crop read disagree about the number, the render is already failed** — one calling it three arms while the other calls it two arms leaving the same shoulder, distorted and overlapping, is not a close call to settle in the render's favour. A picture whose arm count cannot be settled in one look is the defect he names first, whatever the true number turns out to be, so hold it back rather than putting a disputed count on a frozen card.
 
-
 **A pinch is the same failure squeezed into the hand, and the fix is a closed fist.** A `desc` that has the figure pinch a small prop between thumb and forefinger comes back with a fused multi-thumbed mass — two thumbs, extra knuckles, a shape that cannot be read as a hand — because the model has to invent where five digits wrap a cylinder whose far side it cannot see. State the grip rather than the fingertips: *a closed fist, the thumb laid over the folded fingers, no separated fingers sticking out*. Then give the prop **plain flat ends** so it has nothing to resolve into: a short brass cylinder came back as a cartridge until *no flange, no ring, no cap, no bullet shape* was added, and a flanged peg is a second object for the hand to mangle around. Check the hand on a 3x crop before the render reaches a card — a whole-frame read called one of these "a hand pinching the peg" and the crop showed a fist with two thumbs.
 
 **An enumerated set gets its count stated, and the shape that can stand in for a member is banned by name.** A board asked for four device-shaped tags on five hooks came back with three tags and **two** bare hooks: the fourth hook's own mounting plate carried a round cutout, which the model treated as that hook's tag, and its prongs were left empty. The prompt listed the set ("a phone, a tablet, a pair of earbuds and a small speaker") but never the arithmetic, and the count was the whole joke of the frame. State it as a count in `high_level_description` — *exactly five hooks, exactly four tags, the first hook is the only bare one* — and ban the substitute explicitly (*no hook carries a round hole or a circular cutout*), because a backplate with a hole reads as a tag at a glance. `wrong-count` is 2 rejected / 0 approved in the library, so a set that arrives short is a re-render, not a card note.
 
 ## A handover between two figures cannot be drawn in transit
-
 
 So the spanning `bbox` is necessary and not sufficient. Describe the **contact state at one end**, by the actor who should be doing the work — his thumb and forefinger on each temple of the new pair, pressing it onto the robot's face, the old broken pair lying on the floor beside them — and keep the box spanning from his fingers to the face. The transfer is then a fact about the picture rather than a hope about the motion.
 
@@ -222,13 +205,9 @@ The tell in the self-check is the **empty hand**: a figure whose `desc` said off
 
 ## When a re-render still letters something, change the prop rather than the prompt
 
-
-
 ## The pre-prompt forbidden-memory gate (Wojtek's standing instruction, 2026-10-27)
 
-
 So the order of work on a re-render is: `hindsight_recall` on the defect class the rejection named ("colourful artifacts", "swatch strip", "invented text", "pasted overlay") and read the remedies the bank already holds, then write the prompt, then lint, then the lettering gate, then submit. The recall is cheap and it is the difference between re-deriving a known fix and buying a render to discover it again: on this card it returned the palette-array trigger, the undescribed-corner mechanism (#75) and the corner-overlay-without-a-ban rule (#60) in one call.
-
 
 1. **A `color_palette` array** — its entries come back as an edge strip, a mid-frame band, or a cluster of flat blocks in the one corner the prompt left undescribed. Delete the array and rebuild the look from `aesthetics`, `lighting` and `art_style`, naming two or three hues in prose ("warm amber lamp light, cream paper, medium brown wood").
 
@@ -236,12 +215,9 @@ So the order of work on a re-render is: `hindsight_recall` on the defect class t
 
 Naming a thing to describe the *shape* of another thing makes the model draw the named thing. On post 031's `header` re-render the shell was written as "a thin brushed aluminium shell shaped like a flat computer screen frame, open on its back" — the intent was a thin rectangle, and the render came back as a two-part hinged housing with a lid carrying a filled dark panel: a laptop with a blank screen, the exact object the composition's own reject list forbade.
 
-
 - not "shaped like a screen frame" -> "four bare metal strips joined into one open rectangle"
 - not "like a control panel" -> "a flat steel face with two rows of rivets"
 - not "like a dashboard" -> "a rail with five cable tails clipped along it"
-
-
 
 **When two attempts of one slot fail on different invented artefacts, the scene is too busy — reduce it instead of rewording a third time.** A header slot came back first as a laptop (the shape analogy above), then as a flat black panel carrying invented characters pasted over the upper picture; the third attempt passed once the composition itself shrank: a tighter crop onto the bench, the pegboard cut to three spanners, and the jars, parts box, rag and oil can deleted. Two failures that name *different* objects are evidence about the scene's density and the number of surfaces it offers, not about the phrase that failed — so keep the concept, the room, the light and the figure, and take the prop count down until the action the picture needs is the only thing left in frame. A slot that fails twice on the *same* object is the opposite case: keep the scene and change that one prop (`references/archive/re-render-defect-persistence.md` carries the escalation ladder).
 
@@ -255,19 +231,13 @@ Check this on the file before the submit by grepping the prompt for every noun t
 
 Three failures with one cause: an element that asks the model to draw more than one thing.
 
-
-
 **A count spread over two elements is a count the model rounds up.** Post 038's allow-list attempt described a plate with four sockets where "the three right-hand sockets each hold a slug and the left-hand socket is empty", plus a separate element for one loose slug standing on the bench. It rendered four sockets, **all four filled**, and a fifth slug on the bench — a legal reading, because nothing in the prompt said how many slugs exist in the frame, so the loose one became an addition. When a spare copy of a prop shares the frame with the fitted ones, state the total in the `high_level_description` ("exactly four slugs in the whole picture: three seated in sockets and one standing on the bench") and keep the empty socket described by the surface the eye should find, per the absence rule below.
 
 **A container described as empty, dry or bare is still a container the model fills.** "Bone dry" is a modifier, and the model answers a trough with the shape it has drawn a hundred times: full of water. Describe what is visible *in* it instead — the pale dry stone floor of the trough, the seams of its slabs, a ring of grey dust along the rim — because a described surface has no room in it, while an absence has all the room. Naming the missing thing is worse than saying nothing: a negative about water carries the noun `water`, and the noun is read as an instruction (#62). This is the rule for every absence — the empty recess, the bare shelf, the dry run, the plugged socket — describe the surface the eye should find, never the thing that should not be there.
 
 **Two ends facing each other across empty space become one connected part.** A beat that says *this does not reach that* — a shaft that stops short of its socket, a pipe that ends before the flange, a plug that never goes in — cannot be drawn as an air gap however carefully the gap is said. Describe the stub and the matching socket inside one element, name what is visible through the space between them, restate the gap in `high_level_description`, and the engine still runs one continuous member from end to end: it reads two aligned ends as the instruction and the gap as the decoration. So the repair is not a third wording of the gap. Take the connecting member out of the linkage altogether and carry the break as a member **laid aside**, where its state is a fact the model can draw: two bare sprocket wheels with the drive chain coiled on the bench between them and both ends on the wood, a belt hanging on a hook beside two bare pulleys, a plug lying in its own coil beside an open socket. State that the laid-aside part touches neither end. A coil on a bench is drawn as a coil; a gap is drawn as a connection.
 
-
-
 ## A before/after pair needs the reversed state on every part, not a cue
-
-
 
 ## Motion marks are the house style; an arrowhead is a symbol
 
@@ -275,52 +245,21 @@ The ink arcs a cartoon puts around a ringing bell, a struck hammer or a spinning
 
 ## An industrial panel invites engraved labels above its sockets
 
-
-
 ## A swept-dust mark draws as a white patch
-
-
 
 ## A canister, tin or box with a flat face gets a small rectangular label
 
-
-
 ## A member that can reach the walls gets rested on them, and the count it stands for collapses
-
-
-
 
 ## A mechanism comes back complete, and in its resting state
 
-
-
-
-
-
-
-
-
-
-
-
 **The wall band must be the brick immediately beside the object, at the same height — and that is how this rule failed me once.** The pair above was passed on the numbers quoted in the previous paragraph, and the pass was wrong: the "wall" band had been measured on a patch that sat in shadow to one side of the crates, so the crates beat a dark surface and looked lit. Re-measured against the brick immediately beside them, the same two frames read crates **103** against brick **185** in the header, and crates **60** against brick **147** in its companion: the light was on the wall in both, the pair did not argue, and the header frame was showing the absent state. So pick the comparison band as the nearest same-height brick the object does not cover, measure both frames of the pair the same way, and treat a margin under about 15 points as no contrast at all. A pass on a light-contrast pair is only as good as the patch it was measured against. Run `scripts/check-light-contrast.py` rather than measuring inline in a heredoc — it takes `--object x0,y0,x1,y1 --wall x0,y0,x1,y1` (0..1 fractions work too), several frames in one call, and `--pair` for the verdict, and it prints the sign per frame so a session's numbers stay comparable with the ones already in the notes. A pair whose frames all come back with the same sign is the failed pair, whichever engine drew it. And when a pair exists to argue a contrast, both frames of the pair are checked against each other — two frames in the same state is a failed pair even when each is a clean picture, and the frame that fails is the one whose whole purpose was the contrast.
-
-
-
-
-
 
 ## An object that must not join its twin gets joined — change the kind, not the wording
 
-
-
-
 ## Closure is geometry: raise the camera, do not re-word the loop
 
-
 Two causes, both structural:
-
-
 
 Two smaller findings from the same frame: identical objects named once come back in three sizes — say **one size repeated three times**; and `check-bboxes.py` rejects the words *left*/*right* inside the description of a wide box, so a ring spanning the frame has to be described by its ends ("the curve at each end"), not by sides.
 
@@ -328,14 +267,9 @@ Third, found on post 089's header: the checker's NARROW rule matches **thin**, *
 
 ## The flux engine flattens structure — give it the pose, not the cross-section
 
-
-
-
 ## A repair that adds a decoration buys a new defect
 
-
 Two rules follow, and they hold on every repair:
-
 
 ## Lesson
 
@@ -347,12 +281,8 @@ Post 089's `cpu-fire` slot asked for a small brass measuring collar clamped on a
 
 Two rules:
 
-
-
 ## A lighting clause can paint a bar across the frame
 
 The restyle slot of post 089 asked for "deep indigo shadow at the near edge of the bench", and both the prose and the lighting block said it. The engine painted exactly that: the scene ends at row 724 and the remaining **108 px (13 % of the 832 px height)** is a featureless dark band, first a grey strip then a near-black one. Every edge script but one passed it, and `check-blank-margin` only fired on it because it was uniform.
 
 Two rules:
-
-
