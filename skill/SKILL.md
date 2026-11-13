@@ -37,6 +37,8 @@ No text in an image unless the prompt spells every word exactly (few, short word
 
 Before the first render, write the story of the picture in one sentence: who does what, and why it matters for the post. If it is not clear, ask Florian before rendering, not after a rejection. A prompt with no verb produces a render with no story.
 
+**Reviewing late or subagent-written edits.** A condensation can silently drop words mid-paragraph and still read plausibly. Read the candidate for mangled sentences before keeping it; keep `main` when in doubt.
+
 ## The request workflow
 
 1. **Read.** Read the issue's post, section, excerpt and intent; read the post file in `~/wojtek.second.brain.obsidian.vault/tech_blog/`. Run `hindsight_reflect("Wojtek's image taste for <topic>")`. State the post's idea in one sentence and list the taste rules that apply. Fit the series first: reuse the series' `style_description`, character descriptions and world from its library records' `## Prompt` JSON. Taste and recall details: `references/taste-memory.md`.
